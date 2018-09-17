@@ -1,0 +1,39 @@
+Dear Dominic,
+
+Thanks for your answer!
+
+I will begin by sharing what I have done, which would guide why I came up with my questions. 
+
+As previously mentioned, my primary goal has been to get a grasp of what TUDAT can do and how to get it to work. I understand that the full power of teh package will reveal itself when I am actually working on my thesis project. However, I understand that the initial application I presented would be sufficient to actually understand most of the underlying commands and calculations required for general propagation.
+
+I started with going through the example applications provided by the bundle. After which, I decided to use the Unguided Apollo Capsule re-entry code as a starting point. Primayily because is called various function that I would be using in the future. However, as my current application was not for an actual vehicle, I either commented out everything I could that would potentially be a problem or modified values that would approximate what I really wanted: to launch a mass in the atmosphere and to not have aerodynamic effects. Of course, the aerodynamics woudl be calculated, but with an increasingly low drag coefficient/surface area.
+
+After numerous attempts, I was able to get it all to work. However, I realized that certain inputs were being modified before the actual propagation. So, here it is! For some reason, probably expediency and ease of introduction, I prefered to use the spherical orbital state element indices (SphericalOrbitalStateElementIndices). I am aware that this may not be the best way to express initial conditions for an item being launched from the surface of the Earth. However, it allowed me to express clearly and cleanly the desired initial conditions, especially for position and velocity, yet also for initial heading. The Apollo Capsule re-entry code does two transformations to said initial conditions. The first being to Cartesian coordinates (through convertSphericalOrbitalToCartesianState) and the second to the "Global" frame (through transformStateToGlobalFrame).
+
+I understand how and why for the first transformation. The second one, however, I believe I understand how (not very sure yet), but I do not understand why. I understand that this second transformation is what primarily modifies the the magnitudes (and corresponding components) of both position and velocity. To my understanding this is due to the rotational ephemeris of Earth, as defined by the starting Epoch. I noticed that my latitude would be minimally affected, probably due to numerical precision errors. However, the longitude would vary significantly depending on the date/time input into simulationStartEpoch. Of course, this in general makes sense. However, what I do not understand is if the speedIndex of SphericalOrbitalStateElementIndices is supposed to be inertial, the propagation is supposed to be inertial, the central body is already Earth, and the initial condition for position if in respect to Earth's Prime Meridian (as I understand it), why make the transformation at all? And also, where is the code for that function? Cant seem to find it either so I cant understand properly what is going on. I realy have to better understand the positioning and references used throughout the code.
+
+At this point, I would most definitely like to better understand what would be the best way to input my initial conditions (and why). Eventually I will be launching from Earth, just not from the surface, but I will also be starting separate propagations from higher altitudes in the atmosphere that will mimic the Apollo Capsule re-entry.
+
+It is my understanding that I should properly understand the initial conditions and transformation before properly understanding the output of the software. This is regarding the final planetary coordinates at termination. I.e. Where is the vehicle? What velocity does it have? Should I perform additional coordinate/velocity transformations? Which ones?
+
+You can see how my current application can help me answer most of these questions while still developing a better understanding of the underlying capabilities TUDAT has. This brings me to my (current) next set of questions, summarized as: How to I properly set up the optimization scheme with PAGMO?
+
+In this effort, I went through the PAGMO example applications. I decided to implement a multi-objective opmitization where the goal was to reach a specified coordinate, as input through the initial heading angle. Variables that would be tested were velocity and flight-path angle. This 'simple' example would be similar to a typical 2-D, flat Earth, ballistic launch, but applied to a rotating Earth and all the other awesome physical realities that make this such an interesting application to me. I was searching only for the combinaton of variables that would allow for reaching the specified coordinates, not those that would minimize the time of flight.
+
+Until now I have only tried one optmization algorithm (moead). This multi-objective opmitization was given arbitrary bounds, and the return value of the fitness function was a numeric difference from the final goal coordinates. Things to note about this are, from what I understand, that the Earth is rotating throughout the propagation. Hence, the final specified coordinates, similar to the initial coordinates, would be in the same frame, necesitating a transformation to the rotational epehemeris corresponding to the termination epoch. I believe this is achieved this by extracting the last key of the dynamicsSimulator data map through the RHS assignment of ( --dynamicsSimulator.getEquationsOfMotionNumericalSolution().end() )->first;. From this I would extract also the final state, but also have the extracted key (the epoch of the final state) as input to transformStateToGlobalFrame. This would then allow for the transformation of the goal state to 'where is whould be' when the propagation ends. At this point, I would manually calculate the lat/lon values of the final propagated state, difference them with the goal state, and assign them to the return vector. 
+
+I believe that I am proably missing some terms/constraints that should be passed as the return value for the fitnes function. Alternately, I may be providing a heading angle that may not be appropriate (it is fixed). Especially since the opmization (and subsequent evolutions) yields numerous results but continous to not reach the final goal state. I have attached a figure that shows what PAGMO generates vs where I want to be. To construct this image, I took the initial offset created by the rotational ephemeris and applied it to the entire trajectory. I believe this was acceptable becuase the rotational ephemeris only creates a spatial offset that is constant with all values that have been determined. (Again, I would like to properly understand the purpose of that frame transformation.)
+
+Anyhow, regarding PAGMO, my only actual KNOWN issues at the moment have been not being able to set up and archipelago properly such that evolutions can take place. The executable crashes when it finishes the first evolution.
+
+
+
+
+
+
+
+
+
+
+
+

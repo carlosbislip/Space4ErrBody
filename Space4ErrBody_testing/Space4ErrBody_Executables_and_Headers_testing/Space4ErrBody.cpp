@@ -110,7 +110,8 @@ std::pair<std::vector<double>, std::vector<double> > Space4ErrBody_Ballistic::ge
 }
 
 
-
+//! Trying to implement a simple aerodynamic guidance. Initially taken from the
+//! TUDAT website.
 void FlightConditionsBasedAerodynamicGuidance::updateGuidance( const double currentTime )
 {
     using namespace tudat;
@@ -122,43 +123,41 @@ void FlightConditionsBasedAerodynamicGuidance::updateGuidance( const double curr
 
     if( vehicleFlightConditions_->getCurrentAltitude( ) > 60.0E3 )
     {
-        currentAngleOfAttack_ = 35.0 ;
+        currentAngleOfAttack_ = unit_conversions::convertDegreesToRadians( 35.0 ) ;
     }
     else if( vehicleFlightConditions_->getCurrentAltitude( ) < 25.0E3 )
     {
-        currentAngleOfAttack_ = 5.0 ;
+        currentAngleOfAttack_ = unit_conversions::convertDegreesToRadians( 5.0 ) ;
     }
     else
     {
-        currentAngleOfAttack_ = ( 5.0 + 30.0 * ( vehicleFlightConditions_->getCurrentAltitude( ) - 25.0E3 ) / 35.0E3 );
-
+        currentAngleOfAttack_ = unit_conversions::convertDegreesToRadians(
+                    ( 5.0 + 30.0 * ( vehicleFlightConditions_->getCurrentAltitude( ) - 25.0E3 ) / 35.0E3 ) );
     }
 
     currentAngleOfSideslip_ = 0.0;
 
     if( vehicleFlightConditions_->getCurrentMachNumber( ) < 8 )
     {
-        currentBankAngle_ = 80.0 ;
+        currentBankAngle_ = unit_conversions::convertDegreesToRadians( 80.0 ) ;
     }
     else
     {
         currentBankAngle_ = 0.0;
     }
 
-    currentAngleOfAttack_   = currentAngleOfAttack_ * tudat::mathematical_constants::PI / 180.0;
-    currentAngleOfSideslip_ = currentAngleOfSideslip_ * tudat::mathematical_constants::PI / 180.0;
-    currentBankAngle_       = currentBankAngle_ * tudat::mathematical_constants::PI / 180.0;
 }
-
-
 
 
 
 //! Implementation of the fitness function
 //! For this ballistic case, the fitness function returns delta, which is a
 //! vector containing differences in GOAL and calculated latitudes and
-//! longitudes, their "norm", and time o flight.
-//std::vector<double> Space4ErrBody_Ballistic::fitness(const std::vector<double> &x) const
+//! longitudes, their "norm", and time of flight.
+//!
+//! This function seems to be able to get quite long. It is possible to create a
+//! series of functions that could create a more compact display? How feasible
+//! would that be?
 std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double > &x )  const
 {
 
@@ -210,17 +209,14 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
     const double lat_f_rad   = unit_conversions::convertDegreesToRadians( lat_f_deg );
     const double lon_f_rad   = unit_conversions::convertDegreesToRadians( lon_f_deg );
     const double gamma_i_rad = unit_conversions::convertDegreesToRadians( gamma_i_deg );
-    const double chi_i_rad   = chi_i_deg * mathematical_constants::PI / 180;
+    const double chi_i_rad   = unit_conversions::convertDegreesToRadians( chi_i_deg );
+    const double AoA_rad     = unit_conversions::convertDegreesToRadians( AoA_deg );
 
     //! Calculate initial heading angle: https://www.movable-type.co.uk/scripts/latlong.html
     //std::atan2( std::sin( lon_f_rad - lon_i_rad ) * std::cos( lat_f_rad ) , std::cos( lat_i_rad ) * std::sin( lat_f_rad ) - std::sin( lat_i_rad ) * std::cos( lat_f_rad ) * std::cos( lon_f_rad - lon_i_rad ) );
 
-
-
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ///////////////////////            CREATE ENVIRONMENT            //////////////////////////////////////////////////////
+    ///////////////////////            DEFINE TIMEFRAME & TIMESTEP            /////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //! Set simulation start epoch.
@@ -320,6 +316,8 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
 
     //! Assign reference area
     const double referenceArea = input_data_[3];//4.0*000000001;
+
+    //! Assign constant mass
     const double vehicleMass = input_data_[5];//4.0*000000001;
     //double aerodynamicCoefficient = input_data_[4];//1.2 * 0.0000000000001;
     //boost::shared_ptr< simulation_setup::AerodynamicCoefficientSettings > aerodynamicCoefficientSettings =
@@ -327,12 +325,7 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
     //         referenceArea,
     //         aerodynamicCoefficient * Eigen::Vector3d::UnitX( ), 1, 1 );
 
-    //! Create and set aerodynamic coefficients object
-   // bodyMap[ "HORUS" ]->setAerodynamicCoefficientInterface(
-     //           createAerodynamicCoefficientInterface( aerodynamicCoefficientSettings, "HORUS" ) );
-
-
-    ///////// Vechile Aerodynamics Section
+      ///////// Start: Vehicle Aerodynamics Section
 
     //! Define physical meaning of independent variables
     //!     Mach number
@@ -355,9 +348,6 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
     bool areCoefficientsInAerodynamicFrame = true;
     bool areCoefficientsInNegativeAxisDirection = true;
 
-   // bodyMap[ "HORUS" ]->setAerodynamicCoefficientInterface(
-    //            unit_tests::getApolloCoefficientInterface( ) );
-
     //! Load and parse coefficient files; create coefficient settings.
     boost::shared_ptr< AerodynamicCoefficientSettings > aerodynamicCoefficientSettings =
         readTabulatedAerodynamicCoefficientsFromFiles(
@@ -367,16 +357,6 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
                 areCoefficientsInAerodynamicFrame,
                 areCoefficientsInNegativeAxisDirection );
 
-    //! Create vehicle objects.
-    bodyMap[ "HORUS" ] = boost::make_shared< simulation_setup::Body >( );
-
-    //! Set body Mass.
-    bodyMap[ "HORUS" ]->setConstantBodyMass( vehicleMass );
-
-    //! Create vehicle aerodynamic coefficients.
-    bodyMap[ "HORUS" ]->setAerodynamicCoefficientInterface(
-                        createAerodynamicCoefficientInterface( aerodynamicCoefficientSettings, "HORUS" ) );
-
     //! Define constant angle of attack - ARBITRARY. Shouldn't this be
     //! a function of time or events? Would that require reading from a file?
     //! Would that require multiple propagations that are 'stitched' together?
@@ -384,17 +364,24 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
     //bodyMap.at( "HORUS" )->getFlightConditions( )->getAerodynamicAngleCalculator( )->setOrientationAngleFunctions(
     //            boost::lambda::constant( constantAngleOfAttack ) );
 
-
-
-
-
-
-
+    //! Create aerodynamic guidance.
     boost::shared_ptr< aerodynamics::AerodynamicGuidance > aerodynamicGuidance =
             boost::make_shared< FlightConditionsBasedAerodynamicGuidance >(bodyMap, "HORUS");
 
-    setGuidanceAnglesFunctions( aerodynamicGuidance, bodyMap.at( "HORUS" ) );
+    ///////// End: Vehicle Aerodynamics Section
 
+    //! Create vehicle objects.
+    bodyMap[ "HORUS" ] = boost::make_shared< simulation_setup::Body >( );
+
+    //! Set body Mass.
+    bodyMap[ "HORUS" ]->setConstantBodyMass( vehicleMass );
+
+    //! Set vehicle aerodynamic coefficients.
+    bodyMap[ "HORUS" ]->setAerodynamicCoefficientInterface(
+                        createAerodynamicCoefficientInterface( aerodynamicCoefficientSettings, "HORUS" ) );
+
+    //! Set Guidance angle functions.
+    setGuidanceAnglesFunctions( aerodynamicGuidance, bodyMap.at( "HORUS" ) );
 
     //! Finalize body creation.
     setGlobalFrameBodyEphemerides( bodyMap, "SSB", "J2000" );
@@ -438,10 +425,6 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
                 accelerationMap,
                 bodiesToPropagate,
                 centralBodies );
-
-
-
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             CREATE PROPAGATION SETTINGS            ////////////////////////////////////////////
@@ -631,10 +614,13 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
    //! differences such that when minimizing the offsets, there is an additional
    //! unsigned value that always goes to zero. Most definitely unsure about how
    //!  'proper' it is, yet is what works for the current BALLISTIC case.
-   const double dif_norm = std::sqrt(dif_lat_deg * dif_lat_deg + dif_lon_deg * dif_lon_deg);
+   const double dif_norm = std::sqrt( pow(dif_lat_deg,2) + pow(dif_lon_deg,2) );
 
    //! Assign values to Fitness vector! At the moment these are all 'objective
-   //! functions'. No constraints have been implemented.
+   //! functions'. No constraints have been implemented. To modify this I have
+   //! change the header file and define how many are elements are objective
+   //! function, equality contraints, and inequlity constraints. This vector
+   //! here must contain them is that exact order: nOF, nEC, nIC.
    std::vector< double > delta;
    delta.push_back(dif_norm);
    delta.push_back(dif_lat_deg);
@@ -666,14 +652,12 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
    ///////////////////////        PROVIDE OUTPUT TO FILE                        //////////////////////////////////////////
    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-   //! Define output folder for THIS particular set of runs
-   //std::string outputSubFolder = "HORUS_OUTPUT_" + std::to_string(int(input_data_[18])) + "_" + std::to_string(int(input_data_[19])) + "_" + std::to_string(int(input_data_[20])) +  "_" + std::to_string(fixedStepSize) + "_" + play_ +  "/";
-
    //! Get time stamp for this specific simulation. This avoids overwriting the
    //! file if another individual with the same properties shows up in other
    //! evolutions.
    std::string simulation_save_time = getCurrentDateTime( false );
 
+   //! Create unique filename that cannot be overwritten due to the timestamp.
    std::string simulation_file_name_suffix = std::to_string(v_i) + "_" +
            std::to_string(gamma_i_deg) + "_" +
            std::to_string(chi_i_deg) + "_" +
@@ -683,6 +667,8 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
            std::to_string(lon_f_deg_calc) + "_" +
            simulation_save_time;
 
+   //! Will print out depending on some input values. Each entry corresponds to
+   //! a different type of output. Entries are binary, 0 or 1.
    if (output_settings_[1] == 1)
    {
 
@@ -717,45 +703,7 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
                            tudat_applications::getOutputPath( ) + outputSubFolder,
                            "");
 */
-//}
 
    return delta;
 
-}
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////        PROVIDE OUTPUT TO FILE                        //////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /*
-    // Use Boost library to make a random number generator.
-    boost::mt19937 randomNumbergenerator( time( 0 ) );
-    boost::random::uniform_real_distribution< > uniformDistribution( 0.0, 10.0 );
-    boost::variate_generator< boost::mt19937&, boost::random::uniform_real_distribution < > >
-            generateRandomNumbers( randomNumbergenerator, uniformDistribution );
-
-    // Generate random altitude value between 0 and 10 km.
-    //Artbitraty altitude
-    const double altitudeKilometers = 25; //generateRandomNumbers( );
-
-    // Use the Tudat Core library to convert km to m.
-    const double altitudeMeters = tudat::unit_conversions::convertKilometersToMeters(
-            altitudeKilometers );
-
-    // Use the Eigen library to create position vectors.
-    Eigen::Vector3d positionOfBodySubjectToAcceleration;
-    positionOfBodySubjectToAcceleration << 6378136.6 + altitudeMeters, 0.0, 0.0;
-
-    // Position vector of Central body exerting acceleration.
-    const Eigen::Vector3d positionOfBodyExertingAcceleration = Eigen::Vector3d::Zero( );
-
-    // Use the Tudat library to compute the acceleration vector.
-    const Eigen::Vector3d gravitationalAcceleration =
-            tudat::gravitation::computeGravitationalAcceleration(
-                    positionOfBodySubjectToAcceleration, 4.9e12,
-                    positionOfBodyExertingAcceleration );
-   */
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+} // Fitness function.

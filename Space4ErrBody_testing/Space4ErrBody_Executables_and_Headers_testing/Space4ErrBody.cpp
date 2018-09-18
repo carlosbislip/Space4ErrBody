@@ -116,9 +116,11 @@ void FlightConditionsBasedAerodynamicGuidance::updateGuidance( const double curr
 {
     using namespace tudat;
     using namespace tudat::aerodynamics;
-    using namespace tudat::mathematical_constants;
     using namespace tudat::basic_mathematics;
+    using namespace tudat::mathematical_constants;
     using namespace tudat::simulation_setup;
+    using namespace tudat::unit_conversions;
+
 
 
     if( vehicleFlightConditions_->getCurrentAltitude( ) > 60.0E3 )
@@ -596,18 +598,16 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
    const double lat_f_rad_calc = std::asin(systemFinalState_EARTH_FIXED[2] / altitude_f_calc) ;
 
    //! Convert coordinates of final state to degrees: Earth-Fixed Frame
-   const double lon_f_deg_calc = lon_f_rad_calc * 180 / mathematical_constants::PI;
-   const double lat_f_deg_calc = lat_f_rad_calc * 180 / mathematical_constants::PI;
+   const double lon_f_deg_calc = unit_conversions::convertRadiansToDegrees( lon_f_rad_calc );
+   const double lat_f_deg_calc = unit_conversions::convertRadiansToDegrees( lat_f_rad_calc );
 
    //! Calculate offset of final state from GOAL state: Earth-Fixed Frame
    const double dif_lat_rad = lat_f_rad - lat_f_rad_calc;
    const double dif_lon_rad = lon_f_rad - lon_f_rad_calc;
 
-   //! Convert offsets of final state to degrees: Earth-Fixed Frame
-   const double dif_lat_deg = dif_lat_rad * 180 / mathematical_constants::PI;
-   const double dif_lon_deg = dif_lon_rad * 180 / mathematical_constants::PI;
-   //const double dif_lon_rad = unit_conversions::convertDegreesToRadians( dif_lon_deg );
-   //const double dif_lat_rad = unit_conversions::convertDegreesToRadians( dif_lat_deg );
+   //! Calculate offsets of final state in degrees: Earth-Fixed Frame
+   const double dif_lat_deg = lat_f_deg - lat_f_deg_calc;
+   const double dif_lon_deg = lon_f_deg - lon_f_deg_calc;
 
    //! Calculate "norm" of offsets. This is an arbitrary function I have
    //! implemented to pass on as an 'objective function'. It relates the

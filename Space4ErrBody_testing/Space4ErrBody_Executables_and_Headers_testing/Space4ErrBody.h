@@ -16,18 +16,18 @@
 #include <vector>
 #include <limits>
 
-
 #include "pagmo/island.hpp"
 #include "pagmo/io.hpp"
 #include "pagmo/serialization.hpp"
 #include "pagmo/problem.hpp"
 #include "pagmo/types.hpp"
 
-using namespace pagmo;
-//using namespace pagmo::problem;
+namespace pagmo
+{
 
 // Define the problem PaGMO-style
 struct Space4ErrBody_Ballistic {
+
 
     // Empty constructor
     Space4ErrBody_Ballistic( ) { }
@@ -44,8 +44,6 @@ struct Space4ErrBody_Ballistic {
 
     //! Retrieve the name of the problem
     std::string get_name( ) const;
-
-
 
     //! Retrieve the number of objectives in problem, e.g. the size of the
     //! vector returned by the fitness function.
@@ -82,6 +80,7 @@ private:
 
 };
 
+} // namespace pagmo
 
 //PAGMO_REGISTER_PROBLEM(pagmo::Space4ErrBody_Ballistic)
 

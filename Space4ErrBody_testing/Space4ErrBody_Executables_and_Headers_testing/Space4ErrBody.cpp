@@ -84,6 +84,8 @@
 //#include <Tudat/Astrodynamics/Gravitation/centralGravityModel.h>
 //#include <Tudat/Mathematics/NumericalIntegrators/rungeKutta4Integrator.h>
 //#include <Tudat/Astrodynamics/Ephemerides/frameManager.h>
+namespace pagmo
+{
 
 Space4ErrBody_Ballistic::Space4ErrBody_Ballistic(std::vector< std::vector< double > > &bounds,
         std::vector< double > &input_data,
@@ -109,49 +111,6 @@ std::pair<std::vector<double>, std::vector<double> > Space4ErrBody_Ballistic::ge
     return { problemBounds_[0], problemBounds_[1] };
 }
 
-
-//! Trying to implement a simple aerodynamic guidance. Initially taken from the
-//! TUDAT website.
-void FlightConditionsBasedAerodynamicGuidance::updateGuidance( const double currentTime )
-{
-    using namespace tudat;
-    using namespace tudat::aerodynamics;
-    using namespace tudat::basic_mathematics;
-    using namespace tudat::mathematical_constants;
-    using namespace tudat::simulation_setup;
-    using namespace tudat::unit_conversions;
-
-
-
-    if( vehicleFlightConditions_->getCurrentAltitude( ) > 60.0E3 )
-    {
-        currentAngleOfAttack_ = unit_conversions::convertDegreesToRadians( 35.0 ) ;
-    }
-    else if( vehicleFlightConditions_->getCurrentAltitude( ) < 25.0E3 )
-    {
-        currentAngleOfAttack_ = unit_conversions::convertDegreesToRadians( 5.0 ) ;
-    }
-    else
-    {
-        currentAngleOfAttack_ = unit_conversions::convertDegreesToRadians(
-                    ( 5.0 + 30.0 * ( vehicleFlightConditions_->getCurrentAltitude( ) - 25.0E3 ) / 35.0E3 ) );
-    }
-
-    currentAngleOfSideslip_ = 0.0;
-
-    if( vehicleFlightConditions_->getCurrentMachNumber( ) < 8 )
-    {
-        currentBankAngle_ = unit_conversions::convertDegreesToRadians( 80.0 ) ;
-    }
-    else
-    {
-        currentBankAngle_ = 0.0;
-    }
-
-}
-
-
-
 //! Implementation of the fitness function
 //! For this ballistic case, the fitness function returns delta, which is a
 //! vector containing differences in GOAL and calculated latitudes and
@@ -166,6 +125,7 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            USING STATEMENTS              //////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ //   std::cout << "Reading 'using' statements" << std::endl;
 
     using namespace tudat::ephemerides;
     using namespace tudat::interpolators;
@@ -184,16 +144,12 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
     using namespace pagmo;
     using namespace tudat_applications;
 
-
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            UNPACK SOME DATA              //////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //  std::cout << "Unpacking data" << std::endl;
 
-
-
-   //! Unpack input data values.
+    //! Unpack input data values.
     const double h_i         = input_data_[6]; //0 * 1E3; // m
     const double lat_i_deg   = input_data_[7]; //52.30805556; //52deg 18’29"N
     const double lon_i_deg   = input_data_[8]; //4.76416667 //4deg 45’51"E
@@ -220,6 +176,7 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            DEFINE TIMEFRAME & TIMESTEP            /////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ //   std::cout << "Defining timeframe and timestep" << std::endl;
 
     //! Set simulation start epoch.
     const double simulationStartEpoch = input_data_[0]; // 10/28/2018  11:00:00 AM  ---> 2458419.95833333000000000000000
@@ -234,6 +191,7 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            CREATE ENVIRONMENT            //////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ //   std::cout << "Creating environment" << std::endl;
 
     //! Declare/define simulation body settings data map.
     std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings =
@@ -258,6 +216,12 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
     //! Define Earth's radius. Using spice here. Is there a way to get a 'radius
     //! field'? Im interested in includig Earth's flattening, yet am unsure how
     //! to properly do it.
+    //!
+    //! Per Dominic:
+    //! The best way to do this, is to define geodetic coordinates (altitude,
+    //!  geodetic latitude, longitude), which you can then transform to
+    //! Cartesian elements (or any other set) to define your initial condition.
+    //!  This will work for both a spherical and flattened Earth model.
     const double radius_Earth = spice_interface::getAverageRadius( "Earth" );
 
 
@@ -315,6 +279,7 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             CREATE VEHICLE            /////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   // std::cout << "Creating vehicle" << std::endl;
 
     //! Assign reference area
     const double referenceArea = input_data_[3];//4.0*000000001;
@@ -358,6 +323,7 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
                 independentVariableNames,
                 areCoefficientsInAerodynamicFrame,
                 areCoefficientsInNegativeAxisDirection );
+  //  std::cout << "Creating vehicle: Aerodynamic coefficients are done" << std::endl;
 
     //! Define constant angle of attack - ARBITRARY. Shouldn't this be
     //! a function of time or events? Would that require reading from a file?
@@ -365,10 +331,6 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
    // const double constantAngleOfAttack = AoA_deg * mathematical_constants::PI / 180.0;
     //bodyMap.at( "HORUS" )->getFlightConditions( )->getAerodynamicAngleCalculator( )->setOrientationAngleFunctions(
     //            boost::lambda::constant( constantAngleOfAttack ) );
-
-    //! Create aerodynamic guidance.
-    boost::shared_ptr< aerodynamics::AerodynamicGuidance > aerodynamicGuidance =
-            boost::make_shared< FlightConditionsBasedAerodynamicGuidance >(bodyMap, "HORUS");
 
     ///////// End: Vehicle Aerodynamics Section
 
@@ -382,8 +344,6 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
     bodyMap[ "HORUS" ]->setAerodynamicCoefficientInterface(
                         createAerodynamicCoefficientInterface( aerodynamicCoefficientSettings, "HORUS" ) );
 
-    //! Set Guidance angle functions.
-    setGuidanceAnglesFunctions( aerodynamicGuidance, bodyMap.at( "HORUS" ) );
 
     //! Finalize body creation.
     setGlobalFrameBodyEphemerides( bodyMap, "SSB", "J2000" );
@@ -392,6 +352,7 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             CREATE ACCELERATIONS            ///////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //std::cout << "Creating accelerations" << std::endl;
 
     //! Declare propagator settings variables.
     SelectedAccelerationMap accelerationMap;
@@ -401,11 +362,9 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
     //! Declare acceleration data map.
     std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfHORUS;
 
-    //! Gravitational model was stated to be Cartesian. I havent found this one
-    //! in the available models. However, there is a "Central" gravity field
-    //! that uses up to the J4 coefficient. It is not clear yet if the field
-    //! automatically uses J2, J3, and J4, as the only input I have found it
-    //! that of the gravitational parameter.
+    //! Define gravitational model. Arbitrary aximum degree/order. According to
+    //! Dominic, equivalent functionality to Cartesian with corresponding maximum
+    //! degree/order.
     accelerationsOfHORUS[ "Earth" ].push_back( boost::make_shared< SphericalHarmonicAccelerationSettings >( 5, 5 ) );
 
     //! Aerodynamic accelerations are attached differently than gravitational. Why?
@@ -428,11 +387,27 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
                 bodiesToPropagate,
                 centralBodies );
 
+    //! Guidance is set AFTER the accelerations and BEFORE propagating. Placed
+    //! both statements here becuase I am unsure which one matters. Haven't
+    //! investigated further, but it works.
+
+    //! Create aerodynamic guidance. Does this have to be done AFTER acceleration models?
+    boost::shared_ptr< aerodynamics::AerodynamicGuidance > aerodynamicGuidance =
+            boost::make_shared< FlightConditionsBasedAerodynamicGuidance >(bodyMap, "HORUS");
+    //std::cout << "Creating vehicle: Guidance is done AFTER acceleration models" << std::endl;
+
+    //boost::shared_ptr< aerodynamics::FlightConditions > flightConditions_ = double currentFlightPathAngle = flightConditions_->getAerodynamicAngleCalculator( )->getAerodynamicAngle( reference_frames::flight_path_angle );
+
+    //! Set Guidance angle functions.
+    setGuidanceAnglesFunctions( aerodynamicGuidance, bodyMap.at( "HORUS" ) );
+
+   // std::cout << "Creating vehicle: Guidance is set" << std::endl;
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             CREATE PROPAGATION SETTINGS            ////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
- 
+
     //! Set spherical elements for HORUS initial state.
     //! ARTBITRARILY CHOSEN to be in Earth-Fixed frame.
     Eigen::Vector6d horusSphericalEntryState;
@@ -707,3 +682,4 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
    return delta;
 
 } // Fitness function.
+}

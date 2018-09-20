@@ -47,17 +47,17 @@ include(compiler)
 set(SRCROOT "${CMAKE_CURRENT_SOURCE_DIR}")
 
 # Define the code root directory.
-set(CODEROOT "${CMAKE_CURRENT_SOURCE_DIR}/..")
+set(CODEROOT "${CMAKE_CURRENT_SOURCE_DIR}")
 
 # Set testing options based on platform.
 enable_testing()
 
 # Set lib and bin directories where static libraries and unit tests are built.
 if(NOT LIBROOT)
-  set(LIBROOT "${CODEROOT}/lib")
+  set(LIBROOT "${CODEROOT}/executables/lib")
 endif()
 if(NOT BINROOT)
-  set(BINROOT "${CODEROOT}/bin")
+  set(BINROOT "${CODEROOT}/executables/bin")
 endif()
 
 # Set the global macros for setting up targets.
@@ -71,11 +71,11 @@ macro(setup_library_target target_name CUSTOM_OUTPUT_PATH)
   set_property(TARGET ${target_name} PROPERTY ARCHIVE_OUTPUT_DIRECTORY "${LIBROOT}")
 endmacro(setup_library_target)
 
-macro(setup_unit_test_target target_name CUSTOM_OUTPUT_PATH)
-  set_property(TARGET ${target_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${BINROOT}/unit_tests")
-  get_property(CUSTOM_TEST_PROGRAM_NAME TARGET ${target_name} PROPERTY OUTPUT_NAME)
-  add_test("${target_name}" "${BINROOT}/unit_tests/${target_name}")
-endmacro(setup_unit_test_target)
+#macro(setup_unit_test_target target_name CUSTOM_OUTPUT_PATH)
+#  set_property(TARGET ${target_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${BINROOT}/unit_tests")
+#  get_property(CUSTOM_TEST_PROGRAM_NAME TARGET ${target_name} PROPERTY OUTPUT_NAME)
+#  add_test("${target_name}" "${BINROOT}/unit_tests/${target_name}")
+#endmacro(setup_unit_test_target)
 
 # Define the install targets to create a distribution.
 if(NOT TUDAT_BUNDLE_DISTRIBUTION_PATH)

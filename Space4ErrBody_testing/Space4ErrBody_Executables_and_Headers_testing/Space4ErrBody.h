@@ -26,14 +26,16 @@ namespace pagmo
 {
 
 // Define the problem PaGMO-style
-struct Space4ErrBody_Ballistic {
-
+struct Space4ErrBody {
 
     // Empty constructor
-    Space4ErrBody_Ballistic( ) { }
+    Space4ErrBody( ) { }
 
     //! Constructor that sets boundaries of independent variables.
-    Space4ErrBody_Ballistic(std::vector< std::vector< double > >  &bounds, std::vector< double > &input_data, std::vector< double > &output_settings, const std::string &outputSubFolder );
+    Space4ErrBody( const std::vector< std::vector< double > >  &bounds,
+                   const std::vector< double > &input_data,
+                   const std::vector< double > &output_settings,
+                   const std::string &outputSubFolder );
 
     //! Calculate the fitness as a function of the parameter vector input_data
     std::vector<double>  fitness(const std::vector< double >  &x) const;
@@ -74,7 +76,8 @@ struct Space4ErrBody_Ballistic {
 private:
 
     const std::vector< std::vector< double > > problemBounds_;
-    std::vector< double > input_data_;   std::vector< double > output_settings_;
+    const std::vector< double > input_data_;
+    const std::vector< double > output_settings_;
     const std::string outputSubFolder_;
 
 

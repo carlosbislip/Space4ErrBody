@@ -3,6 +3,7 @@
 #include <Tudat/Astrodynamics/Aerodynamics/aerodynamicGuidance.h>
 #include <Tudat/SimulationSetup/tudatSimulationHeader.h>
 
+
 //! Trying to implement a simple aerodynamic guidance. Initially taken from the
 //! TUDAT website.
 //! http://tudat.tudelft.nl/tutorials/tudatFeatures/accelerationSetup/aerodynamicGuidance.html#FlightConditions

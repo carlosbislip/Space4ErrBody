@@ -16,26 +16,27 @@
 #include <vector>
 #include <limits>
 
+
 #include "pagmo/island.hpp"
 #include "pagmo/io.hpp"
 #include "pagmo/serialization.hpp"
 #include "pagmo/problem.hpp"
 #include "pagmo/types.hpp"
 
-namespace pagmo
-{
+using namespace pagmo;
+//using namespace pagmo::problem;
 
 // Define the problem PaGMO-style
-struct Space4ErrBody {
+struct Space4ErrBody_Ballistic {
 
     // Empty constructor
-    Space4ErrBody( ) { }
+    Space4ErrBody_Ballistic( ) { }
 
     //! Constructor that sets boundaries of independent variables.
-    Space4ErrBody( const std::vector< std::vector< double > >  &bounds,
-                   const std::vector< double > &input_data,
-                   const std::vector< double > &output_settings,
-                   const std::string &outputSubFolder );
+    Space4ErrBody_Ballistic( const std::vector< std::vector< double > > &bounds,
+                             const std::vector< double > &input_data,
+                             const std::vector< double > &output_settings,
+                             const std::string &outputSubFolder );
 
     //! Calculate the fitness as a function of the parameter vector input_data
     std::vector<double>  fitness(const std::vector< double >  &x) const;
@@ -46,6 +47,8 @@ struct Space4ErrBody {
 
     //! Retrieve the name of the problem
     std::string get_name( ) const;
+
+
 
     //! Retrieve the number of objectives in problem, e.g. the size of the
     //! vector returned by the fitness function.
@@ -83,7 +86,6 @@ private:
 
 };
 
-} // namespace pagmo
 
 //PAGMO_REGISTER_PROBLEM(pagmo::Space4ErrBody_Ballistic)
 

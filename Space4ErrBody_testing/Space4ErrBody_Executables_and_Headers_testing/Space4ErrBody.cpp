@@ -75,7 +75,7 @@
 #include "Space4ErrBody.h"
 #include "applicationOutput_tudat.h"
 #include "getStuff.h"
-//#include "updateGuidance.h"
+#include "updateGuidance.h"
 //#include <Tudat/Astrodynamics/BasicAstrodynamics/stateVectorIndices.h>
 //#include <Tudat/Astrodynamics/BasicAstrodynamics/sphericalStateConversions.h>
 //#include <Tudat/Astrodynamics/Ephemerides/ephemeris.h>
@@ -84,10 +84,8 @@
 //#include <Tudat/Astrodynamics/Gravitation/centralGravityModel.h>
 //#include <Tudat/Mathematics/NumericalIntegrators/rungeKutta4Integrator.h>
 //#include <Tudat/Astrodynamics/Ephemerides/frameManager.h>
-//namespace pagmo
-using namespace pagmo;
 
-Space4ErrBody::Space4ErrBody(
+Space4ErrBody_Ballistic::Space4ErrBody_Ballistic(
         const std::vector< std::vector< double > > &bounds,
         const std::vector< double > &input_data,
         const std::vector< double > &output_settings,
@@ -101,16 +99,19 @@ Space4ErrBody::Space4ErrBody(
 //    useExtendedDynamics_( useExtendedDynamics ){ }
 
 //! Descriptive name of the problem
-std::string Space4ErrBody::get_name() const
+std::string Space4ErrBody_Ballistic::get_name() const
 {
     return "AMS to IAD Ballistic Trajectory: 10/28/2018  11:00:00 AM";
 }
 
 //! Get bounds
-std::pair<std::vector<double>, std::vector<double> > Space4ErrBody::get_bounds() const
+std::pair<std::vector<double>, std::vector<double> > Space4ErrBody_Ballistic::get_bounds() const
 {
     return { problemBounds_[0], problemBounds_[1] };
 }
+
+
+
 
 //! Implementation of the fitness function
 //! For this ballistic case, the fitness function returns delta, which is a
@@ -120,16 +121,12 @@ std::pair<std::vector<double>, std::vector<double> > Space4ErrBody::get_bounds()
 //! This function seems to be able to get quite long. It is possible to create a
 //! series of functions that could create a more compact display? How feasible
 //! would that be?
-std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  const
+std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double > &x )  const
 {
-   std::vector< double > delta = getFitness( input_data_, output_settings_, outputSubFolder_, x);
 
-/*
- *
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            USING STATEMENTS              //////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- //   std::cout << "Reading 'using' statements" << std::endl;
 
     using namespace tudat::ephemerides;
     using namespace tudat::interpolators;
@@ -148,74 +145,28 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     using namespace pagmo;
     using namespace tudat_applications;
 
+
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            UNPACK SOME DATA              //////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //  std::cout << "Unpacking data" << std::endl;
 
-    //! Unpack input data values.
-    //! Declare variables to unpack from input_data. This list may include
-    //! variables that may not be used further.
-    double Ref_area;
-    double M_i;
-    double v_i;
-    double gamma_i_deg;
-    double chi_i_deg;
-    double AoA_deg;
-    double h_i;
-    double lat_i_deg;
-    double lon_i_deg;
-    double h_f;
-    double lat_f_deg;
-    double lon_f_deg;
 
-    if ( input_data_[0] == 0 )
-    {
-        //! Assign Reference area
-        Ref_area    = input_data_[4]; //m^2
 
-        //! Assign initial mass
-        M_i         = input_data_[6]; // kg
+   //! Unpack input data values.
+    const double h_i         = input_data_[6]; //0 * 1E3; // m
+    const double lat_i_deg   = input_data_[7]; //52.30805556; //52deg 18’29"N
+    const double lon_i_deg   = input_data_[8]; //4.76416667 //4deg 45’51"E
+    const double h_f         = input_data_[9]; //0 * 1E3; // m
+    const double lat_f_deg   = input_data_[10]; //38.9444444444444; //38deg 56’40"N
+    const double lon_f_deg   = input_data_[11]; //-77.4558333333 //77deg 27’21"W
+    const double v_i         = x[0]; // OPTIMIZE IT!
+    const double gamma_i_deg = x[1]; // OPTIMIZE IT!
+    const double chi_i_deg   = x[2]; // OPTIMIZE IT!
+    //const double AoA_deg     = x[3]; // OPTIMIZE IT!
 
-        //! Assign the initial and final position conditions.
-        h_i         = input_data_[7]; //0 * 1E3; // m
-        lat_i_deg   = input_data_[8]; //52.30805556; //52deg 18’29"N
-        lon_i_deg   = input_data_[9]; //4.76416667 //4deg 45’51"E
-        h_f         = input_data_[10]; //0 * 1E3; // m
-        lat_f_deg   = input_data_[11]; //38.9444444444444; //38deg 56’40"N
-        lon_f_deg   = input_data_[12]; //282.544166666667 //77deg 27’21"W
-
-        //! Variables to optimize
-        v_i         = x[0]; // OPTIMIZE IT!
-        gamma_i_deg = x[1]; // OPTIMIZE IT!
-        chi_i_deg   = x[2]; // OPTIMIZE IT!
-        AoA_deg     = x[3]; // OPTIMIZE IT!
-        const double AoA_rad     = unit_conversions::convertDegreesToRadians( AoA_deg );
-
-    }
-    else
-    {
-        //! Assign Reference area
-        Ref_area    = input_data_[4]; // ??? m^2 // dont have it yet
-
-        //! Assign initial mass
-        M_i         = input_data_[6]; //??? * 1E3 kg // dont have it yet
-
-        //! Assign the initial and final position conditions.
-        h_i         = input_data_[10]; //122 * 1E3 m // given
-        lat_i_deg   = input_data_[11]; //-22.37 deg // given
-        lon_i_deg   = input_data_[12]; //-106.7 deg // given
-        h_f         = input_data_[13]; //25 * 1E3 m // arbitrary?
-        lat_f_deg   = input_data_[14]; //5.237222 deg //5 deg 14’14"N // arbitrary?
-        lon_f_deg   = input_data_[15]; //-52.760556 deg //52 deg 45’38"W// arbitrary?
-
-        //! Variables to optimize
-        v_i         = x[0]; // OPTIMIZE IT!
-        gamma_i_deg = x[1]; // OPTIMIZE IT!
-        chi_i_deg   = x[2]; // OPTIMIZE IT!
-
-    }
-    
     //! Convert angles from degrees to radians
     const double lat_i_rad   = unit_conversions::convertDegreesToRadians( lat_i_deg );
     const double lon_i_rad   = unit_conversions::convertDegreesToRadians( lon_i_deg );
@@ -223,6 +174,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     const double lon_f_rad   = unit_conversions::convertDegreesToRadians( lon_f_deg );
     const double gamma_i_rad = unit_conversions::convertDegreesToRadians( gamma_i_deg );
     const double chi_i_rad   = unit_conversions::convertDegreesToRadians( chi_i_deg );
+    //const double AoA_rad     = unit_conversions::convertDegreesToRadians( AoA_deg );
 
     //! Calculate initial heading angle: https://www.movable-type.co.uk/scripts/latlong.html
     //std::atan2( std::sin( lon_f_rad - lon_i_rad ) * std::cos( lat_f_rad ) , std::cos( lat_i_rad ) * std::sin( lat_f_rad ) - std::sin( lat_i_rad ) * std::cos( lat_f_rad ) * std::cos( lon_f_rad - lon_i_rad ) );
@@ -230,17 +182,17 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            DEFINE TIMEFRAME & TIMESTEP            /////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- //   std::cout << "Defining timeframe and timestep" << std::endl;
+  //  std::cout << "Defining timeframe and timestep" << std::endl;
 
     //! Set simulation start epoch.
-    const double simulationStartEpoch = input_data_[1]; // 10/28/2018  11:00:00 AM  ---> 2458419.95833333000000000000000
+    const double simulationStartEpoch = input_data_[0]; // 10/28/2018  11:00:00 AM  ---> 2458419.95833333000000000000000
 
     //! Set simulation end epoch.
     // const double simulationEndEpoch = simulationStartEpoch + 18000.0; // 5 hours
-    const double simulationEndEpoch = simulationStartEpoch + input_data_[2];
+    const double simulationEndEpoch = simulationStartEpoch + input_data_[1];
 
     //! Set numerical integration fixed step size.
-    const double fixedStepSize = input_data_[3];
+    const double fixedStepSize = input_data_[2];
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            CREATE ENVIRONMENT            //////////////////////////////////////////////////////
@@ -270,22 +222,15 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //! Define Earth's radius. Using spice here. Is there a way to get a 'radius
     //! field'? Im interested in includig Earth's flattening, yet am unsure how
     //! to properly do it.
-    //!
-    //! Per Dominic:
-    //! The best way to do this, is to define geodetic coordinates (altitude,
-    //!  geodetic latitude, longitude), which you can then transform to
-    //! Cartesian elements (or any other set) to define your initial condition.
-    //!  This will work for both a spherical and flattened Earth model.
     const double radius_Earth = spice_interface::getAverageRadius( "Earth" );
-
+    double radius_Earth_i = radius_Earth;
+    double radius_Earth_f = radius_Earth;
 
     //!---------------------------- Still playing around with this section
 
-    double radius_Earth_i = radius_Earth;
-    double radius_Earth_f = radius_Earth;
     //! https://en.wikipedia.org/wiki/Flattening#Numerical_values_for_planets
     //! https://www.vcalc.com/wiki/vCalc/WGS-84+Earth+flattening+factor
-    double flattening_Earth = 1 / input_data_.back();
+    double flattening_Earth = 1 / input_data_[12];
     if (flattening_Earth != 1)
     {
         bodySettings[ "Earth" ]->shapeModelSettings = boost::make_shared< OblateSphericalBodyShapeSettings >( radius_Earth, flattening_Earth );
@@ -333,7 +278,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             CREATE VEHICLE            /////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   // std::cout << "Creating vehicle" << std::endl;
+//    std::cout << "Creating vehicle" << std::endl;
 
     //! Assign reference area
     const double referenceArea = input_data_[3];//4.0*000000001;
@@ -345,6 +290,8 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //       boost::make_shared< ConstantAerodynamicCoefficientSettings >(
     //         referenceArea,
     //         aerodynamicCoefficient * Eigen::Vector3d::UnitX( ), 1, 1 );
+
+ //   std::cout << "Creating vehicle Aerodynamics" << std::endl;
 
       ///////// Start: Vehicle Aerodynamics Section
 
@@ -377,7 +324,6 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                 independentVariableNames,
                 areCoefficientsInAerodynamicFrame,
                 areCoefficientsInNegativeAxisDirection );
-  //  std::cout << "Creating vehicle: Aerodynamic coefficients are done" << std::endl;
 
     //! Define constant angle of attack - ARBITRARY. Shouldn't this be
     //! a function of time or events? Would that require reading from a file?
@@ -386,7 +332,10 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //bodyMap.at( "HORUS" )->getFlightConditions( )->getAerodynamicAngleCalculator( )->setOrientationAngleFunctions(
     //            boost::lambda::constant( constantAngleOfAttack ) );
 
+
     ///////// End: Vehicle Aerodynamics Section
+
+  //  std::cout << "Creating vehicle objects" << std::endl;
 
     //! Create vehicle objects.
     bodyMap[ "HORUS" ] = boost::make_shared< simulation_setup::Body >( );
@@ -406,7 +355,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             CREATE ACCELERATIONS            ///////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //std::cout << "Creating accelerations" << std::endl;
+ //   std::cout << "Creating accelerations" << std::endl;
 
     //! Declare propagator settings variables.
     SelectedAccelerationMap accelerationMap;
@@ -416,9 +365,11 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //! Declare acceleration data map.
     std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfHORUS;
 
-    //! Define gravitational model. Arbitrary aximum degree/order. According to
-    //! Dominic, equivalent functionality to Cartesian with corresponding maximum
-    //! degree/order.
+    //! Gravitational model was stated to be Cartesian. I havent found this one
+    //! in the available models. However, there is a "Central" gravity field
+    //! that uses up to the J4 coefficient. It is not clear yet if the field
+    //! automatically uses J2, J3, and J4, as the only input I have found it
+    //! that of the gravitational parameter.
     accelerationsOfHORUS[ "Earth" ].push_back( boost::make_shared< SphericalHarmonicAccelerationSettings >( 5, 5 ) );
 
     //! Aerodynamic accelerations are attached differently than gravitational. Why?
@@ -441,26 +392,29 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                 bodiesToPropagate,
                 centralBodies );
 
-    //! Guidance is set AFTER the accelerations and BEFORE propagating. Placed
-    //! both statements here becuase I am unsure which one matters. Haven't
-    //! investigated further, but it works.
 
-    //! Create aerodynamic guidance. Does this have to be done AFTER acceleration models?
+    //std::cout << "Creating vehicle: Guidance is set AFTER acceleration models" << std::endl;
+
+    //! Guidance is set AFTER the accelerations and BEFORE propagating.
+
+    //! Create aerodynamic guidance functions.
     boost::shared_ptr< aerodynamics::AerodynamicGuidance > aerodynamicGuidance =
             boost::make_shared< FlightConditionsBasedAerodynamicGuidance >(bodyMap, "HORUS");
-    //std::cout << "Creating vehicle: Guidance is done AFTER acceleration models" << std::endl;
-
-    //boost::shared_ptr< aerodynamics::FlightConditions > flightConditions_ = double currentFlightPathAngle = flightConditions_->getAerodynamicAngleCalculator( )->getAerodynamicAngle( reference_frames::flight_path_angle );
 
     //! Set Guidance angle functions.
     setGuidanceAnglesFunctions( aerodynamicGuidance, bodyMap.at( "HORUS" ) );
 
-   // std::cout << "Creating vehicle: Guidance is set" << std::endl;
+    //! Define constant orientation
+    //double constantAngleOfAttack = unit_conversions::convertDegreesToRadians( 30 );
+    //double constantBankAngle = unit_conversions::convertDegreesToRadians( 85 );
+    //bodyMap.at( "HORUS" )->getFlightConditions( )->getAerodynamicAngleCalculator( )->setOrientationAngleFunctions(
+    //            boost::lambda::constant( constantAngleOfAttack ),boost::lambda::constant( 0 ),boost::lambda::constant( constantBankAngle ));
+    //std::cout << "Creating vehicle: Guidance is set" << std::endl;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             CREATE PROPAGATION SETTINGS            ////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+//    std::cout << "Creating propagation settings" << std::endl;
 
     //! Set spherical elements for HORUS initial state.
     //! ARTBITRARILY CHOSEN to be in Earth-Fixed frame.
@@ -488,7 +442,6 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     Eigen::Vector6d systemFinalStateGOAL = convertSphericalOrbitalToCartesianState(
                 horusSphericalFINALState );
 
-
     //! Transform INITIAL state from Earth-fixed frame to Inertial Frame.
     systemInitialState = transformStateToGlobalFrame(
                 systemInitialState,
@@ -496,6 +449,9 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                 earthRotationalEphemeris );
 
     //! Define list of dependent variables to save.
+    //! The file that prints out the text saying what is saved has been modified
+    //! to mute this message. During optimization this would clutter the
+    //! terminal screen and is incredibly annoying.
     std::vector< boost::shared_ptr< SingleDependentVariableSaveSettings > > dependentVariablesList;
     dependentVariablesList.push_back(
                 boost::make_shared< SingleDependentVariableSaveSettings >(
@@ -531,7 +487,21 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     boost::shared_ptr< DependentVariableSaveSettings > dependentVariablesToSave =
             boost::make_shared< DependentVariableSaveSettings >( dependentVariablesList );
 
-    // Define termination conditions
+    //! Define termination conditions
+    //! Dominic mentioned something about terminating at exactly the termination
+    //! condition. Somewhere in the documentation. This works for now, though
+    //! the altitude temrination condition may yield a "nearest neighbor" or
+    //! dnet error with nrlmsise00 as the atmospheric model.
+    //!
+    //! Per Dominic:
+    //! If I remember correctly, these errors (dnet....) are thrown by NRLMSISE
+    //! when the altitude becomes < 0. The good thing is that the propagation
+    //! results up until the error should be saved (numerical solution and
+    //! dependent variables), so you can verifyf whether the last step gets
+    //! close to zero. Note that the very last step, where it crashes, won't be
+    //! saved, so you may find that the results don't actually show it getting
+    //! below zero.
+
     boost::shared_ptr< SingleDependentVariableSaveSettings > terminationDependentVariable =
             boost::make_shared< SingleDependentVariableSaveSettings >(
                 altitude_dependent_variable,
@@ -563,6 +533,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             PROPAGATE ORBIT            ////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ //   std::cout << "Propagating" << std::endl;
 
     //! Create simulation object and propagate dynamics.
     SingleArcDynamicsSimulator< double > dynamicsSimulator(
@@ -666,6 +637,8 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                   std::setw(14) << gamma_i_deg <<
                   std::setw(13) << "heading = " <<
                   std::setw(16) << chi_i_deg <<
+//                  std::setw(7) << "AoA = " <<
+//                  std::setw(14) << x[3] <<
                   std::setw(7) << "lat = " <<
                   std::setw(16) << lat_f_deg_calc <<
                   std::setw(7) << "lon = " <<
@@ -719,25 +692,18 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                            std::numeric_limits< double >::digits10,
                            "," );
    }
-   */
-   /*
-   writeMatrixToFile( systemFinalStateGOAL,
+ /*  writeMatrixToFile( systemFinalStateGOAL,
                            "HORUSsystemFinalStateGOAL_" + std::to_string(v_i) + "_" + std::to_string(gamma_i_deg) + "_" + std::to_string(chi_i_deg) + ".dat",
                       std::numeric_limits< double >::digits10,
                            tudat_applications::getOutputPath( ) + outputSubFolder,
                            "");
-    writeMatrixToFile( systemFinalState_EARTH_FIXED,
+   writeMatrixToFile( systemFinalState_EARTH_FIXED,
                            "HORUSsystemFinalState_EARTH_FIXED" + std::to_string(v_i) + "_" + std::to_string(gamma_i_deg) + "_" + std::to_string(chi_i_deg) + ".dat",
                       std::numeric_limits< double >::digits10,
                            tudat_applications::getOutputPath( ) + outputSubFolder,
                            "");
-   */
-  
-
-
-
+*/
 
    return delta;
 
 } // Fitness function.
-//} // namespace pagmo

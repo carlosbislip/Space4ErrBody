@@ -17,7 +17,7 @@ static inline std::string getOutputPath(
     // __FILE__ only gives the absolute path of the header file!
     std::string filePath_( __FILE__ );
 
-    // Strip filename from temporary string and return root-path string.
+ // Strip filename from temporary string and return root-path string.
 //    std::string reducedPath = filePath_.substr( 0, filePath_.length( ) -
 //                                std::string( "tudatBundle/tudatApplications/Space4ErrBody_Executables_testing/Space4ErrBody_Executables_and_Headers_testing/applicationOutput_pagmo.h" ).length( ) );
 //    std::string outputPath = reducedPath + "Cloud Storage/OneDrive/School/TUDelft/Space Flight/Thesis/code/SimulationOutput/";

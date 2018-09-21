@@ -23,8 +23,7 @@ set(SPACE4ERRBODY_HEADERS
 )
 
 set(SPACE4ERRBODY_SOURCES
-    "${CMAKE_CURRENT_SOURCE_DIR}/Space4ErrBody.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/getFitness.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Space4ErrBody.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/getCurrentDateTime.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/getData.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/getFiles.cpp"

@@ -37,13 +37,23 @@ void FlightConditionsBasedAerodynamicGuidance::updateGuidance( const double curr
     //currentAngleOfAttack_ = ...
     //currentAngleOfSideslip_ = ...
 
+
+
+   //boost::shared_ptr< aerodynamics::FlightConditions > flightConditions_ = double currentFlightPathAngle = flightConditions_->getAerodynamicAngleCalculator( )->getAerodynamicAngle( reference_frames::flight_path_angle );
+
    // double currentFlightPathAngle = flightConditions_->getAerodynamicAngleCalculator( )->getAerodynamicAngle( reference_frames::flight_path_angle );
 
 */
 
-    currentAngleOfAttack_ = unit_conversions::convertDegreesToRadians( 35.0 );
-    currentBankAngle_ = unit_conversions::convertDegreesToRadians( 35.0 );
-    /*
+
+   // currentAngleOfAttack_ = unit_conversions::convertDegreesToRadians( 35.0 );
+   // currentBankAngle_ = unit_conversions::convertDegreesToRadians( 35.0 );
+    //double constantAngleOfAttack = unit_conversions::convertDegreesToRadians( 30 );
+    //double constantBankAngle = unit_conversions::convertDegreesToRadians( 85 );
+    //
+
+
+
     if( FlightConditions_->getCurrentAltitude( ) > 60.0E3 )
     {
         currentAngleOfAttack_ = unit_conversions::convertDegreesToRadians( 35.0 ) ;
@@ -73,7 +83,7 @@ void FlightConditionsBasedAerodynamicGuidance::updateGuidance( const double curr
     {
         currentBankAngle_ = unit_conversions::convertDegreesToRadians( 85.0 );
     }
-*/
+
         /*
         // Define input to aerodynamic coefficients: take care of order of input (this depends on how the coefficients are created)!
         std::vector< double > currentAerodynamicCoefficientsInput_;

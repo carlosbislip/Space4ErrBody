@@ -47,23 +47,23 @@ include(compiler)
 set(SRCROOT "${CMAKE_CURRENT_SOURCE_DIR}")
 
 # Define the code root directory.
-set(CODEROOT "${CMAKE_CURRENT_SOURCE_DIR}")
+set(CODEROOT "${CMAKE_CURRENT_SOURCE_DIR}/..")
 
 # Set testing options based on platform.
 enable_testing()
 
 # Set lib and bin directories where static libraries and unit tests are built.
 if(NOT LIBROOT)
-  set(LIBROOT "${CODEROOT}/executables/lib")
+  set(LIBROOT "${CODEROOT}/Space4ErrBody_testing")
 endif()
 if(NOT BINROOT)
-  set(BINROOT "${CODEROOT}/executables/bin")
+  set(BINROOT "${CODEROOT}/Space4ErrBody_testing")
 endif()
 
 # Set the global macros for setting up targets.
 macro(setup_executable_target target_name CUSTOM_OUTPUT_PATH)
-  set_property(TARGET ${target_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${BINROOT}/applications")
-  install(TARGETS ${target_name} RUNTIME DESTINATION "${BINROOT}/applications")
+  set_property(TARGET ${target_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${BINROOT}/Space4ErrBody_Executables_and_Headers_testing/executables")
+  install(TARGETS ${target_name} RUNTIME DESTINATION "${BINROOT}/Space4ErrBody_Executables_and_Headers_testing/executables")
 endmacro(setup_executable_target)
 
 macro(setup_library_target target_name CUSTOM_OUTPUT_PATH)

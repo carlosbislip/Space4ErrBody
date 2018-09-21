@@ -87,7 +87,7 @@ int main()
             std::to_string(int(opt_set[1])) + "_" +
             std::to_string(int(opt_set[2])) + "_" +
             std::to_string(int(opt_set[3])) + "_" +
-            std::to_string(input_data[2]);
+            std::to_string(input_data[3]);
 
     //! Get output settings. Size of vector is NOT pre-defined.
     //!     print fitness & population
@@ -98,7 +98,15 @@ int main()
 
     //! Create output subfolder filename. Based on arbitrary prefix, the
     //! previously created partial suffix, and the run's time stamp.
-    const std::string outputSubFolder = "HORUS_OUTPUT_" + this_run_settings + "_" + play_time + "/";
+    std::string outputSubFolder = "HORUS_OUTPUT_" + this_run_settings + "_" + play_time + "/";
+    if ( int(input_data[0]) == 0 )
+    {
+        outputSubFolder = "HORUS_OUTPUT_" + this_run_settings + "_" + play_time + "/";
+    }
+    else
+    {
+        outputSubFolder = "HORUS_VALIDATION_" + this_run_settings + "_" + play_time + "/";
+    }
 
     //! Load spice kernels
     tudat::spice_interface::loadStandardSpiceKernels( );
@@ -113,18 +121,42 @@ int main()
     std::vector< std::vector< double > > bounds( 2, std::vector< double >( N, 0.0 ) );
     //!---------------------------------------   ^ for lb/up  (rows)       ^ for # of parameters
 
-    //! Assign bounds of decision variables. Loop unpacks data decision vector
-    //! bounds into the bounds matrix that will be passed on for the optimizer.
-    //!       Initial velocity (Earth-Fixed) - v_i
-    //!       Initial flight-path angle      - gamma_i
-    //!       Initial heading angle          - chi_i
-    //!       Angle of attack                - AoA
-    int p = 0;
-    for( int i = 0; i < N; i++ )
+    if ( int(input_data[0]) == 0 )
     {
-        bounds[ 0 ][ i ] = dv_bounds[ p ];
-        bounds[ 1 ][ i ] = dv_bounds[ p + 1 ];
-        p = p + 2;
+        //! Assign bounds of decision variables. Loop unpacks data decision vector
+        //! bounds into the bounds matrix that will be passed on for the optimizer.
+        //!       Initial velocity (Earth-Fixed) - v_i
+        //!       Initial flight-path angle      - gamma_i
+        //!       Initial heading angle          - chi_i
+        //!       Angle of attack                - AoA
+        int p = 0;
+        for( int i = 0; i < N; i++ )
+        {
+            bounds[ 0 ][ i ] = dv_bounds[ p ];
+            bounds[ 1 ][ i ] = dv_bounds[ p + 1 ];
+            p = p + 2;
+        }
+    }
+    else
+    {
+        //! Same loop as before. However, the purpose of this distinction it
+        //! that a validation exercise is to be done. Various initial conditions
+        //! are known. The corresponding bounds of interest are then tightened
+        //! to reflect this. The bounds are still defined in an input file.
+        //!       Initial velocity (Earth-Fixed) - v_i = 7435.5 m/s
+        //!                                              Not sure if the stated
+        //!                                              velocity is Earth-Fixed
+        //!                                              or Inertial.
+        //!       Initial flight-path angle      - gamma_i = -1.437 deg
+        //!       Initial heading angle          - chi_i = 70.757 deg
+        int p = 0;
+        for( int i = 0; i < N; i++ )
+        {
+            bounds[ 0 ][ i ] = dv_bounds[ p ];
+            bounds[ 1 ][ i ] = dv_bounds[ p + 1 ];
+            p = p + 2;
+        }
+
     }
 
     //! Create object to compute the problem fitness; no perturbations
@@ -166,16 +198,56 @@ int main()
     //! before that, let's print out some stuff to the screen to make sure we
     //! know what's supposed to happen.
 
-    //! Assign initial mass
-    const double M_i       = input_data[5]; //0 * 1E3; // m
+    //! Declare variables to unpack from input_data. This list may include
+     //! variables that may not be used further.
+     double Ref_area;
+     double M_i;
+     double v_i;
+     double gamma_i_deg;
+     double chi_i_deg;
+     double h_i;
+     double lat_i_deg;
+     double lon_i_deg;
+     double h_f;
+     double lat_f_deg;
+     double lon_f_deg;
 
-    //! Assign the initial and final position conditions.
-    const double h_i       = input_data[6]; //0 * 1E3; // m
-    const double lat_i_deg = input_data[7]; //52.30805556; //52deg 18’29"N
-    const double lon_i_deg = input_data[8]; //4.76416667 //4deg 45’51"E
-    const double h_f       = input_data[9]; //0 * 1E3; // m
-    const double lat_f_deg = input_data[10]; //38.9444444444444; //38deg 56’40"N
-    const double lon_f_deg = input_data[11]; //282.544166666667 //77deg 27’21"W
+     if ( int(input_data[0]) == 0 )
+     {
+         //! Assign Reference area
+         Ref_area    = input_data[4]; //m^2
+
+         //! Assign initial mass
+         M_i         = input_data[6]; // kg
+
+         //! Assign the initial and final position conditions.
+         h_i         = input_data[7]; //0 * 1E3; // m
+         lat_i_deg   = input_data[8]; //52.30805556; //52deg 18’29"N
+         lon_i_deg   = input_data[9]; //4.76416667 //4deg 45’51"E
+         h_f         = input_data[10]; //0 * 1E3; // m
+         lat_f_deg   = input_data[11]; //38.9444444444444; //38deg 56’40"N
+         lon_f_deg   = input_data[12]; //282.544166666667 //77deg 27’21"W
+     }
+     else
+     {
+         //! Assign Reference area
+         Ref_area    = input_data[4]; // ??? m^2 // dont have it yet
+
+         //! Assign initial mass
+         M_i         = input_data[6]; //??? * 1E3 kg // dont have it yet
+         v_i         = input_data[7]; //7435.5 m/s // given
+         gamma_i_deg = input_data[8]; //-1.437 * 1E3 kg // given
+         chi_i_deg   = input_data[9]; //70.757 deg // given
+
+         //! Assign the initial and final position conditions.
+         h_i         = input_data[10]; //122 * 1E3 m // given
+         lat_i_deg   = input_data[11]; //-22.37 deg // given
+         lon_i_deg   = input_data[12]; //-106.7 deg // given
+         h_f         = input_data[13]; //25 * 1E3 m // arbitrary?
+         lat_f_deg   = input_data[14]; //5.237222 deg //5 deg 14’14"N // arbitrary?
+         lon_f_deg   = input_data[15]; //-52.760556 deg //52 deg 45’38"W// arbitrary?
+
+     }
 
     //! Convert angles from degrees to radians
     const double lat_i_rad = unit_conversions::convertDegreesToRadians( lat_i_deg );
@@ -185,12 +257,11 @@ int main()
 
     //! Calculate initial heading angle: https://www.movable-type.co.uk/scripts/latlong.html
     const double chi_i_rad = std::atan2( std::sin( lon_f_rad - lon_i_rad ) * std::cos( lat_f_rad ) , std::cos( lat_i_rad ) * std::sin( lat_f_rad ) - std::sin( lat_i_rad ) * std::cos( lat_f_rad ) * std::cos( lon_f_rad - lon_i_rad ) );
-    double chi_i_deg = chi_i_rad * 180 / mathematical_constants::PI;
-
+    double chi_i_deg_calc = unit_conversions::convertRadiansToDegrees( chi_i_rad );
     //! If heading angle is negative, this may help visualize it.
-    if (chi_i_deg < 0)
+    if (chi_i_deg_calc < 0)
     {
-        chi_i_deg = 360 + chi_i_deg;
+        chi_i_deg_calc = 360 + chi_i_deg_calc;
     }
 
     //! Calculate ground distance to cover using Haversine formula and Sperical Law of Cosines: https://www.movable-type.co.uk/scripts/latlong.html
@@ -221,30 +292,57 @@ int main()
     }
 
     //! Print out some stuff.
-    std::cout << " " << std::endl;
-    std::cout << "AMS to IAD Ballistic Trajectory: 10/28/2018  11:00:00 AM" << std::endl;
-    std::cout << "--------------------------------------------------------" << std::endl;
-    std::cout << "Starting Epoch:             " << input_data[0] << " seconds." << std::endl;
-    std::cout << "Max. Epoch dif.:            " << input_data[1] << " seconds." << std::endl;
-    std::cout << "Initial mass:               " << M_i << " kg." << std::endl;
-    std::cout << "Reference area:             " << input_data[3] << " m^2." << std::endl;
-    std::cout << "Initial height:             " << h_i / 1E3 << " km above Earth's surface." << std::endl;
-    std::cout << "Final height:               " << h_f / 1E3 << " km above Earth's surface." << std::endl;
-    std::cout << "Initial latitude:           " << lat_i_deg << " degrees. Earth-Fixed" << std::endl;
-    std::cout << "Initial longitude:          " << lon_i_deg << " degrees. Earth-Fixed" << std::endl;
-    std::cout << "GOAL latitude:              " << lat_f_deg << " degrees. Earth-Fixed" << std::endl;
-    std::cout << "GOAL longitude:             " << lon_f_deg << " degrees. Earth-Fixed" << std::endl;
-    std::cout << "Groud distance to cover " << std::endl;
-    std::cout << "  Haversine Formula:        " << d_haversine / 1E3<< " km." << std::endl;
-    std::cout << "  Spherical Law of Cosines: " << d_spherical_law_cosines / 1E3<< " km." << std::endl;
-    std::cout << "Initial Heading angle:      " << chi_i_deg << " degrees."  << std::endl;
-    std::cout << "Optimization method:        " << algo_method << std::endl;
-    std::cout << "Population size:            " << populationSize << std::endl;
-    std::cout << "Num. of archipelagos:       " << archipelagoSize << std::endl;
-    std::cout << "Num. of evolutions:         " << evolutions << std::endl;
-    std::cout << "Output subfolder: " << std::endl;
-    std::cout << "     '" << outputSubFolder <<"'" << std::endl;
-    std::cout << " DV " << " Lower Boundary " << " Upper Boundary " << std::endl;
+       std::cout << " " << std::endl;
+       if ( int(input_data[0]) == 0 )
+       {
+           std::cout << "AMS to IAD Ballistic Trajectory: 10/28/2018  11:00:00 AM" << std::endl;
+       }
+       else
+       {
+           std::cout << "Validation: HORUS Entry towards Kourou" << std::endl;
+       }
+       std::cout << "--------------------------------------------------------" << std::endl;
+       std::cout << "Starting Epoch:             " << input_data[1] << " seconds." << std::endl;
+       std::cout << "Max. Epoch dif.:            " << input_data[2] << " seconds." << std::endl;
+       if ( int(input_data[0]) == 0 )
+       {
+           std::cout << "Initial mass:               " << M_i << " kg." << std::endl;
+           std::cout << "Reference area:             " << Ref_area << " m^2." << std::endl;
+       }
+       else
+       {
+           std::cout << "Initial mass:               " << M_i << " kg. Dont have it yet" << std::endl;
+           std::cout << "Reference area:             " << Ref_area << " m^2. Dont have it yet" << std::endl;
+       }
+       std::cout << "Initial height:             " << h_i / 1E3 << " km above Earth's surface." << std::endl;
+       std::cout << "Final height:               " << h_f / 1E3 << " km above Earth's surface." << std::endl;
+       std::cout << "Initial latitude:           " << lat_i_deg << " degrees. Earth-Fixed" << std::endl;
+       std::cout << "Initial longitude:          " << lon_i_deg << " degrees. Earth-Fixed" << std::endl;
+
+       if ( int(input_data[0]) == 0 )
+       {
+           std::cout << "GOAL latitude:              " << lat_f_deg << " degrees. Earth-Fixed" << std::endl;
+           std::cout << "GOAL longitude:             " << lon_f_deg << " degrees. Earth-Fixed" << std::endl;
+       }
+       else
+       {
+           std::cout << "GOAL latitude:              " << lat_f_deg << " degrees. Not sure if its this one." << std::endl;
+           std::cout << "GOAL longitude:             " << lon_f_deg << " degrees. Not sure if its this one." << std::endl;
+           std::cout << "Initial velocity:           " << v_i << " m/s. Unclear if Earth-Fixed." << std::endl;
+           std::cout << "Initial flight-path angle:  " << gamma_i_deg << " degrees." << std::endl;
+           std::cout << "Initial heading:            " << chi_i_deg << " degrees." << std::endl;
+       }
+       std::cout << "Ground distance to cover " << std::endl;
+       std::cout << "  Haversine Formula:        " << d_haversine / 1E3 << " km." << std::endl;
+       std::cout << "  Spherical Law of Cosines: " << d_spherical_law_cosines / 1E3 << " km." << std::endl;
+       std::cout << "Initial Heading angle:      " << chi_i_deg_calc << " degrees. Calculated."  << std::endl;
+       std::cout << "Optimization method:        " << algo_method << std::endl;
+       std::cout << "Population size:            " << populationSize << std::endl;
+       std::cout << "Num. of archipelagos:       " << archipelagoSize << std::endl;
+       std::cout << "Num. of evolutions:         " << evolutions << std::endl;
+       std::cout << "Output subfolder: " << std::endl;
+       std::cout << "     '" << outputSubFolder <<"'" << std::endl;
+       std::cout << " DV " << " Lower Boundary " << " Upper Boundary " << std::endl;
     for( int i = 0; i < N; i++ )
     {
         std::cout << std::fixed << std::setprecision(10) <<
@@ -252,7 +350,6 @@ int main()
                      std::setw(16) << bounds[ 0 ][ i ] <<
                      std::setw(16) << bounds[ 1 ][ i ] << std::endl;
     }
-
 
 
     ////////////////////////////////////////////////////////////////////////////

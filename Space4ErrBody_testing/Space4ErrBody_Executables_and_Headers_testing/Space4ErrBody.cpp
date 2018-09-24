@@ -76,6 +76,8 @@
 #include "applicationOutput_tudat.h"
 #include "getStuff.h"
 #include "updateGuidance.h"
+#include "updateGuidance_val.h"
+
 //#include <Tudat/Astrodynamics/BasicAstrodynamics/stateVectorIndices.h>
 //#include <Tudat/Astrodynamics/BasicAstrodynamics/sphericalStateConversions.h>
 //#include <Tudat/Astrodynamics/Ephemerides/ephemeris.h>
@@ -85,7 +87,7 @@
 //#include <Tudat/Mathematics/NumericalIntegrators/rungeKutta4Integrator.h>
 //#include <Tudat/Astrodynamics/Ephemerides/frameManager.h>
 
-Space4ErrBody_Ballistic::Space4ErrBody_Ballistic(
+Space4ErrBody::Space4ErrBody(
         const std::vector< std::vector< double > > &bounds,
         const std::vector< double > &input_data,
         const std::vector< double > &output_settings,
@@ -99,13 +101,20 @@ Space4ErrBody_Ballistic::Space4ErrBody_Ballistic(
 //    useExtendedDynamics_( useExtendedDynamics ){ }
 
 //! Descriptive name of the problem
-std::string Space4ErrBody_Ballistic::get_name() const
+std::string Space4ErrBody::get_name() const
 {
-    return "AMS to IAD Ballistic Trajectory: 10/28/2018  11:00:00 AM";
+    if ( int(input_data_[0]) == 0 )
+    {
+        return "AMS to IAD Ballistic Trajectory: 10/28/2018  11:00:00 AM";
+    }
+    else
+    {
+        return "Validation: HORUS Entry towards Kourou";
+    }
 }
 
 //! Get bounds
-std::pair<std::vector<double>, std::vector<double> > Space4ErrBody_Ballistic::get_bounds() const
+std::pair<std::vector<double>, std::vector<double> > Space4ErrBody::get_bounds() const
 {
     return { problemBounds_[0], problemBounds_[1] };
 }
@@ -121,7 +130,7 @@ std::pair<std::vector<double>, std::vector<double> > Space4ErrBody_Ballistic::ge
 //! This function seems to be able to get quite long. It is possible to create a
 //! series of functions that could create a more compact display? How feasible
 //! would that be?
-std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double > &x )  const
+std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  const
 {
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -148,34 +157,34 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ///////////////////////            UNPACK SOME DATA              //////////////////////////////////////////////////////
+    ///////////////////////            UNPACK INPUT DATA             //////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //  std::cout << "Unpacking data" << std::endl;
 
-    //! Unpack input data values.
-    //! Declare variables to unpack from input_data. This list may include
-    //! variables that may not be used further.
-    double Ref_area;
-    double M_i;
-    double v_i;
-    double gamma_i_deg;
-    double chi_i_deg;
-    double AoA_deg;
-    double h_i;
-    double lat_i_deg;
-    double lon_i_deg;
-    double h_f;
-    double lat_f_deg;
-    double lon_f_deg;
+    //! Set simulation start epoch.
+    const double simulationStartEpoch = input_data_[1]; // 10/28/2018  11:00:00 AM  ---> 2458419.95833333000000000000000
+
+    //! Set simulation end epoch.
+    // const double simulationEndEpoch = simulationStartEpoch + 18000.0; // 5 hours
+    const double simulationEndEpoch = simulationStartEpoch + input_data_[2];
+
+    //! Set numerical integration fixed step size.
+    const double fixedStepSize = input_data_[3];
+
+    //! Assign Reference area
+    const double Ref_area = input_data_[4]; //m^2
+
+    //! Assign initial mass
+    const double M_i = input_data_[6]; // kg
+
+    //! Declare various variables to unpack from input_data depending on a
+    //! conditional.
+    double v_i, gamma_i_deg, chi_i_deg, AoA_deg, AoA_rad;
+    double h_i, lat_i_deg,lon_i_deg;
+    double h_f, lat_f_deg,lon_f_deg;
 
     if ( int(input_data_[0]) == 0 )
     {
-        //! Assign Reference area
-        Ref_area    = input_data_[4]; //m^2
-
-        //! Assign initial mass
-        M_i         = input_data_[6]; // kg
-
         //! Assign the initial and final position conditions.
         h_i         = input_data_[7]; //0 * 1E3; // m
         lat_i_deg   = input_data_[8]; //52.30805556; //52deg 18’29"N
@@ -189,17 +198,10 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
         gamma_i_deg = x[1]; // FIND IT!
         chi_i_deg   = x[2]; // FIND IT!
         AoA_deg     = x[3]; // FIND IT!
-        const double AoA_rad     = unit_conversions::convertDegreesToRadians( AoA_deg );
-
+        AoA_rad     = unit_conversions::convertDegreesToRadians( AoA_deg );
     }
     else
     {
-        //! Assign Reference area
-        Ref_area    = input_data_[4]; // ??? m^2 // dont have it yet
-
-        //! Assign initial mass
-        M_i         = input_data_[6]; //??? * 1E3 kg // dont have it yet
-
         //! Assign the initial and final position conditions.
         h_i         = input_data_[10]; //122 * 1E3 m // given
         lat_i_deg   = input_data_[11]; //-22.37 deg // given
@@ -212,7 +214,6 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
         v_i         = x[0]; // FIND IT!
         gamma_i_deg = x[1]; // FIND IT!
         chi_i_deg   = x[2]; // FIND IT!
-
     }
 
     //! Convert angles from degrees to radians
@@ -222,25 +223,9 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
     const double lon_f_rad   = unit_conversions::convertDegreesToRadians( lon_f_deg );
     const double gamma_i_rad = unit_conversions::convertDegreesToRadians( gamma_i_deg );
     const double chi_i_rad   = unit_conversions::convertDegreesToRadians( chi_i_deg );
-    //const double AoA_rad     = unit_conversions::convertDegreesToRadians( AoA_deg );
 
     //! Calculate initial heading angle: https://www.movable-type.co.uk/scripts/latlong.html
     //std::atan2( std::sin( lon_f_rad - lon_i_rad ) * std::cos( lat_f_rad ) , std::cos( lat_i_rad ) * std::sin( lat_f_rad ) - std::sin( lat_i_rad ) * std::cos( lat_f_rad ) * std::cos( lon_f_rad - lon_i_rad ) );
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ///////////////////////            DEFINE TIMEFRAME & TIMESTEP            /////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //  std::cout << "Defining timeframe and timestep" << std::endl;
-
-    //! Set simulation start epoch.
-    const double simulationStartEpoch = input_data_[1]; // 10/28/2018  11:00:00 AM  ---> 2458419.95833333000000000000000
-
-    //! Set simulation end epoch.
-    // const double simulationEndEpoch = simulationStartEpoch + 18000.0; // 5 hours
-    const double simulationEndEpoch = simulationStartEpoch + input_data_[2];
-
-    //! Set numerical integration fixed step size.
-    const double fixedStepSize = input_data_[3];
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            CREATE ENVIRONMENT            //////////////////////////////////////////////////////
@@ -315,7 +300,6 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
     }
     //!--------------------------------------------------------------
 
-
     //! Create Earth object
     NamedBodyMap bodyMap = createBodies( bodySettings );
 
@@ -329,10 +313,10 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
 //    std::cout << "Creating vehicle" << std::endl;
 
     //! Assign reference area
-    const double referenceArea = input_data_[3];//4.0*000000001;
+//    const double referenceArea = input_data_[3];//4.0*000000001;
 
     //! Assign constant mass
-    const double vehicleMass = input_data_[5];//4.0*000000001;
+//    const double vehicleMass = input_data_[5];//4.0*000000001;
     //double aerodynamicCoefficient = input_data_[4];//1.2 * 0.0000000000001;
     //boost::shared_ptr< simulation_setup::AerodynamicCoefficientSettings > aerodynamicCoefficientSettings =
     //       boost::make_shared< ConstantAerodynamicCoefficientSettings >(
@@ -368,7 +352,7 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
     boost::shared_ptr< AerodynamicCoefficientSettings > aerodynamicCoefficientSettings =
         readTabulatedAerodynamicCoefficientsFromFiles(
                 forceCoefficientFiles,
-                referenceArea,
+                Ref_area,
                 independentVariableNames,
                 areCoefficientsInAerodynamicFrame,
                 areCoefficientsInNegativeAxisDirection );
@@ -389,13 +373,15 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
     bodyMap[ "HORUS" ] = boost::make_shared< simulation_setup::Body >( );
 
     //! Set body Mass.
-    bodyMap[ "HORUS" ]->setConstantBodyMass( vehicleMass );
+    bodyMap[ "HORUS" ]->setConstantBodyMass( M_i );
 
     //! Set vehicle aerodynamic coefficients.
     bodyMap[ "HORUS" ]->setAerodynamicCoefficientInterface(
                         createAerodynamicCoefficientInterface( aerodynamicCoefficientSettings, "HORUS" ) );
 
-    //! Finalize body creation.
+    //! Finalize body creation. Not entirely sure what this does. I believe it
+    //! may place the body (Earth) at the barycenter. Probably another hack to
+    //! facilitate bringing in everything into the inertial frame.
     setGlobalFrameBodyEphemerides( bodyMap, "SSB", "J2000" );
 
 
@@ -444,8 +430,17 @@ std::vector<double> Space4ErrBody_Ballistic::fitness( const std::vector< double 
     //! Guidance is set AFTER the accelerations and BEFORE propagating.
 
     //! Declare and assign aerodynamic guidance functions.
-    boost::shared_ptr< aerodynamics::AerodynamicGuidance > aerodynamicGuidance =
-            boost::make_shared< FlightConditionsBasedAerodynamicGuidance >(bodyMap, "HORUS");
+    boost::shared_ptr< aerodynamics::AerodynamicGuidance > aerodynamicGuidance;
+    if ( int(input_data_[0]) == 0 )
+    {
+        aerodynamicGuidance =
+            boost::make_shared< MyAerodynamicGuidance >(bodyMap, "HORUS");
+    }
+    else
+    {
+        aerodynamicGuidance =
+            boost::make_shared< ValidationAerodynamicGuidance >(bodyMap, "HORUS");
+    }
 
     //! Set Guidance angle functions.
     setGuidanceAnglesFunctions( aerodynamicGuidance, bodyMap.at( "HORUS" ) );

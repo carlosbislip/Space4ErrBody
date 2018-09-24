@@ -27,13 +27,13 @@ using namespace pagmo;
 //using namespace pagmo::problem;
 
 // Define the problem PaGMO-style
-struct Space4ErrBody_Ballistic {
+struct Space4ErrBody {
 
     // Empty constructor
-    Space4ErrBody_Ballistic( ) { }
+    Space4ErrBody( ) { }
 
     //! Constructor that sets boundaries of independent variables.
-    Space4ErrBody_Ballistic( const std::vector< std::vector< double > > &bounds,
+    Space4ErrBody( const std::vector< std::vector< double > > &bounds,
                              const std::vector< double > &input_data,
                              const std::vector< double > &output_settings,
                              const std::string &outputSubFolder );
@@ -87,6 +87,6 @@ private:
 };
 
 
-//PAGMO_REGISTER_PROBLEM(pagmo::Space4ErrBody_Ballistic)
+//PAGMO_REGISTER_PROBLEM(pagmo::Space4ErrBody)
 
 #endif // TUDAT_EXAMPLE_PAGMO_PROBLEM_PROPAGATION_TARGETING_HPP

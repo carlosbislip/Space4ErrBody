@@ -16,6 +16,7 @@ set(SPACE4ERRBODY_HEADERS
   "${CMAKE_CURRENT_SOURCE_DIR}/saveOptimizationResults.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/getStuff.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/updateGuidance.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/updateGuidance_val.h"
 #  "Tudat/Astrodynamics/Aerodynamics/flightConditions.h"
   #"${CMAKE_CURRENT_SOURCE_DIR}/getCurrentDateTime.h"
   #"${CMAKE_CURRENT_SOURCE_DIR}/getOptimizationSettings.h"
@@ -28,7 +29,8 @@ set(SPACE4ERRBODY_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/getData.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/getFiles.cpp"
 #  "Tudat/Astrodynamics/Aerodynamics/flightConditions.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/updateGuidance.cpp"
+"${CMAKE_CURRENT_SOURCE_DIR}/updateGuidance.cpp"
+"${CMAKE_CURRENT_SOURCE_DIR}/updateGuidance_val.cpp"
 #  "${CMAKE_CURRENT_SOURCE_DIR}/getConditions.cpp"
 #  "${CMAKE_CURRENT_SOURCE_DIR}/getDVBounds.cpp"
 )

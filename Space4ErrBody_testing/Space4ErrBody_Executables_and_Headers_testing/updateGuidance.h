@@ -11,10 +11,10 @@ namespace tudat
 {
 namespace aerodynamics
 {
-class FlightConditionsBasedAerodynamicGuidance: public AerodynamicGuidance
+class MyAerodynamicGuidance: public AerodynamicGuidance
 {
 public:
-    FlightConditionsBasedAerodynamicGuidance(
+    MyAerodynamicGuidance(
             const tudat::simulation_setup::NamedBodyMap& bodyMap,
             const std::string vehicleName )
     {

@@ -18,7 +18,7 @@ namespace aerodynamics
 //! Trying to implement a simple aerodynamic guidance. Initially taken from the
 //! TUDAT website.
 //! http://tudat.tudelft.nl/tutorials/tudatFeatures/accelerationSetup/aerodynamicGuidance.html#FlightConditions
-void FlightConditionsBasedAerodynamicGuidance::updateGuidance( const double currentTime )
+void MyAerodynamicGuidance::updateGuidance( const double currentTime )
 {
 
     //using namespace tudat;

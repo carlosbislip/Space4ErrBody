@@ -49,7 +49,9 @@ int main()
 
 
     //! Get conditions that are passed to the propagator. Size of vector is NOT
-    //! pre-defined.
+    //! pre-defined. The structure defined here is that for actual run, not for
+    //! validation cases.
+    //!     Validation flag
     //!     initial Epoch
     //!     max additional time from initial epoch
     //!     fixed time step
@@ -112,6 +114,7 @@ int main()
     tudat::spice_interface::loadStandardSpiceKernels( );
 
     //! Set seed for reproducible results. Should I make this an input value?
+    //! It may be better to hardcode this value to avoid issues down the line.
     pagmo::random_device::set_seed(234);
 
     //! Determine number of parameters to vary based of size of dv_bounds input.
@@ -166,7 +169,7 @@ int main()
     //! "space4Errbody.h" If I want to use it, maybe the "extended dynamics'
     //! cases would then include aerodynamics and eventually thrust. Probably
     //! not. might be a bit too messy.
-    problem prob{Space4ErrBody_Ballistic( bounds, input_data, output_settings, outputSubFolder) };
+    problem prob{Space4ErrBody( bounds, input_data, output_settings, outputSubFolder) };
 
     //! Retrieve algorithm. Three options available in the following function:
     //!        getMultiObjectiveAlgorithm
@@ -198,28 +201,20 @@ int main()
     //! before that, let's print out some stuff to the screen to make sure we
     //! know what's supposed to happen.
 
-    //! Declare variables to unpack from input_data. This list may include
-     //! variables that may not be used further.
-     double Ref_area;
-     double M_i;
-     double v_i;
-     double gamma_i_deg;
-     double chi_i_deg;
-     double h_i;
-     double lat_i_deg;
-     double lon_i_deg;
-     double h_f;
-     double lat_f_deg;
-     double lon_f_deg;
+    //! Assign Reference area
+    const double Ref_area = input_data[4]; //m^2
 
-     if ( int(input_data[0]) == 0 )
+    //! Assign initial mass
+    const double M_i = input_data[6]; // kg
+
+    //! Declare various variables to unpack from input_data depending on a
+    //! conditional.
+    double v_i, gamma_i_deg, chi_i_deg;
+    double h_i, lat_i_deg,lon_i_deg;
+    double h_f, lat_f_deg,lon_f_deg;
+
+    if ( int(input_data[0]) == 0 )
      {
-         //! Assign Reference area
-         Ref_area    = input_data[4]; //m^2
-
-         //! Assign initial mass
-         M_i         = input_data[6]; // kg
-
          //! Assign the initial and final position conditions.
          h_i         = input_data[7]; //0 * 1E3; // m
          lat_i_deg   = input_data[8]; //52.30805556; //52deg 18’29"N
@@ -230,11 +225,8 @@ int main()
      }
      else
      {
-         //! Assign Reference area
-         Ref_area    = input_data[4]; // ??? m^2 // dont have it yet
-
-         //! Assign initial mass
-         M_i         = input_data[6]; //??? * 1E3 kg // dont have it yet
+         //! Assign expected initial values. Only used to display and remind
+         //! what the goal values are supposed to be.
          v_i         = input_data[7]; //7435.5 m/s // given
          gamma_i_deg = input_data[8]; //-1.437 * 1E3 kg // given
          chi_i_deg   = input_data[9]; //70.757 deg // given
@@ -246,7 +238,6 @@ int main()
          h_f         = input_data[13]; //25 * 1E3 m // arbitrary?
          lat_f_deg   = input_data[14]; //5.237222 deg //5 deg 14’14"N // arbitrary?
          lon_f_deg   = input_data[15]; //-52.760556 deg //52 deg 45’38"W// arbitrary?
-
      }
 
     //! Convert angles from degrees to radians
@@ -291,7 +282,7 @@ int main()
     }
     }
 
-    //! Print out some stuff.
+    //! Print to Terminal screen.
        std::cout << " " << std::endl;
        if ( int(input_data[0]) == 0 )
        {

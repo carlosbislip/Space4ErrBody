@@ -14,6 +14,7 @@ namespace aerodynamics
 class ValidationAerodynamicGuidance: public AerodynamicGuidance
 {
 public:
+
     ValidationAerodynamicGuidance(
             const tudat::simulation_setup::NamedBodyMap& bodyMap,
             const std::string vehicleName)
@@ -21,6 +22,9 @@ public:
     {
         FlightConditions_ = boost::dynamic_pointer_cast< AtmosphericFlightConditions >(
                     bodyMap.at( vehicleName )->getFlightConditions( ) );
+        lat_f_rad_ = bodyMap.at( vehicleName )->getTargetLat( ) ;
+        lon_f_rad_ = bodyMap.at( vehicleName )->getTargetLon( ) ;
+//     const double    lon_f_rad_ = lon_f_rad;
     }
 
     void updateGuidance(const double currentTime);
@@ -28,6 +32,10 @@ public:
 private:
 
     boost::shared_ptr< AtmosphericFlightConditions > FlightConditions_;
+    double lat_f_rad_;
+    double lon_f_rad_;
+
+
 };
 
 } // namespace aerodynamics

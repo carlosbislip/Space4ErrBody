@@ -1011,11 +1011,15 @@ public:
         target_lat_ = target_lat;
     }
 
-        void setTargetLon( const double target_lon )
+    void setTargetLon( const double target_lon )
     {
         target_lon_ = target_lon;
     }
 
+    void setStartingEpoch( const double startingEpoch )
+    {
+        startingEpoch_ = startingEpoch;
+    }
     //! Function to get the function returning body mass as a function of time
     /*!
      * Function to get the function returning body mass as a function of time
@@ -1059,6 +1063,10 @@ public:
     double getTargetLon( )
     {
         return target_lon_;
+    }
+    double setStartingEpoch( )
+    {
+        return startingEpoch_;
     }
 
     //! Function to retrieve the body moment-of-inertia tensor.
@@ -1252,9 +1260,13 @@ private:
     //! Container object with hardware systems present on/in body (typically only non-NULL for a vehicle).
     boost::shared_ptr< system_models::VehicleSystems > vehicleSystems_;
 
-   //! Mass of body (default set to zero, calculated from GravityFieldModel when it is set).
+   //! Passing target coordinates for guidance logic
     double target_lat_;
     double target_lon_;
+
+    //! Passing starting epoch for guidance logic
+    double startingEpoch_;
+
 
 };
 

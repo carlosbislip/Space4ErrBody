@@ -429,6 +429,12 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
     //! Guidance is set AFTER the accelerations and BEFORE propagating.
 
+    //! Set body Mass.
+    bodyMap[ "HORUS" ]->setTargetLat( lat_f_rad );
+    bodyMap[ "HORUS" ]->setTargetLon( lon_f_rad );
+
+
+
     //! Declare and assign aerodynamic guidance functions.
     boost::shared_ptr< aerodynamics::AerodynamicGuidance > aerodynamicGuidance;
     if ( int(input_data_[0]) == 0 )
@@ -439,7 +445,9 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     else
     {
         aerodynamicGuidance =
-            boost::make_shared< ValidationAerodynamicGuidance >(bodyMap, "HORUS");
+            boost::make_shared< ValidationAerodynamicGuidance >(
+                    bodyMap,
+                    "HORUS");
     }
 
     //! Set Guidance angle functions.

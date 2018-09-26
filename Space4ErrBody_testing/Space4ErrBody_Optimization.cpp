@@ -236,8 +236,8 @@ int main()
          lat_i_deg   = input_data[11]; //-22.37 deg // given
          lon_i_deg   = input_data[12]; //-106.7 deg // given
          h_f         = input_data[13]; //25 * 1E3 m // arbitrary?
-         lat_f_deg   = input_data[14]; //5.237222 deg //5 deg 14’14"N // arbitrary?
-         lon_f_deg   = input_data[15]; //-52.760556 deg //52 deg 45’38"W// arbitrary?
+         lat_f_deg   = input_data[14]; //5.237222 deg //5 deg 14’14"N // 5.0 deg according to Mooij Dissertation
+         lon_f_deg   = input_data[15]; //-52.760556 deg //52 deg 45’38"W// -53.0 deg according to Mooij Dissertation
      }
 
     //! Convert angles from degrees to radians
@@ -247,8 +247,8 @@ int main()
     const double lon_f_rad = unit_conversions::convertDegreesToRadians( lon_f_deg );
 
     //! Calculate initial heading angle: https://www.movable-type.co.uk/scripts/latlong.html
-    const double chi_i_rad = std::atan2( std::sin( lon_f_rad - lon_i_rad ) * std::cos( lat_f_rad ) , std::cos( lat_i_rad ) * std::sin( lat_f_rad ) - std::sin( lat_i_rad ) * std::cos( lat_f_rad ) * std::cos( lon_f_rad - lon_i_rad ) );
-    double chi_i_deg_calc = unit_conversions::convertRadiansToDegrees( chi_i_rad );
+    const double chi_i_rad_calc = std::atan2( std::sin( lon_f_rad - lon_i_rad ) * std::cos( lat_f_rad ) , std::cos( lat_i_rad ) * std::sin( lat_f_rad ) - std::sin( lat_i_rad ) * std::cos( lat_f_rad ) * std::cos( lon_f_rad - lon_i_rad ) );
+    double chi_i_deg_calc = unit_conversions::convertRadiansToDegrees( chi_i_rad_calc );
     //! If heading angle is negative, this may help visualize it.
     if (chi_i_deg_calc < 0)
     {
@@ -257,8 +257,8 @@ int main()
 
     //! Calculate ground distance to cover using Haversine formula and Sperical Law of Cosines: https://www.movable-type.co.uk/scripts/latlong.html
     const double a = std::sin( (lat_f_rad - lat_i_rad) / 2) * std::sin( (lat_f_rad - lat_i_rad) / 2) + std::cos( lat_i_rad ) * std::cos( lon_i_rad ) * std::sin( (lon_f_rad - lon_i_rad) / 2) * std::sin( (lon_f_rad - lon_i_rad) / 2);
-    const double c = 2 * std::atan2( std::sqrt(a) , std::sqrt(1 - a) );
-    const double d_haversine = c * spice_interface::getAverageRadius( "Earth" );
+    const double d_angular = 2 * std::atan2( std::sqrt(a) , std::sqrt(1 - a) );
+    const double d_haversine = d_angular * spice_interface::getAverageRadius( "Earth" );
     const double d_spherical_law_cosines =  std::acos( std::sin(lat_i_rad) * std::sin(lat_f_rad) + std::cos(lat_i_rad) * std::cos(lat_f_rad) * std::cos(lon_f_rad-lon_i_rad) ) * spice_interface::getAverageRadius( "Earth" );
 
     const int index = int(opt_set[0]);

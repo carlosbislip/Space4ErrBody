@@ -1064,7 +1064,7 @@ public:
     {
         return target_lon_;
     }
-    double setStartingEpoch( )
+    double getStartingEpoch( )
     {
         return startingEpoch_;
     }

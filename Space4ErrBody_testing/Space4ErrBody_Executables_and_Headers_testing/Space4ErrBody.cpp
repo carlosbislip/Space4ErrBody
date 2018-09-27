@@ -150,6 +150,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     using namespace tudat::mathematical_constants;
     using namespace tudat::input_output;
     using namespace tudat::unit_conversions;
+    using namespace tudat::reference_frames;
     using namespace tudat;
     using namespace tudat_applications;
 
@@ -429,10 +430,12 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
     //! Guidance is set AFTER the accelerations and BEFORE propagating.
 
-    //! Set body Mass.
+    //! Set target coordinates.
     bodyMap[ "HORUS" ]->setTargetLat( lat_f_rad );
     bodyMap[ "HORUS" ]->setTargetLon( lon_f_rad );
 
+    //! Pass starting epoch to body.
+    bodyMap[ "HORUS" ]->setStartingEpoch( simulationStartEpoch );
 
 
     //! Declare and assign aerodynamic guidance functions.
@@ -528,9 +531,40 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //                "Earth",
     //                1 ) );
     dependentVariablesList.push_back(
-                boost::make_shared< SingleDependentVariableSaveSettings >(
-                    total_acceleration_dependent_variable,
-                    "HORUS" ) );
+                boost::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
+                    "HORUS",
+                    latitude_angle,
+                    "Earth") );
+    dependentVariablesList.push_back(
+                boost::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
+                    "HORUS",
+                    longitude_angle,
+                    "Earth") );
+    dependentVariablesList.push_back(
+                boost::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
+                    "HORUS",
+                    heading_angle,
+                    "Earth") );
+    dependentVariablesList.push_back(
+                boost::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
+                    "HORUS",
+                    flight_path_angle,
+                    "Earth") );
+    dependentVariablesList.push_back(
+                boost::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
+                    "HORUS",
+                    angle_of_attack,
+                    "Earth") );
+    dependentVariablesList.push_back(
+                boost::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
+                    "HORUS",
+                    angle_of_sideslip,
+                    "Earth") );
+    dependentVariablesList.push_back(
+                boost::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
+                    "HORUS",
+                    bank_angle,
+                    "Earth") );
 
     // Create object with list of dependent variables
     boost::shared_ptr< DependentVariableSaveSettings > dependentVariablesToSave =
@@ -556,6 +590,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                 altitude_dependent_variable,
                 "HORUS",
                 "Earth" );
+
     boost::shared_ptr< PropagationTerminationSettings > terminationSettings =
             boost::make_shared< PropagationDependentVariableTerminationSettings >(
                 terminationDependentVariable,

@@ -49,26 +49,29 @@ const double abs_chi_err_deg = abs( chi_err_deg );
 //////////////// Calc Distance to target
 //! Calculate ground distance to cover using Haversine formula and Sperical Law of Cosines: https://www.movable-type.co.uk/scripts/latlong.html
 //! Maybe consider Vicenty's formulation: https://www.movable-type.co.uk/scripts/latlong-vincenty.html
-const double a = std::sin( (lat_f_rad_ - lat_c_rad) / 2) * std::sin( (lat_f_rad_ - lat_c_rad) / 2) + std::cos( lat_c_rad ) * std::cos( lon_c_rad ) * std::sin( (lon_f_rad_ - lon_c_rad) / 2) * std::sin( (lon_f_rad_ - lon_c_rad) / 2);
-const double d_rad = 2 * std::atan2( std::sqrt(a) , std::sqrt(1 - a) );
+//const double a = std::sin( (lat_f_rad_ - lat_c_rad) / 2) * std::sin( (lat_f_rad_ - lat_c_rad) / 2) + std::cos( lat_c_rad ) * std::cos( lon_c_rad ) * std::sin( (lon_f_rad_ - lon_c_rad) / 2) * std::sin( (lon_f_rad_ - lon_c_rad) / 2);
+//const double d_rad = 2 * std::atan2( std::sqrt(a) , std::sqrt(1 - a) );
+const double d_rad =  std::acos( std::sin(lat_c_rad) * std::sin(lat_f_rad_) + std::cos(lat_c_rad) * std::cos(lat_f_rad_) * std::cos(lon_f_rad_-lon_c_rad) );
 const double d_deg = unit_conversions::convertRadiansToDegrees( d_rad );
 
 int sign = 1;
-if ( currentBankAngle_ > 0.0 )
-{
-    sign = 1;
-}
-else if ( currentBankAngle_ < 0.0 )
+if ( currentBankAngle_ < 0.0 )
 {
     sign = -1;
 }
 
+//! Declare and determine if bank reversal conditional. If result is lower than
+//! zero, bank reversal could happen. Should be less than zero if the vehicle is
+//! in fact aiming away form the target. (is it really?)
 double reversal_conditional = chi_err_deg * sign;
+
+//! Declare reversal flag
 bool reversal = false;
-//////////////// Determine SIGN of bank angle
-//! I believe I may need some time history to properly determine if a sign
-//! change is required. Or should this also be somehow included in the
-//! determination of the bank angle?
+
+//! Determine SIGN of bank angle. This overly complicated segment figures out
+//! the current conditions and if the bank angle sign indeed needs to change.
+//! It considers the distance from the target, the absolute heading error, and
+//! the reversal conditional.
 if ( ( d_deg >= 30 ) && ( abs_chi_err_deg > 15 ) && ( reversal_conditional < 0 ) )
 {
     reversal = true;
@@ -85,23 +88,66 @@ else if ( ( d_deg >= 30 ) && ( abs_chi_err_deg < 15 ) && ( reversal_conditional 
 {
     reversal = false;
 }
-else if ( ( d_deg < 30 ) && ( d_deg > 10 ) && ( abs_chi_err_deg > abs( 23 + (d_deg - 10) * ( 15 - 23 ) / ( 30 - 10 )) ) && ( reversal_conditional < 0 ) )
+else if ( ( d_deg < 30 ) && ( d_deg >= 10 ) && ( abs_chi_err_deg > abs( 23 + (d_deg - 10) * ( 15 - 23 ) / ( 30 - 10 )) ) && ( reversal_conditional < 0 ) )
 {
     reversal = true;
 }
-else if ( ( d_deg < 30 ) && ( d_deg > 10 ) && ( abs_chi_err_deg > abs( 23 + (d_deg - 10) * ( 15 - 23 ) / ( 30 - 10 )) ) && ( reversal_conditional > 0 ) )
+else if ( ( d_deg < 30 ) && ( d_deg >= 10 ) && ( abs_chi_err_deg > abs( 23 + (d_deg - 10) * ( 15 - 23 ) / ( 30 - 10 )) ) && ( reversal_conditional > 0 ) )
 {
     reversal = false;
 }
-else if ( ( d_deg < 30 ) && ( d_deg > 10 ) && ( abs_chi_err_deg < abs( 23 + (d_deg - 10) * ( 15 - 23 ) / ( 30 - 10 )) ) && ( reversal_conditional > 0 ) )
+else if ( ( d_deg < 30 ) && ( d_deg >= 10 ) && ( abs_chi_err_deg < abs( 23 + (d_deg - 10) * ( 15 - 23 ) / ( 30 - 10 )) ) && ( reversal_conditional > 0 ) )
 {
     reversal = false;
 }
-
-
-//else if ( ( currentTime >= 924 ) && ( currentTime <= 1319 ) )
-
-
+else if ( ( d_deg < 10 ) && ( d_deg >= 0.94331 ) && ( abs_chi_err_deg > abs( 23 + (d_deg - 0.94331) * ( 23 - 23 ) / ( 10 - 0.94331 )) ) && ( reversal_conditional < 0 ) )
+{
+    reversal = true;
+}
+else if ( ( d_deg < 10 ) && ( d_deg >= 0.94331 ) && ( abs_chi_err_deg > abs( 23 + (d_deg - 0.94331) * ( 23 - 23 ) / ( 10 - 0.94331 )) ) && ( reversal_conditional > 0 ) )
+{
+    reversal = false;
+}
+else if ( ( d_deg < 10 ) && ( d_deg >= 0.94331 ) && ( abs_chi_err_deg < abs( 23 + (d_deg - 0.94331) * ( 23 - 23 ) / ( 10 - 0.94331 )) ) && ( reversal_conditional > 0 ) )
+{
+    reversal = false;
+}
+else if ( ( d_deg < 0.94331 ) && ( d_deg >= 0.91452 ) && ( abs_chi_err_deg > abs( 20.36779 + (d_deg - 0.91452) * ( 23 - 20.36779 ) / ( 0.94331 - 0.91452 )) ) && ( reversal_conditional < 0 ) )
+{
+    reversal = true;
+}
+else if ( ( d_deg < 0.94331 ) && ( d_deg >= 0.91452 ) && ( abs_chi_err_deg > abs( 20.36779 + (d_deg - 0.91452) * ( 23 - 20.36779 ) / ( 0.94331 - 0.91452 )) ) && ( reversal_conditional > 0 ) )
+{
+    reversal = false;
+}
+else if ( ( d_deg < 0.94331 ) && ( d_deg >= 0.91452 ) && ( abs_chi_err_deg < abs( 20.36779 + (d_deg - 0.91452) * ( 23 - 20.36779 ) / ( 0.94331 - 0.91452 )) ) && ( reversal_conditional > 0 ) )
+{
+    reversal = false;
+}
+else if ( ( d_deg < 0.91452 ) && ( d_deg >= 0.90739 ) && ( abs_chi_err_deg > abs( 19.62079 + (d_deg - 0.90739) * ( 20.36779 - 19.62079 ) / ( 0.91452 - 0.90739 )) ) && ( reversal_conditional < 0 ) )
+{
+    reversal = true;
+}
+else if ( ( d_deg < 0.91452 ) && ( d_deg >= 0.90739 ) && ( abs_chi_err_deg > abs( 19.62079 + (d_deg - 0.90739) * ( 20.36779 - 19.62079 ) / ( 0.91452 - 0.90739 )) ) && ( reversal_conditional > 0 ) )
+{
+    reversal = false;
+}
+else if ( ( d_deg < 0.91452 ) && ( d_deg >= 0.90739 ) && ( abs_chi_err_deg < abs( 19.62079 + (d_deg - 0.90739) * ( 20.36779 - 19.62079 ) / ( 0.91452 - 0.90739 )) ) && ( reversal_conditional > 0 ) )
+{
+    reversal = false;
+}
+else if ( ( d_deg < 0.90739 ) && ( d_deg >= 0.86476 ) && ( abs_chi_err_deg > abs( 15.20725 + (d_deg - 0.86476) * ( 19.62079 - 15.20725 ) / ( 0.90739 - 0.86476 )) ) && ( reversal_conditional < 0 ) )
+{
+    reversal = true;
+}
+else if ( ( d_deg < 0.90739 ) && ( d_deg >= 0.86476 ) && ( abs_chi_err_deg > abs( 15.20725 + (d_deg - 0.86476) * ( 19.62079 - 15.20725 ) / ( 0.90739 - 0.86476 )) ) && ( reversal_conditional > 0 ) )
+{
+    reversal = false;
+}
+else if ( ( d_deg < 0.90739 ) && ( d_deg >= 0.86476 ) && ( abs_chi_err_deg < abs( 15.20725 + (d_deg - 0.86476) * ( 19.62079 - 15.20725 ) / ( 0.90739 - 0.86476 )) ) && ( reversal_conditional > 0 ) )
+{
+    reversal = false;
+}
     /*
 00.0		& 23.0 &  0.85776  & 14.35438\\
 10.0		& 23.0 &  0.86476  & 15.20725\\
@@ -112,37 +158,37 @@ else if ( ( d_deg < 30 ) && ( d_deg > 10 ) && ( abs_chi_err_deg < abs( 23 + (d_d
 
   */
 
-//const double d_haversine = c * spice_interface::getAverageRadius( "Earth" );
 double currentBankAngle_1;
 
+double runningTime = currentTime - startingEpoch_;
 
 //! Determine value of aerodynamic angles
-if( currentTime < 264 )
+if( runningTime < 264 )
 {
     currentAngleOfAttack_ = 40.0;
     currentBankAngle_1 = 0.0;
 }
-else if ( ( currentTime >= 264 ) && ( currentTime <= 290 ) )
+else if ( ( runningTime >= 264 ) && ( runningTime <= 290 ) )
 {
     currentAngleOfAttack_ = 40.0;
     currentBankAngle_1 = 0.0;
 }
-else if ( ( currentTime >= 290 ) && ( currentTime <= 554 ) )
+else if ( ( runningTime >= 290 ) && ( runningTime <= 554 ) )
 {
     currentAngleOfAttack_ = 40.0;
     currentBankAngle_1 = 79.6;
 }
-else if ( ( currentTime >= 554 ) && ( currentTime <= 686 ) )
+else if ( ( runningTime >= 554 ) && ( runningTime <= 686 ) )
 {
     currentAngleOfAttack_ = 40.0;
     currentBankAngle_1 = 56.0;
 }
-else if ( ( currentTime >= 686 ) && ( currentTime <= 924 ) )
+else if ( ( runningTime >= 686 ) && ( runningTime <= 924 ) )
 {
     currentAngleOfAttack_ = 40.0;
     currentBankAngle_1 = 59.8;
 }
-else if ( ( currentTime >= 924 ) && ( currentTime <= 1319 ) )
+else if ( ( runningTime >= 924 ) && ( runningTime <= 1319 ) )
 {
     currentAngleOfAttack_ = 40.0;
     currentBankAngle_1 = 59.8;
@@ -152,11 +198,12 @@ else
     currentAngleOfAttack_ = 11.5;
     currentBankAngle_1 = 54.0;
 }
-currentBankAngle_ = currentBankAngle_1;
+
+currentBankAngle_ = double(sign) * currentBankAngle_1;
 
 if ( reversal == true )
 {
-   currentBankAngle_ = -currentBankAngle_1;
+   currentBankAngle_ = -currentBankAngle_;
 }
 
 currentAngleOfAttack_ = unit_conversions::convertDegreesToRadians( currentAngleOfAttack_ ) ;

@@ -332,8 +332,8 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //!     Mach number
     //!     Angle of attack
     std::vector< aerodynamics::AerodynamicCoefficientsIndependentVariables > independentVariableNames;
-    independentVariableNames.push_back( aerodynamics::mach_number_dependent );
     independentVariableNames.push_back( aerodynamics::angle_of_attack_dependent );
+    independentVariableNames.push_back( aerodynamics::mach_number_dependent );
 
     //! Define list of files for force coefficients. Entry denotes direction.
     //!     0 : x-direction (C ~D~/C ~X~)
@@ -341,8 +341,8 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //!     2 : z-direction (C ~L~/C ~Z~)
     //! Gotta get my own for HORUS.
     std::map< int, std::string > forceCoefficientFiles;
-    forceCoefficientFiles[ 0 ] = "aurora_CD.txt"; // Set drag coefficient file
-    forceCoefficientFiles[ 2 ] = "aurora_CL.txt"; // Set lift coefficient file
+    forceCoefficientFiles[ 0 ] = "HORUS_CD.txt"; // Set drag coefficient file
+    forceCoefficientFiles[ 2 ] = "HORUS_CL.txt"; // Set lift coefficient file
 
     //! Define reference frame in which the loaded coefficients are defined.
     //! Have to get some more background info here to properly understand it.

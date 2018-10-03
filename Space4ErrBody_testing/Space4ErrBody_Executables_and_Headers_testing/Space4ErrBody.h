@@ -52,19 +52,19 @@ struct Space4ErrBody {
 
     //! Retrieve the number of objectives in problem, e.g. the size of the
     //! vector returned by the fitness function.
-    //! The ballistic case:
-    //!        4 objectives
+    //!        5 objectives
     //!
-    //!         dif_norm = sqrt(dif_lat^2 + dif_lon^2)
-    //!         dif_lat  = lat_f_rad - lat_f_rad_calc
-    //!         dif_lon  = lon_f_rad - lon_f_rad_calc
-    //!         tof      = simulationEndEpoch_calc - simulationStartEpoch
+    //!         dif_norm  = sqrt( dif_lat^2 + dif_lon^2 )
+    //!         dif_lat   = lat_f_rad - lat_f_rad_calc
+    //!         dif_lon   = lon_f_rad - lon_f_rad_calc
+    //!         dif_d_deg = d_deg - unit_conversions::convertDegreesToRadians( term_cond[0] )
+    //!         tof       = simulationEndEpoch_calc - simulationStartEpoch
     //!
     //! The size of the vector returned by the fitness function is then
-    //!        4 rows by 1 column.
+    //!        5 rows by 1 column.
     std::vector< double >::size_type get_nobj() const
     {
-        return 4u;
+        return 5u;
     }
     //std::vector< double >::size_type get_nec() const
    //{

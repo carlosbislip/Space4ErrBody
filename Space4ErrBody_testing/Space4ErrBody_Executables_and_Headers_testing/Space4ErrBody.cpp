@@ -69,7 +69,7 @@
 
 //! Do I need a costumized one for HORUS? Probably.... Maybe not. I believe it
 //! would be sufficient with the aerodynamic coefficient tables.
-#include <Tudat/Astrodynamics/Aerodynamics/UnitTests/testApolloCapsuleCoefficients.h>
+//#include <Tudat/Astrodynamics/Aerodynamics/UnitTests/testApolloCapsuleCoefficients.h>
 
 //! Mine
 #include "Space4ErrBody.h"
@@ -77,6 +77,7 @@
 #include "getStuff.h"
 #include "updateGuidance.h"
 #include "updateGuidance_val.h"
+#include "StopOrNot_val.h"
 
 //#include <Tudat/Astrodynamics/BasicAstrodynamics/stateVectorIndices.h>
 //#include <Tudat/Astrodynamics/BasicAstrodynamics/sphericalStateConversions.h>
@@ -580,7 +581,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //! If I remember correctly, these errors (dnet....) are thrown by NRLMSISE
     //! when the altitude becomes < 0. The good thing is that the propagation
     //! results up until the error should be saved (numerical solution and
-    //! dependent variables), so you can verifyf whether the last step gets
+    //! dependent variables), so you can verify whether the last step gets
     //! close to zero. Note that the very last step, where it crashes, won't be
     //! saved, so you may find that the results don't actually show it getting
     //! below zero.
@@ -591,11 +592,23 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                 "HORUS",
                 "Earth" );
 
+
+    //In case your custom function requires more inputs (e.g., it may depend on the position of the spacecraft or other variables that are not the current time), you can use boost::bind to add more inputs.
+
+    //As an example, the case where the state of the spacecraft is added as an input is shown below:
+
+   // boost::function< Eigen::Vector6d( ) > HORUS_StateFunction =
+     //       boost::bind( &Body::getState, bodyMap.at( "HORUS" ) );
+
     boost::shared_ptr< PropagationTerminationSettings > terminationSettings =
-            boost::make_shared< PropagationDependentVariableTerminationSettings >(
-                terminationDependentVariable,
-                h_f,
-                true );
+            boost::make_shared< PropagationCustomTerminationSettings >(
+                boost::bind( &StopOrNot, bodyMap, "HORUS" ) );
+
+    //boost::shared_ptr< PropagationTerminationSettings > terminationSettings =
+    //        boost::make_shared< PropagationDependentVariableTerminationSettings >(
+    //            terminationDependentVariable,
+    //            h_f,
+    //            true );
 
     //! Create propagation settings.
     boost::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =

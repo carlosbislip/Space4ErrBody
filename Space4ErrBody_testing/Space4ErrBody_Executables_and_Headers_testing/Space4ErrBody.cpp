@@ -78,6 +78,7 @@
 #include "updateGuidance.h"
 #include "updateGuidance_val.h"
 #include "StopOrNot_val.h"
+//#include "getAngularDistance.h"
 
 //#include <Tudat/Astrodynamics/BasicAstrodynamics/stateVectorIndices.h>
 //#include <Tudat/Astrodynamics/BasicAstrodynamics/sphericalStateConversions.h>
@@ -208,9 +209,9 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
         h_i         = input_data_[10]; //122 * 1E3 m // given
         lat_i_deg   = input_data_[11]; //-22.37 deg // given
         lon_i_deg   = input_data_[12]; //-106.7 deg // given
-        h_f         = input_data_[13]; //25 * 1E3 m // arbitrary?
-        lat_f_deg   = input_data_[14]; //5.237222 deg //5 deg 14’14"N // arbitrary?
-        lon_f_deg   = input_data_[15]; //-52.760556 deg //52 deg 45’38"W// arbitrary?
+        h_f         = input_data_[13]; //25 * 1E3 m //
+        lat_f_deg   = input_data_[14]; //5.0 deg //5 deg N //
+        lon_f_deg   = input_data_[15]; //-53 deg //53 deg W//
 
         //! Variables to optimize
         v_i         = x[0]; // FIND IT!
@@ -431,13 +432,24 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
     //! Guidance is set AFTER the accelerations and BEFORE propagating.
 
-    //! Set target coordinates.
+    //! Set initial coordinates. Earth-Fixed.
+    bodyMap[ "HORUS" ]->setInitialLat( lat_i_rad );
+    bodyMap[ "HORUS" ]->setInitialLon( lon_i_rad );
+
+    //! Set target coordinates. Earth-Fixed.
     bodyMap[ "HORUS" ]->setTargetLat( lat_f_rad );
     bodyMap[ "HORUS" ]->setTargetLon( lon_f_rad );
 
+    //! Calculate initial distance to target.
+    //const double initial_d_to_target_rad = std::acos( std::sin(lat_i_rad) * std::sin(lat_f_rad) + std::cos(lat_i_rad) * std::cos(lat_f_rad) * std::cos(lon_f_rad-lon_i_rad) );
+    //const double initial_d_to_target_rad = getAngularDistance(lat_i_rad,lon_i_rad,lat_f_rad,lon_f_rad);
+    //const double initial_d_to_target_deg = unit_conversions::convertRadiansToDegrees( initial_d_to_target_rad );
+
+    //! Set initial distance to target.
+    bodyMap[ "HORUS" ]->setInitialDistanceToTarget( getAngularDistance(lat_i_rad,lon_i_rad,lat_f_rad,lon_f_rad) );
+
     //! Pass starting epoch to body.
     bodyMap[ "HORUS" ]->setStartingEpoch( simulationStartEpoch );
-
 
     //! Declare and assign aerodynamic guidance functions.
     boost::shared_ptr< aerodynamics::AerodynamicGuidance > aerodynamicGuidance;
@@ -600,9 +612,13 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
    // boost::function< Eigen::Vector6d( ) > HORUS_StateFunction =
      //       boost::bind( &Body::getState, bodyMap.at( "HORUS" ) );
 
+    std::vector< double > term_cond;
+    term_cond.push_back( unit_conversions::convertDegreesToRadians( 0.75 ) );
+    term_cond.push_back( 25000 );
+
     boost::shared_ptr< PropagationTerminationSettings > terminationSettings =
             boost::make_shared< PropagationCustomTerminationSettings >(
-                boost::bind( &StopOrNot, bodyMap, "HORUS" ) );
+                boost::bind( &StopOrNot, bodyMap, "HORUS", term_cond ) );
 
     //boost::shared_ptr< PropagationTerminationSettings > terminationSettings =
     //        boost::make_shared< PropagationDependentVariableTerminationSettings >(
@@ -698,6 +714,13 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
    const double lon_f_deg_calc = unit_conversions::convertRadiansToDegrees( lon_f_rad_calc );
    const double lat_f_deg_calc = unit_conversions::convertRadiansToDegrees( lat_f_rad_calc );
 
+   //! Calculate angular distance of final state from target coordinates.
+   const double d_rad = getAngularDistance( lat_f_rad_calc, lon_f_rad_calc, lat_f_rad, lon_f_rad );
+   const double d_deg = unit_conversions::convertRadiansToDegrees( d_rad );
+
+   //! Calculate offset of final angular distance to termination condition distance.
+   const double dif_d_deg = d_deg - unit_conversions::convertDegreesToRadians( term_cond[0] );
+
    //! Calculate offset of final state from GOAL state: Earth-Fixed Frame
    const double dif_lat_rad = lat_f_rad - lat_f_rad_calc;
    const double dif_lon_rad = lon_f_rad - lon_f_rad_calc;
@@ -713,16 +736,18 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
    //!  'proper' it is, yet is what works for the current BALLISTIC case.
    const double dif_norm = std::sqrt( pow(dif_lat_deg,2) + pow(dif_lon_deg,2) );
 
+   //! Calculate difference of final angular distance to
    //! Assign values to Fitness vector! At the moment these are all 'objective
    //! functions'. No constraints have been implemented. To modify this I have
    //! change the header file and define how many are elements are objective
    //! function, equality contraints, and inequlity constraints. This vector
    //! here must contain them is that exact order: nOF, nEC, nIC.
    std::vector< double > delta;
-   delta.push_back(dif_norm);
-   delta.push_back(dif_lat_deg);
-   delta.push_back(dif_lon_deg);
-   delta.push_back(tof);  // Not sure yet how this one affects the optimization. Included for completion.
+   delta.push_back( dif_norm );
+   delta.push_back( dif_lat_deg );
+   delta.push_back( dif_lon_deg );
+   delta.push_back( dif_d_deg );
+   delta.push_back( tof );  // Not sure yet how this one affects the optimization. Included for completion.
 
    //! Print results to terminal. Used to gauge progress.
    std::cout << std::fixed << std::setprecision(10) <<
@@ -734,8 +759,6 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                   std::setw(14) << gamma_i_deg <<
                   std::setw(13) << "heading = " <<
                   std::setw(16) << chi_i_deg <<
-//                  std::setw(7) << "AoA = " <<
-//                  std::setw(14) << x[3] <<
                   std::setw(7) << "lat = " <<
                   std::setw(16) << lat_f_deg_calc <<
                   std::setw(7) << "lon = " <<
@@ -743,8 +766,9 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                   std::setw(14) << "lat offset = " <<
                   std::setw(16) << dif_lat_deg <<
                   std::setw(14) << "lon offset = " <<
-                  std::setw(16) << dif_lon_deg <<std::endl;
-
+                  std::setw(16) << dif_lon_deg <<
+                  std::setw(17) << "angular dist. = " <<
+                  std::setw(16) << d_deg <<std::endl;
    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    ///////////////////////        PROVIDE OUTPUT TO FILE                        //////////////////////////////////////////
    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

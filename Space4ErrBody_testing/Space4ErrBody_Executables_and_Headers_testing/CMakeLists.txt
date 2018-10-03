@@ -33,6 +33,8 @@ set(SPACE4ERRBODY_SOURCES
 "${CMAKE_CURRENT_SOURCE_DIR}/updateGuidance.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/updateGuidance_val.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/StopOrNot_val.cpp"
+"${CMAKE_CURRENT_SOURCE_DIR}/getAngularDistance.cpp"
+"${CMAKE_CURRENT_SOURCE_DIR}/getHeadingToTarget.cpp"
 #  "${CMAKE_CURRENT_SOURCE_DIR}/getConditions.cpp"
 #  "${CMAKE_CURRENT_SOURCE_DIR}/getDVBounds.cpp"
 )

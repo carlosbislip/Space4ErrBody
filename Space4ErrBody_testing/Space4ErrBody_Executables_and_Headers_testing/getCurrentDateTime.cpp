@@ -9,7 +9,7 @@ using namespace std;
  * @param useLocalTime true if want to use local time, default to false (UTC)
  * @return current datetime in the format of "YYYYMMDD HHMMSS"
 */
-std::string getCurrentDateTime(bool useLocalTime) {
+std::string getCurrentDateTime( bool useLocalTime ) {
     std::stringstream currentDateTime;
     // current date/time based on current system
     time_t ttNow = time(0);

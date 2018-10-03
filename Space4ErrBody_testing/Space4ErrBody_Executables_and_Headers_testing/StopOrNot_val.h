@@ -5,7 +5,9 @@
 namespace tudat
 {
 
-bool StopOrNot ( const simulation_setup::NamedBodyMap& bodyMap, const std::string vehicleName);
+bool StopOrNot ( const simulation_setup::NamedBodyMap& bodyMap,
+                 const std::string vehicleName,
+                 const std::vector< double > term_cond);
 
 } // namespace tudat
 

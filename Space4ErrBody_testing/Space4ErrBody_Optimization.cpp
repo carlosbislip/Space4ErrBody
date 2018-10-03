@@ -9,6 +9,7 @@
 #include "Space4ErrBody_Executables_and_Headers_testing/applicationOutput_pagmo.h"
 #include "Space4ErrBody_Executables_and_Headers_testing/saveOptimizationResults.h"
 #include "Space4ErrBody_Executables_and_Headers_testing/getStuff.h"
+
 //#include "Space4ErrBody_Executables_and_Headers_testing/getConditions.h"
 //#include "Space4ErrBody_Executables_and_Headers_testing/getOptimizationSettings.h"
 
@@ -247,8 +248,9 @@ int main()
     const double lon_f_rad = unit_conversions::convertDegreesToRadians( lon_f_deg );
 
     //! Calculate initial heading angle: https://www.movable-type.co.uk/scripts/latlong.html
-    const double chi_i_rad_calc = std::atan2( std::sin( lon_f_rad - lon_i_rad ) * std::cos( lat_f_rad ) , std::cos( lat_i_rad ) * std::sin( lat_f_rad ) - std::sin( lat_i_rad ) * std::cos( lat_f_rad ) * std::cos( lon_f_rad - lon_i_rad ) );
-    double chi_i_deg_calc = unit_conversions::convertRadiansToDegrees( chi_i_rad_calc );
+    //const double chi_i_rad_calc = getHeadingToTarget( lat_i_rad , lon_i_rad , lat_f_rad , lon_f_rad );
+    //std::atan2( std::sin( lon_f_rad - lon_i_rad ) * std::cos( lat_f_rad ) , std::cos( lat_i_rad ) * std::sin( lat_f_rad ) - std::sin( lat_i_rad ) * std::cos( lat_f_rad ) * std::cos( lon_f_rad - lon_i_rad ) );
+    double chi_i_deg_calc = unit_conversions::convertRadiansToDegrees( getHeadingToTarget( lat_i_rad , lon_i_rad , lat_f_rad , lon_f_rad ) );
     //! If heading angle is negative, this may help visualize it.
     if (chi_i_deg_calc < 0)
     {
@@ -259,7 +261,8 @@ int main()
     const double a = std::sin( (lat_f_rad - lat_i_rad) / 2) * std::sin( (lat_f_rad - lat_i_rad) / 2) + std::cos( lat_i_rad ) * std::cos( lon_i_rad ) * std::sin( (lon_f_rad - lon_i_rad) / 2) * std::sin( (lon_f_rad - lon_i_rad) / 2);
     const double d_angular = 2 * std::atan2( std::sqrt(a) , std::sqrt(1 - a) );
     const double d_haversine = d_angular * spice_interface::getAverageRadius( "Earth" );
-    const double d_spherical_law_cosines =  std::acos( std::sin(lat_i_rad) * std::sin(lat_f_rad) + std::cos(lat_i_rad) * std::cos(lat_f_rad) * std::cos(lon_f_rad-lon_i_rad) ) * spice_interface::getAverageRadius( "Earth" );
+    const double d_spherical_law_cosines = unit_conversions::convertRadiansToDegrees( getAngularDistance( lat_i_rad , lon_i_rad , lat_f_rad , lon_f_rad ) );
+    //std::acos( std::sin(lat_i_rad) * std::sin(lat_f_rad) + std::cos(lat_i_rad) * std::cos(lat_f_rad) * std::cos(lon_f_rad-lon_i_rad) ) * spice_interface::getAverageRadius( "Earth" );
 
     const int index = int(opt_set[0]);
     std::string algo_method;
@@ -325,7 +328,7 @@ int main()
        }
        std::cout << "Ground distance to cover " << std::endl;
        std::cout << "  Haversine Formula:        " << d_haversine / 1E3 << " km." << std::endl;
-       std::cout << "  Spherical Law of Cosines: " << d_spherical_law_cosines / 1E3 << " km." << std::endl;
+       std::cout << "  Spherical Law of Cosines: " << d_spherical_law_cosines << " degrees." << std::endl;
        std::cout << "Initial Heading angle:      " << chi_i_deg_calc << " degrees. Calculated."  << std::endl;
        std::cout << "Optimization method:        " << algo_method << std::endl;
        std::cout << "Population size:            " << populationSize << std::endl;

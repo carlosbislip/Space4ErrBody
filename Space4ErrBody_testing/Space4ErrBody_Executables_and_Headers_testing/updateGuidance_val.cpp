@@ -1,5 +1,6 @@
 #include "Space4ErrBody.h"
 #include "updateGuidance_val.h"
+#include "getStuff.h"
 
 #include <Tudat/Mathematics/BasicMathematics/mathematicalConstants.h>
 #include <Tudat/Astrodynamics/BasicAstrodynamics/unitConversions.h>
@@ -39,7 +40,8 @@ const double chi_c_deg = unit_conversions::convertRadiansToDegrees( chi_c_rad );
 
 //! Calculate required heading angle: https://www.movable-type.co.uk/scripts/latlong.html
 //! Maybe consider Vicenty's formulation: https://www.movable-type.co.uk/scripts/latlong-vincenty.html
-const double chi_req_rad = std::atan2( std::sin( lon_f_rad_ - lon_c_rad ) * std::cos( lat_f_rad_ ) , std::cos( lat_c_rad ) * std::sin( lat_f_rad_ ) - std::sin( lat_c_rad ) * std::cos( lat_f_rad_ ) * std::cos( lon_f_rad_ - lon_c_rad ) );
+const double chi_req_rad = getHeadingToTarget( lat_c_rad , lon_c_rad , lat_f_rad_ , lon_f_rad_ );
+        //std::atan2( std::sin( lon_f_rad_ - lon_c_rad ) * std::cos( lat_f_rad_ ) , std::cos( lat_c_rad ) * std::sin( lat_f_rad_ ) - std::sin( lat_c_rad ) * std::cos( lat_f_rad_ ) * std::cos( lon_f_rad_ - lon_c_rad ) );
 const double chi_req_deg = unit_conversions::convertRadiansToDegrees( chi_req_rad );
 
 //! Calculate heading error

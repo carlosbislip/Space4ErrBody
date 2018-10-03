@@ -1016,6 +1016,20 @@ public:
         target_lon_ = target_lon;
     }
 
+    void setInitialLat( const double initial_lat )
+    {
+        initial_lat_ = initial_lat;
+    }
+
+    void setInitialLon( const double initial_lon )
+    {
+        initial_lon_ = initial_lon;
+    }
+    void setInitialDistanceToTarget( const double initial_d_to_target )
+    {
+        initial_d_to_target_ = initial_d_to_target;
+    }
+
     void setStartingEpoch( const double startingEpoch )
     {
         startingEpoch_ = startingEpoch;
@@ -1063,6 +1077,18 @@ public:
     double getTargetLon( )
     {
         return target_lon_;
+    }
+    double getInitialLat( )
+    {
+        return initial_lat_;
+    }        
+    double getInitialLon( )
+    {
+        return initial_lon_;
+    }
+    double getInitialDistanceToTarget( )
+    {
+        return initial_d_to_target_;
     }
     double getStartingEpoch( )
     {
@@ -1260,9 +1286,16 @@ private:
     //! Container object with hardware systems present on/in body (typically only non-NULL for a vehicle).
     boost::shared_ptr< system_models::VehicleSystems > vehicleSystems_;
 
-   //! Passing target coordinates for guidance logic
+   //! Passing target coordinates
     double target_lat_;
     double target_lon_;
+
+    //! Passing initial coordinates
+    double initial_lat_;
+    double initial_lon_;
+
+   //! Passing initial distance to target
+    double initial_d_to_target_;
 
     //! Passing starting epoch for guidance logic
     double startingEpoch_;

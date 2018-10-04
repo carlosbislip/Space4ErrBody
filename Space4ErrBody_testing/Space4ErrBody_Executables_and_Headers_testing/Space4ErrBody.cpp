@@ -427,7 +427,6 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                 bodiesToPropagate,
                 centralBodies );
 
-
     //std::cout << "Creating vehicle: Guidance is set AFTER acceleration models" << std::endl;
 
     //! Guidance is set AFTER the accelerations and BEFORE propagating.
@@ -439,11 +438,6 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //! Set target coordinates. Earth-Fixed.
     bodyMap[ "HORUS" ]->setTargetLat( lat_f_rad );
     bodyMap[ "HORUS" ]->setTargetLon( lon_f_rad );
-
-    //! Calculate initial distance to target.
-    //const double initial_d_to_target_rad = std::acos( std::sin(lat_i_rad) * std::sin(lat_f_rad) + std::cos(lat_i_rad) * std::cos(lat_f_rad) * std::cos(lon_f_rad-lon_i_rad) );
-    //const double initial_d_to_target_rad = getAngularDistance(lat_i_rad,lon_i_rad,lat_f_rad,lon_f_rad);
-    //const double initial_d_to_target_deg = unit_conversions::convertRadiansToDegrees( initial_d_to_target_rad );
 
     //! Set initial distance to target.
     bodyMap[ "HORUS" ]->setInitialDistanceToTarget( getAngularDistance(lat_i_rad,lon_i_rad,lat_f_rad,lon_f_rad) );
@@ -598,11 +592,11 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //! saved, so you may find that the results don't actually show it getting
     //! below zero.
 
-    boost::shared_ptr< SingleDependentVariableSaveSettings > terminationDependentVariable =
-            boost::make_shared< SingleDependentVariableSaveSettings >(
-                altitude_dependent_variable,
-                "HORUS",
-                "Earth" );
+   // boost::shared_ptr< SingleDependentVariableSaveSettings > terminationDependentVariable =
+    //        boost::make_shared< SingleDependentVariableSaveSettings >(
+    //            altitude_dependent_variable,
+    //            "HORUS",
+    //            "Earth" );
 
 
     //In case your custom function requires more inputs (e.g., it may depend on the position of the spacecraft or other variables that are not the current time), you can use boost::bind to add more inputs.
@@ -614,7 +608,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
     std::vector< double > term_cond;
     term_cond.push_back( unit_conversions::convertDegreesToRadians( 0.75 ) );
-    term_cond.push_back( 25000 );
+    term_cond.push_back( h_f );
 
     boost::shared_ptr< PropagationTerminationSettings > terminationSettings =
             boost::make_shared< PropagationCustomTerminationSettings >(
@@ -676,13 +670,13 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     const double simulationEndEpoch_calc =  ( dynamicsSimulator.getEquationsOfMotionNumericalSolution().rbegin() )->first;
 
     //! Told by Dominic that this here gives the final state directly
-    Eigen::Vector6d systemFinalState =  ( dynamicsSimulator.getEquationsOfMotionNumericalSolution().rbegin() )->second;
+    //Eigen::Vector6d systemFinalState =  ( dynamicsSimulator.getEquationsOfMotionNumericalSolution().rbegin() )->second;
 
     //! Calculate Time of Flight
     const double tof = simulationEndEpoch_calc - simulationStartEpoch;
 
     //! Transform final state from Inertial Frame to Earth-Fixed Frame
-    Eigen::Vector6d systemFinalState_EARTH_FIXED = transformStateToTargetFrame( systemFinalState, simulationEndEpoch_calc, earthRotationalEphemeris );
+    //Eigen::Vector6d systemFinalState_EARTH_FIXED = transformStateToTargetFrame( systemFinalState, simulationEndEpoch_calc, earthRotationalEphemeris );
 
     //! Transform expected final state to Inertial frame. This is where the
     //! destination is located at the termination of the simulation.
@@ -705,14 +699,23 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
    //!               body_fixed_relative_spherical_position
    //! as a dependent variable. If possible, convert this calulation to the
    //! extraction of the final entry. It generates radius, lat and lon.
-   const double altitude_f_calc = std::sqrt( pow(systemFinalState_EARTH_FIXED[0],2) +
-           pow(systemFinalState_EARTH_FIXED[1],2) + pow(systemFinalState_EARTH_FIXED[2],2) ) ;
-   const double lon_f_rad_calc = std::atan2(systemFinalState_EARTH_FIXED[1] , systemFinalState_EARTH_FIXED[0]);
-   const double lat_f_rad_calc = std::asin(systemFinalState_EARTH_FIXED[2] / altitude_f_calc) ;
+   //!
+   //!
+   //!
+
+   Eigen::VectorXd dep_var_FINAL_STATE = ( dynamicsSimulator.getDependentVariableHistory( ).rbegin() )->second;
+   //const double altitude_f_calc = dep_var_FINAL_STATE[3];
+   const double lat_f_rad_calc  = dep_var_FINAL_STATE[4];
+   const double lon_f_rad_calc  = dep_var_FINAL_STATE[5];
+   const double h_f_calc        = dep_var_FINAL_STATE[6];
+   //const double altitude_f_calc = std::sqrt( pow(systemFinalState_EARTH_FIXED[0],2) +
+   //       pow(systemFinalState_EARTH_FIXED[1],2) + pow(systemFinalState_EARTH_FIXED[2],2) ) ;
+   //const double lon_f_rad_calc = std::atan2(systemFinalState_EARTH_FIXED[1] , systemFinalState_EARTH_FIXED[0]);
+   //const double lat_f_rad_calc = std::asin(systemFinalState_EARTH_FIXED[2] / altitude_f_calc) ;
 
    //! Convert coordinates of final state to degrees: Earth-Fixed Frame
-   const double lon_f_deg_calc = unit_conversions::convertRadiansToDegrees( lon_f_rad_calc );
    const double lat_f_deg_calc = unit_conversions::convertRadiansToDegrees( lat_f_rad_calc );
+   const double lon_f_deg_calc = unit_conversions::convertRadiansToDegrees( lon_f_rad_calc );
 
    //! Calculate angular distance of final state from target coordinates.
    const double d_rad = getAngularDistance( lat_f_rad_calc, lon_f_rad_calc, lat_f_rad, lon_f_rad );
@@ -722,8 +725,8 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
    const double dif_d_deg = d_deg - unit_conversions::convertDegreesToRadians( term_cond[0] );
 
    //! Calculate offset of final state from GOAL state: Earth-Fixed Frame
-   const double dif_lat_rad = lat_f_rad - lat_f_rad_calc;
-   const double dif_lon_rad = lon_f_rad - lon_f_rad_calc;
+   //const double dif_lat_rad = lat_f_rad - lat_f_rad_calc;
+   //const double dif_lon_rad = lon_f_rad - lon_f_rad_calc;
 
    //! Calculate offsets of final state in degrees: Earth-Fixed Frame
    const double dif_lat_deg = lat_f_deg - lat_f_deg_calc;
@@ -734,9 +737,11 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
    //! differences such that when minimizing the offsets, there is an additional
    //! unsigned value that always goes to zero. Most definitely unsure about how
    //!  'proper' it is, yet is what works for the current BALLISTIC case.
-   const double dif_norm = std::sqrt( pow(dif_lat_deg,2) + pow(dif_lon_deg,2) );
+   const double dif_norm = std::sqrt( std::pow(dif_lat_deg,2) + std::pow(dif_lon_deg,2) );
 
-   //! Calculate difference of final angular distance to
+   //! Calculate offset from goal elevation.
+   const double dif_h = h_f_calc - h_f;
+
    //! Assign values to Fitness vector! At the moment these are all 'objective
    //! functions'. No constraints have been implemented. To modify this I have
    //! change the header file and define how many are elements are objective
@@ -747,6 +752,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
    delta.push_back( dif_lat_deg );
    delta.push_back( dif_lon_deg );
    delta.push_back( dif_d_deg );
+   delta.push_back( dif_h );
    delta.push_back( tof );  // Not sure yet how this one affects the optimization. Included for completion.
 
    //! Print results to terminal. Used to gauge progress.

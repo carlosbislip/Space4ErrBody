@@ -774,7 +774,9 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                   std::setw(14) << "lon offset = " <<
                   std::setw(16) << dif_lon_deg <<
                   std::setw(17) << "angular dist. = " <<
-                  std::setw(16) << d_deg <<std::endl;
+                  std::setw(16) << d_deg <<
+                  std::setw(17) << "height offset = " <<
+                  std::setw(16) << dif_h << std::endl;
    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    ///////////////////////        PROVIDE OUTPUT TO FILE                        //////////////////////////////////////////
    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

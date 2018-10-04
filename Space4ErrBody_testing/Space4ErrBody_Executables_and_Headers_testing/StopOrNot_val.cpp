@@ -49,10 +49,14 @@ bool StopOrNot( const simulation_setup::NamedBodyMap& bodyMap,
     const double current_altitude = bodyMap.at( vehicleName )->getFlightConditions( )->getCurrentAltitude();
 
 
-
+    //! Declare boolean that is returns to terminate the simulation.
     bool done;
 
-    if ( d_togo_rad <= term_cond[0])
+    //! Currently 3 conditions could temrinate a simulation
+    //!     When distance to target is less than a specified number
+    //!     When altitude is less than a specified number
+    //!     When angular distance traveled is larger than angular distance among endpoints
+    if ( ( d_togo_rad <= term_cond[0] ) || ( current_altitude <= term_cond[1] ) || ( d_traveled_rad >= initial_d_to_target ) )
     {
         done = true;
     }
@@ -60,27 +64,6 @@ bool StopOrNot( const simulation_setup::NamedBodyMap& bodyMap,
     {
         done = false;
     }
-
-    if ( current_altitude <= term_cond[1] )
-    {
-        done = true;
-    }
-    else
-    {
-        done = false;
-    }
-    if ( d_traveled_rad >= initial_d_to_target )
-    {
-        done = true;
-    }
-    else
-    {
-        done = false;
-    }
-
-
-    //! How can I incorporate when the distance increases after hitting the initial mark?
-    //! How can I incorporate when the distance increases?
 
 
 return done;

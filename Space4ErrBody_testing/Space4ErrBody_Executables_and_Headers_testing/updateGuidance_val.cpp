@@ -150,6 +150,31 @@ else if ( ( d_deg < 0.90739 ) && ( d_deg >= 0.86476 ) && ( abs_chi_err_deg < abs
 {
     reversal = false;
 }
+else if ( ( d_deg < 0.86476 ) && ( d_deg >= 0.85776 ) && ( abs_chi_err_deg > abs( 14.35438 + (d_deg - 0.85776) * ( 15.20725 - 14.35438 ) / ( 0.86476 - 0.85776 )) ) && ( reversal_conditional < 0 ) )
+{
+    reversal = true;
+}
+else if ( ( d_deg < 0.86476 ) && ( d_deg >= 0.85776 ) && ( abs_chi_err_deg > abs( 14.35438 + (d_deg - 0.85776) * ( 15.20725 - 14.35438 ) / ( 0.86476 - 0.85776 )) ) && ( reversal_conditional > 0 ) )
+{
+    reversal = false;
+}
+else if ( ( d_deg < 0.86476 ) && ( d_deg >= 0.85776 ) && ( abs_chi_err_deg < abs( 14.35438 + (d_deg - 0.85776) * ( 15.20725 - 14.35438 ) / ( 0.86476 - 0.85776 )) ) && ( reversal_conditional > 0 ) )
+{
+    reversal = false;
+}
+else if ( ( d_deg < 0.85776 ) && ( abs_chi_err_deg > 14.35438 ) && ( reversal_conditional < 0 ) )
+{
+    reversal = true;
+}
+else if ( ( d_deg < 0.85776 ) && ( abs_chi_err_deg > 14.35438 ) && ( reversal_conditional > 0 ) )
+{
+    reversal = false;
+}
+else if ( ( d_deg < 0.85776 ) && ( abs_chi_err_deg < 14.35438 ) && ( reversal_conditional > 0 ) )
+{
+    reversal = false;
+}
+
     /*
 00.0		& 23.0 &  0.85776  & 14.35438\\
 10.0		& 23.0 &  0.86476  & 15.20725\\

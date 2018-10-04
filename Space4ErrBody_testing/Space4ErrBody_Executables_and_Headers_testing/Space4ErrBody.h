@@ -52,19 +52,20 @@ struct Space4ErrBody {
 
     //! Retrieve the number of objectives in problem, e.g. the size of the
     //! vector returned by the fitness function.
-    //!        5 objectives
+    //!        6 objectives
     //!
     //!         dif_norm  = sqrt( dif_lat^2 + dif_lon^2 )
     //!         dif_lat   = lat_f_rad - lat_f_rad_calc
     //!         dif_lon   = lon_f_rad - lon_f_rad_calc
     //!         dif_d_deg = d_deg - unit_conversions::convertDegreesToRadians( term_cond[0] )
+    //!         dif_h     = h_f_calc - h_f
     //!         tof       = simulationEndEpoch_calc - simulationStartEpoch
     //!
     //! The size of the vector returned by the fitness function is then
-    //!        5 rows by 1 column.
+    //!        6 rows by 1 column.
     std::vector< double >::size_type get_nobj() const
     {
-        return 5u;
+        return 6u;
     }
     //std::vector< double >::size_type get_nec() const
    //{

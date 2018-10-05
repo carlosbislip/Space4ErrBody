@@ -537,16 +537,16 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //                "HORUS",
     //                "Earth",
     //                1 ) );
-    dependentVariablesList.push_back(
-                boost::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
-                    "HORUS",
-                    latitude_angle,
-                    "Earth") );
-    dependentVariablesList.push_back(
-                boost::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
-                    "HORUS",
-                    longitude_angle,
-                    "Earth") );
+    //dependentVariablesList.push_back(
+    //            boost::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
+    //                "HORUS",
+    //                latitude_angle,
+    //                "Earth") );
+    //dependentVariablesList.push_back(
+    //            boost::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
+    //                "HORUS",
+    //                longitude_angle,
+    //                "Earth") );
     dependentVariablesList.push_back(
                 boost::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
                     "HORUS",

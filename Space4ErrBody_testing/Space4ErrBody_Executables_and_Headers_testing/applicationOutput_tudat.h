@@ -19,7 +19,7 @@ static inline std::string getOutputPath(
 //    std::string reducedPath = filePath_.substr( 0, filePath_.length( ) -
 //                                                std::string( "tudatBundle/tudatApplications/Space4ErrBody_Executables_testing/Space4ErrBody_Executables_and_Headers_testing/applicationOutput_tudat.h" ).length( ) );
 //    std::string outputPath = reducedPath + "Cloud Storage/OneDrive/School/TUDelft/Space Flight/Thesis/code/SimulationOutput/";
-    std::string outputPath = "/Users/bislip/Cloud Storage/OneDrive/School/TUDelft/Space Flight/Thesis/code/SimulationOutput/";
+    std::string outputPath = "/Users/bislip/Cloud Storage/OneDrive/School/TUDelft/Space Flight/Thesis/code/MATLAB-Drive/SimulationOutput/";
     if( extraDirectory != "" )
     {
         outputPath += extraDirectory;

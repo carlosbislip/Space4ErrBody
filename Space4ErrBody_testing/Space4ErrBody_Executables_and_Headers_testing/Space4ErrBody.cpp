@@ -182,7 +182,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
     //! Declare various variables to unpack from input_data depending on a
     //! conditional.
-    double v_i, gamma_i_deg, chi_i_deg, AoA_deg, AoA_rad;
+    double v_i, gamma_i_deg, chi_i_deg;//, AoA_deg, AoA_rad;
     double h_i, lat_i_deg,lon_i_deg;
     double h_f, lat_f_deg,lon_f_deg;
 
@@ -200,8 +200,8 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
         v_i         = x[0]; // FIND IT!
         gamma_i_deg = x[1]; // FIND IT!
         chi_i_deg   = x[2]; // FIND IT!
-        AoA_deg     = x[3]; // FIND IT!
-        AoA_rad     = unit_conversions::convertDegreesToRadians( AoA_deg );
+        //AoA_deg     = x[3]; // FIND IT!
+        //AoA_rad     = unit_conversions::convertDegreesToRadians( AoA_deg );
     }
     else
     {
@@ -737,7 +737,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
    //! differences such that when minimizing the offsets, there is an additional
    //! unsigned value that always goes to zero. Most definitely unsure about how
    //!  'proper' it is, yet is what works for the current BALLISTIC case.
-   const double dif_norm = std::sqrt( std::pow(dif_lat_deg,2) + std::pow(dif_lon_deg,2) );
+   const double dif_norm = std::sqrt( ( dif_lat_deg * dif_lat_deg ) + ( dif_lon_deg * dif_lon_deg ) );
 
    //! Calculate offset from goal elevation.
    const double dif_h = h_f_calc - h_f;
@@ -755,28 +755,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
    delta.push_back( dif_h );
    delta.push_back( tof );  // Not sure yet how this one affects the optimization. Included for completion.
 
-   //! Print results to terminal. Used to gauge progress.
-   std::cout << std::fixed << std::setprecision(10) <<
-                  std::setw(7) << "tof = " <<
-                  std::setw(16) << tof <<
-                  std::setw(7) << "v_i = " <<
-                  std::setw(16) << v_i <<
-                  std::setw(15) << "flight-path = " <<
-                  std::setw(14) << gamma_i_deg <<
-                  std::setw(13) << "heading = " <<
-                  std::setw(16) << chi_i_deg <<
-                  std::setw(7) << "lat = " <<
-                  std::setw(16) << lat_f_deg_calc <<
-                  std::setw(7) << "lon = " <<
-                  std::setw(16) << lon_f_deg_calc <<
-                  std::setw(14) << "lat offset = " <<
-                  std::setw(16) << dif_lat_deg <<
-                  std::setw(14) << "lon offset = " <<
-                  std::setw(16) << dif_lon_deg <<
-                  std::setw(17) << "angular dist. = " <<
-                  std::setw(16) << d_deg <<
-                  std::setw(17) << "height offset = " <<
-                  std::setw(16) << dif_h << std::endl;
+
    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    ///////////////////////        PROVIDE OUTPUT TO FILE                        //////////////////////////////////////////
    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -787,14 +766,18 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
    std::string simulation_save_time = getCurrentDateTime( false );
 
    //! Create unique filename that cannot be overwritten due to the timestamp.
-   std::string simulation_file_name_suffix = std::to_string(v_i) + "_" +
+   std::string simulation_file_name_suffix =
+           std::to_string(v_i) + "_" +
            std::to_string(gamma_i_deg) + "_" +
            std::to_string(chi_i_deg) + "_" +
            std::to_string(tof) + "_" +
-           std::to_string(x[3]) + "_" +
+           //std::to_string(x[3]) + "_" +
            std::to_string(lat_f_deg_calc) + "_" +
            std::to_string(lon_f_deg_calc) + "_" +
            simulation_save_time;
+
+   std::string complete_file_name_Prop = "HORUSPropHistory_" + simulation_file_name_suffix + ".dat";
+   std::string complete_file_name_DepVar = "HORUSDepVar_" + simulation_file_name_suffix + ".dat";
 
    //! Will print out depending on some input values. Each entry corresponds to
    //! a different type of output. Entries are binary, 0 or 1.
@@ -803,7 +786,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
    //! Write HORUS propagation history to file.
    writeDataMapToTextFile( dynamicsSimulator.getEquationsOfMotionNumericalSolution( ),
-                           "HORUSPropHistory_" + simulation_file_name_suffix + ".dat",
+                           complete_file_name_Prop,
                            tudat_applications::getOutputPath( ) + outputSubFolder_,
                            "",
                            std::numeric_limits< double >::digits10,
@@ -814,7 +797,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
    {
    //! Write HORUS dependent variables' history to file.
    writeDataMapToTextFile( dynamicsSimulator.getDependentVariableHistory( ),
-                           "HORUSDepVar_" + simulation_file_name_suffix + ".dat",
+                           complete_file_name_DepVar,
                            tudat_applications::getOutputPath( ) + outputSubFolder_,
                            "",
                            std::numeric_limits< double >::digits10,
@@ -832,6 +815,35 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                            tudat_applications::getOutputPath( ) + outputSubFolder,
                            "");
 */
+
+
+
+   //! Print results to terminal. Used to gauge progress.
+   std::cout << std::fixed << std::setprecision(10) <<
+                  std::setw(7) << "v_i = " <<
+                  std::setw(16) << v_i <<
+                  std::setw(15) << "flight-path = " <<
+                  std::setw(14) << gamma_i_deg <<
+                  std::setw(13) << "heading = " <<
+                  std::setw(16) << chi_i_deg <<
+                  std::setw(12) << "dif_norm = " <<
+                  std::setw(16) << dif_norm <<
+                  std::setw(14) << "dif_lat_deg = " <<
+                  std::setw(16) << dif_lat_deg <<
+                  std::setw(14) << "dif_lon_deg = " <<
+                  std::setw(16) << dif_lon_deg <<
+                  std::setw(13) << "dif_d_deg = " <<
+                  std::setw(16) << dif_d_deg <<
+                  std::setw(9) << "dif_h = " <<
+                  std::setw(16) << dif_h <<
+                  std::setw(7) << "tof = " <<
+                  std::setw(16) << tof <<
+                  std::setw(120) << simulation_file_name_suffix << std::endl;
+
+
+
+
+
 
    return delta;
 

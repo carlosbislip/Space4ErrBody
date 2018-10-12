@@ -18,10 +18,6 @@ set(SPACE4ERRBODY_HEADERS
   "${CMAKE_CURRENT_SOURCE_DIR}/updateGuidance.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/updateGuidance_val.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/StopOrNot_val.h"
-#  "Tudat/Astrodynamics/Aerodynamics/flightConditions.h"
-  #"${CMAKE_CURRENT_SOURCE_DIR}/getCurrentDateTime.h"
-  #"${CMAKE_CURRENT_SOURCE_DIR}/getOptimizationSettings.h"
-  #"${CMAKE_CURRENT_SOURCE_DIR}/getConditions.h"
 )
 
 set(SPACE4ERRBODY_SOURCES
@@ -29,14 +25,16 @@ set(SPACE4ERRBODY_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/getCurrentDateTime.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/getData.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/getFiles.cpp"
-#  "Tudat/Astrodynamics/Aerodynamics/flightConditions.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/updateGuidance.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/updateGuidance_val.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/StopOrNot_val.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/getAngularDistance.cpp"
-"${CMAKE_CURRENT_SOURCE_DIR}/getHeadingToTarget.cpp"
-#  "${CMAKE_CURRENT_SOURCE_DIR}/getConditions.cpp"
-#  "${CMAKE_CURRENT_SOURCE_DIR}/getDVBounds.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/updateGuidance.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/getNewCoefficients.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/updateGuidance_val.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/StopOrNot_val.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/getAngularDistance.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/getHeadingToTarget.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/getGamma.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/getGravs.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/getRoot.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/getF.cpp"
 )
 
 add_library(Space4ErrBody_Executables_and_Headers_testing STATIC ${SPACE4ERRBODY_SOURCES} ${SPACE4ERRBODY_HEADERS})

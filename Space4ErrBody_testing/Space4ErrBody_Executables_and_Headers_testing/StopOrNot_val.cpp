@@ -64,9 +64,7 @@ bool StopOrNot( const simulation_setup::NamedBodyMap& bodyMap,
     {
         done = false;
     }
-
-
+    
 return done;
 }
-
 } // namespace tudat

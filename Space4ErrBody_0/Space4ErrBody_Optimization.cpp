@@ -92,46 +92,22 @@ int main()
     //!---------------------------------------   ^ for lb/up  (rows)       ^ for # of parameters
 
     //! Loop to build the bounds matrix.
-  /*  for( int i = 0; i < N; i++ )
+    int p;
+
+    for( int i = 0; i < N; i++ )
     {
-        if( i % parameterList.size() == 0 )
+        if( i <  ( nodes -1 ) )
         {
             p = 0;
+        }
+        else if( ( i - ( nodes - 1 ) ) % nodes == 0 )
+        {
+            p += 2;
         }
 
         bounds[ 0 ][ i ] = parameterBounds[ p ];
         bounds[ 1 ][ i ] = parameterBounds[ p + 1 ];
-        p = p + 2;
     }
-
-    //! Populate bounds for node intervals
-    for( int i = 0; i < ( nodes - 1 ); i++ )
-    {
-        bounds[ 0 ][ i ] = parameterBounds[ 0 ];
-        bounds[ 1 ][ i ] = parameterBounds[ 1 ];
-    }
-*/
-    //! Populate bounds for the rest
-    int p;
-
-        for( int i = 0; i < N; i++ )
-        {
-            if( i <  ( nodes -1 ) )
-            {
-                p = 0;
-            }
-            else if( ( i - ( nodes - 1 ) ) % nodes == 0 )
-            {
-                      p += 2;
-            }
-
-            bounds[ 0 ][ i ] = parameterBounds[ p ];
-            bounds[ 1 ][ i ] = parameterBounds[ p + 1 ];
-        }
-
-
-
-
 
     //! Load spice kernels
     tudat::spice_interface::loadStandardSpiceKernels( );
@@ -179,10 +155,6 @@ int main()
     ////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////
-
-
-
-
 
     const int index = int( optimization_settingsValues[ 0 ] );
     std::string algo_method;
@@ -238,15 +210,7 @@ int main()
     {
         std::cout << boost::format("%-25s %-2s %-8.1f %-2s %-8.1f %-2s\n") % parameterList[i] % "[" % bounds[0][i] % "," % bounds[1][i] % "]";
     }
-    /*std::cout << std::setw(30) << parameterList[1] << "    [ " << bounds[0][1] << " , " << bounds[1][1] << " ]" << std::endl;
-    std::cout << std::setw(30) << parameterList[2] << "    [ " << bounds[0][2] << " , " << bounds[1][2] << " ]" << std::endl;
-    std::cout << std::setw(30) << parameterList[3] << "    [ " << bounds[0][3] << " , " << bounds[1][3] << " ]" << std::endl;
-    std::cout << std::setw(30) << parameterList[4] << "    [ " << bounds[0][4] << " , " << bounds[1][4] << " ]" << std::endl;
-    std::cout << std::setw(30) << parameterList[5] << "    [ " << bounds[0][5] << " , " << bounds[1][5] << " ]" << std::endl;
-    std::cout << std::setw(30) << parameterList[6] << "    [ " << bounds[0][6] << " , " << bounds[1][6] << " ]" << std::endl;
-    std::cout << std::setw(30) << parameterList[7] << "    [ " << bounds[0][7] << " , " << bounds[1][7] << " ]" << std::endl;
-//    std::cout << parameterList[8] << "    [ " << bounds[0][8] << " , " << bounds[1][8] << " ]" << std::endl;
- */   std::cout << "--------------------------------------------------------" << std::endl;
+    std::cout << "--------------------------------------------------------" << std::endl;
     std::cout << "Vehicle Parameters" << std::endl;
     std::cout << std::setw(30) << vehicleParameterList[0] << "      " <<  vehicleParameterValues[0] << std::endl;
     std::cout << std::setw(30) << vehicleParameterList[1] << "      " <<  vehicleParameterValues[1] << std::endl;
@@ -268,55 +232,30 @@ int main()
     {
         std::cout << boost::format("%-25s %-2s %-8.0f\n") % optimization_settingsList[i] % "" % optimization_settingsValues[i];
     }
-    /*std::cout << std::setw(30) << optimization_settingsList[0] << "      " <<  optimization_settingsValues[0] << std::endl;
-    std::cout << std::setw(30) << optimization_settingsList[1] << "      " <<  optimization_settingsValues[1] << std::endl;
-    std::cout << std::setw(30) << optimization_settingsList[2] << "      " <<  optimization_settingsValues[2] << std::endl;
-    std::cout << std::setw(30) << optimization_settingsList[3] << "      " <<  optimization_settingsValues[3] << std::endl;
-    std::cout << std::setw(30) << optimization_settingsList[4] << "      " <<  optimization_settingsValues[4] << std::endl;
-    */std::cout << "--------------------------------------------------------" << std::endl;
+    std::cout << "--------------------------------------------------------" << std::endl;
     std::cout << "Simulation Settings" << std::endl;
     for( int i = 0; i < int( simulation_settingsList.size() ); i++)
     {
         std::cout << boost::format("%-25s %-2s %-8.0f\n") % simulation_settingsList[i] % "" % simulation_settingsValues[i];
     }
-    /*std::cout << std::setw(30) << simulation_settingsList[0] << "      " <<  simulation_settingsValues[0] << std::endl;
-    std::cout << std::setw(30) << simulation_settingsList[1] << "      " <<  simulation_settingsValues[1] << std::endl;
-    std::cout << std::setw(30) << simulation_settingsList[2] << "      " <<  simulation_settingsValues[2] << std::endl;
-    std::cout << std::setw(30) << simulation_settingsList[3] << "      " <<  simulation_settingsValues[3] << std::endl;
-    */
     std::cout << "--------------------------------------------------------" << std::endl;
     std::cout << "Output Settings" << std::endl;
     for( int i = 0; i < int( output_settingsList.size() ); i++)
     {
         std::cout << boost::format("%-25s %-2s %-8.0f\n") % output_settingsList[i] % "" % output_settingsValues[i];
     }
-
-    /*std::cout << std::setw(30) << output_settingsList[0] << "      " <<  output_settingsValues[0] << std::endl;
-    std::cout << std::setw(30) << output_settingsList[1] << "      " <<  output_settingsValues[1] << std::endl;
-    std::cout << std::setw(30) << output_settingsList[2] << "      " <<  output_settingsValues[2] << std::endl;
-    */
     std::cout << "--------------------------------------------------------" << std::endl;
     std::cout << "Initial Conditions" << std::endl;
     for( int i = 0; i < int( initialConditionsList.size() ); i++)
     {
         std::cout << boost::format("%-25s %-2s %-8.2f\n") % initialConditionsList[i] % "" % initialConditionsValues[i];
     }
-    /*std::cout << std::setw(30) << initialConditionsList[0] << "      " <<  initialConditionsValues[0] << std::endl;
-    std::cout << std::setw(30) << initialConditionsList[1] << "      " <<  initialConditionsValues[1] << std::endl;
-    std::cout << std::setw(30) << initialConditionsList[2] << "      " <<  initialConditionsValues[2] << std::endl;
-    std::cout << std::setw(30) << initialConditionsList[3] << "      " <<  initialConditionsValues[3] << std::endl;
-    */
     std::cout << "--------------------------------------------------------" << std::endl;
     std::cout << "Termination Conditions" << std::endl;
     for( int i = 0; i < int( terminationConditionsList.size() ); i++)
     {
         std::cout << boost::format("%-25s %-2s %-8.2f\n") % terminationConditionsList[i] % "" % terminationConditionsValues[i];
     }
-    /*std::cout << std::setw(30) << terminationConditionsList[0] << "      " <<  terminationConditionsValues[0] << std::endl;
-    std::cout << std::setw(30) << terminationConditionsList[1] << "      " <<  terminationConditionsValues[1] << std::endl;
-    std::cout << std::setw(30) << terminationConditionsList[2] << "      " <<  terminationConditionsValues[2] << std::endl;
-    std::cout << std::setw(30) << terminationConditionsList[3] << "      " <<  terminationConditionsValues[3] << std::endl;
-    */
     std::cout << "--------------------------------------------------------" << std::endl;
     std::cout << "Ground distance to cover " << std::endl;
     std::cout << "  Haversine Formula:        " << unit_conversions::convertRadiansToDegrees( d_angular ) << " degrees." << std::endl;
@@ -326,13 +265,12 @@ int main()
     std::cout << "Output subfolder: " << std::endl;
     std::cout << "     '" << outputSubFolder <<"'" << std::endl;
     std::cout << " DV  " << " Lower Boundary " << " Upper Boundary " << std::endl;
-
     for( int i = 0; i < N; i++ )
     {
         std::cout << std::fixed << std::setprecision(10) <<
-                     std::setw(5) << i <<
-                     std::setw(16) << bounds[ 0 ][ i ] <<
-                     std::setw(16) << bounds[ 1 ][ i ] << std::endl;
+                     std::setw(6) << i <<
+                     std::setw(17) << bounds[ 0 ][ i ] <<
+                     std::setw(17) << bounds[ 1 ][ i ] << std::endl;
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -367,9 +305,14 @@ int main()
              true );
     }
 */
-
-
-
+    //! Write original (unevolved) population to file
+    if  ( output_settingsValues[ 0 ] == 1 )
+    {
+        printPopulationToFile( isl_pert.get_population( ).get_x( ), this_run_settings_1,
+                               outputSubFolder, false );
+        printPopulationToFile( isl_pert.get_population( ).get_f( ), this_run_settings_1,
+                               outputSubFolder, true );
+    }
 
     for( int i = 0; i < evolutions; i++ )
     {
@@ -381,7 +324,7 @@ int main()
         }
         isl.wait_check( ); // Raises errors
 
-        if (output_settingsValues[0] == 1)
+        if  ( output_settingsValues[ 0 ] == 1 )
         {
 
             std::string this_run_settings_1 = std::to_string( i ) + "_" +
@@ -401,56 +344,6 @@ int main()
         std::cout<<i<<std::endl;
 
     }
-    /*
-    // Create object to compute the problem fitness; with perturbations
-    problem prob_pert{Space4ErrBody_Ballistic( var1, var2, var3, var4, var5, var6, var7, var8, var9, var10, var11, var12, var13, var14, true ) };
 
-
-    // Instantiate a pagmo algorithm for the new problem.
-    algorithm algo_pert{de1220( )};
-
-    // Create an empty population for perturbed problem
-    population population_pert = population( prob_pert, 0 );
-
-    // Retrieve population of unperturbed problem, and instantiate population of perturbed problem
-    std::vector<vector_double> original_population = isl.get_population( ).get_x( );
-    for( unsigned int k = 0; k < populationSize; k++ )
-    {
-        population_pert.push_back( original_population.at( k ) );
-    }
-
-    // Create island for perturbed problem
-    island isl_pert{algo_pert, population_pert};
-
-    // Perform Grid Search for perturbed priblem and write results to file
-    if( performGridSearch )
-    {
-        createGridSearch( isl_pert.get_population( ).get_problem( ), {{0.0, 0.0}, {360.0, 180.0}}, { 100, 50 }, "propagationTargetingGridSearch_pert" );
-    }
-
-    // Write original (unevolved) population to file
-    printPopulationToFile( isl_pert.get_population( ).get_x( ), "targetingPropagation_pert_orig" , false );
-    printPopulationToFile( isl_pert.get_population( ).get_f( ), "targetingPropagation_pert_orig" , true );
-
-
-    // Evolve for 4 generations
-    for( int i = 0; i < 1; i++ )
-    {
-        isl_pert.evolve( );
-        while( isl_pert.status( ) != pagmo::evolve_status::idle &&
-               isl_pert.status( ) != pagmo::evolve_status::idle_error )
-        {
-            isl_pert.wait( );
-        }
-        isl_pert.wait_check( ); // Raises errors
-
-        // Write current iteration results to file
-        printPopulationToFile( isl_pert.get_population( ).get_x( ), "targetingPropagation_pert_" + std::to_string( i ) + "_" + std::to_string( i ) , false );
-        printPopulationToFile( isl_pert.get_population( ).get_f( ), "targetingPropagation_pert_" + std::to_string( i ) + "_" + std::to_string( i ) , true );
-
-        std::cout<<i<<std::endl;
-    }
-
-    */
 }
 

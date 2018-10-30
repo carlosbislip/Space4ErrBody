@@ -48,9 +48,8 @@ int main()
     //! Size of vector is NOT pre-defined.
     std::vector< std::string > file_list = getFiles ( "file_list.txt" );
 
-
     //! Get conditions that are passed to the propagator. Size of vector is NOT
-    //! pre-defined. The structure defined here is that for actual run, not for
+    //! pre-defined. The structure defined here is that for an actual run, not for
     //! validation cases.
     //!     Validation flag
     //!     initial Epoch
@@ -65,103 +64,85 @@ int main()
     //!     final height (relative to Earth's surface)
     //!     final latitude (Earth-Fixed)
     //!     final longitude (Earth-Fixed)
-    std::vector< double > input_data = getData ( file_list[0] );
-
-    //! Get optimization settings. Size of vector is NOT pre-defined.
-    //!     population size
-    //!     archipelago size
-    //!     number of evolutions
-    std::vector< double > opt_set = getData ( file_list[1] );
-
-    //! Get decision variable bounds. Size of vector is NOT pre-defined.
-    //!     lb - initial velocity (Earth-Fixed)
-    //!     ub - initial velocity (Earth-Fixed)
-    //!     lb - initial flight-path angle
-    //!     ub - initial flight-path angle
-    //!     lb - initial heading angle
-    //!     ub - initial heading angle
-    //!     lb - angle of attack
-    //!     ub - angle of attack
-    std::vector< double > dv_bounds = getData ( file_list[2] );
-
-    //! Create partial output subfolder filename suffix based on optimization
-    //! settings and fixed time step.
-    std::string this_run_settings = std::to_string(int(opt_set[0])) + "_" +
-            std::to_string(int(opt_set[1])) + "_" +
-            std::to_string(int(opt_set[2])) + "_" +
-            std::to_string(int(opt_set[3])) + "_" +
-            std::to_string(input_data[3]);
+    std::vector< double > input_data = getData ( file_list[ 0 ] );
 
     //! Get output settings. Size of vector is NOT pre-defined.
     //!     print fitness & population
     //!     print propagation history
     //!     print dependent varialbes history
-    std::vector< double > output_settings = getData ( file_list[3] );
+    std::vector< double > output_settings = getData ( file_list[ 3 ] );
 
+    std::vector< double > dv_bounds, cn_bounds;
+    int N;
 
     //! Create output subfolder filename. Based on arbitrary prefix, the
     //! previously created partial suffix, and the run's time stamp.
     std::string outputSubFolder = "HORUS_OUTPUT_" + this_run_settings + "_" + play_time + "/";
-    if ( int(input_data[0]) == 0 )
+    if ( int( input_data[ 0 ] ) == 0 )
     {
-        outputSubFolder = "HORUS_OUTPUT_" + this_run_settings + "_" + play_time + "/";
+        outputSubFolder = "OUTPUT_" + this_run_settings + "_" + play_time + "/";
+
+        //! Get decision variable bounds. Size of vector is NOT pre-defined.
+        dv_bounds = getData ( file_list[ 2 ] );
+
+        //! Determine number of parameters to vary based of size of dv_bounds input.
+        N = dv_bounds.size()/2;
     }
-    else
+    else if ( int( input_data[ 0 ] ) == 1 )
     {
-        outputSubFolder = "HORUS_VALIDATION_" + this_run_settings + "_" + play_time + "/";
+        outputSubFolder = "VALIDATION_" + this_run_settings + "_" + play_time + "/";
+
+        //! Get decision variable bounds. Size of vector is NOT pre-defined.
+        dv_bounds = getData ( file_list[ 2 ] );
+
+        //! Determine number of parameters to vary based of size of dv_bounds input.
+        N = dv_bounds.size()/2;
     }
+    else if ( int( input_data[ 0 ] ) == 2 )
+    {
+        outputSubFolder = "GEN_REF_TRAJ" + this_run_settings + "_" + play_time + "/";
+
+        //! Get control node bounds. Maybe this should be a vector of vectors.. or a Matrix
+        //! If a matrix, I may have to create a diffrent function.
+        cn_bounds = getData ( file_list[ 2 ] );
+
+        //! Determine number of control nodes based of size of dv_bounds input. Still have to work this one out.
+        N = cn_bounds.size()/2;
+    }
+
+    //! Create vector containing decision vector bounds.
+    std::vector< std::vector< double > > bounds( 2, std::vector< double >( N, 0.0 ) );
+    //!---------------------------------------   ^ for lb/up  (rows)       ^ for # of parameters
+
+    //! Loop to structure the bounds matrix.
+    int p = 0;
+    for( int i = 0; i < N; i++ )
+    {
+        bounds[ 0 ][ i ] = dv_bounds[ p ];
+        bounds[ 1 ][ i ] = dv_bounds[ p + 1 ];
+        p = p + 2;
+    }
+
+    //! Get optimization settings. Size of vector is NOT pre-defined.
+    //!     population size
+    //!     archipelago size
+    //!     number of evolutions
+    std::vector< double > opt_set = getData ( file_list[ 1 ] );
 
     //! Load spice kernels
     tudat::spice_interface::loadStandardSpiceKernels( );
 
     //! Set seed for reproducible results. Should I make this an input value?
     //! It may be better to hardcode this value to avoid issues down the line.
-    pagmo::random_device::set_seed(234);
+    pagmo::random_device::set_seed( 234 );
 
-    //! Determine number of parameters to vary based of size of dv_bounds input.
-    const int N = dv_bounds.size()/2;
-
-    //! Create vector containing decision vector bounds.
-    std::vector< std::vector< double > > bounds( 2, std::vector< double >( N, 0.0 ) );
-    //!---------------------------------------   ^ for lb/up  (rows)       ^ for # of parameters
-
-    if ( int(input_data[0]) == 0 )
-    {
-        //! Assign bounds of decision variables. Loop unpacks data decision vector
-        //! bounds into the bounds matrix that will be passed on for the optimizer.
-        //!       Initial velocity (Earth-Fixed) - v_i
-        //!       Initial flight-path angle      - gamma_i
-        //!       Initial heading angle          - chi_i
-        //!       Angle of attack                - AoA
-        int p = 0;
-        for( int i = 0; i < N; i++ )
-        {
-            bounds[ 0 ][ i ] = dv_bounds[ p ];
-            bounds[ 1 ][ i ] = dv_bounds[ p + 1 ];
-            p = p + 2;
-        }
-    }
-    else
-    {
-        //! Same loop as before. However, the purpose of this distinction it
-        //! that a validation exercise is to be done. Various initial conditions
-        //! are known. The corresponding bounds of interest are then tightened
-        //! to reflect this. The bounds are still defined in an input file.
-        //!       Initial velocity (Earth-Fixed) - v_i = 7435.5 m/s
-        //!                                              Not sure if the stated
-        //!                                              velocity is Earth-Fixed
-        //!                                              or Inertial.
-        //!       Initial flight-path angle      - gamma_i = -1.437 deg
-        //!       Initial heading angle          - chi_i = 70.757 deg
-        int p = 0;
-        for( int i = 0; i < N; i++ )
-        {
-            bounds[ 0 ][ i ] = dv_bounds[ p ];
-            bounds[ 1 ][ i ] = dv_bounds[ p + 1 ];
-            p = p + 2;
-        }
-
-    }
+    //! Create partial output subfolder filename suffix based on optimization
+    //! settings and fixed time step.
+    std::string this_run_settings = std::to_string( int( opt_set[ 0 ] ) ) + "_" +
+            std::to_string( int( opt_set[ 1 ] ) ) + "_" +
+            std::to_string( int( opt_set[ 2 ] ) ) + "_" +
+            std::to_string( int( opt_set[ 3 ] ) ) + "_" +
+            std::to_string( input_data[ 3 ] );
 
     //! Create object to compute the problem fitness; no perturbations
     //! An example uses 'extended dynamics'. Some conditional in the original
@@ -170,7 +151,7 @@ int main()
     //! "space4Errbody.h" If I want to use it, maybe the "extended dynamics'
     //! cases would then include aerodynamics and eventually thrust. Probably
     //! not. might be a bit too messy.
-    problem prob{Space4ErrBody( bounds, input_data, output_settings, outputSubFolder) };
+    problem prob{ Space4ErrBody( bounds, input_data, output_settings, outputSubFolder ) };
 
     //! Retrieve algorithm. Three options available in the following function:
     //!        getMultiObjectiveAlgorithm
@@ -179,19 +160,19 @@ int main()
     //!               case 2 --> ihs
     //! Selection is currently arbitrary. moead.hpp has been modified such that
     //! the points are generated with a Halton sequence.
-    algorithm algo{getMultiObjectiveAlgorithm( opt_set[0] )};
+    algorithm algo{ getMultiObjectiveAlgorithm( opt_set[ 0 ] ) };
 
     //! Assign population size.
-    pagmo::population::size_type populationSize = opt_set[1];
+    pagmo::population::size_type populationSize = opt_set[ 1 ];
 
     //! Assign archipelago size.
-    pagmo::archipelago::size_type archipelagoSize = opt_set[2];
+    pagmo::archipelago::size_type archipelagoSize = opt_set[ 2 ];
 
     //! Assign population per archipelago
     const int pop_per_archi = populationSize/archipelagoSize;
 
     //! Assign number of evolutions
-    const int evolutions = opt_set[3];
+    const int evolutions = opt_set[ 3 ];
 
     ////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////
@@ -203,7 +184,7 @@ int main()
     //! know what's supposed to happen.
 
     //! Assign Reference area
-    const double Ref_area = input_data[4]; //m^2
+    const double Ref_area = input_data[ 4 ]; //m^2
 
     //! Assign initial mass
     const double M_i = input_data[6]; // kg
@@ -214,7 +195,7 @@ int main()
     double h_i, lat_i_deg,lon_i_deg;
     double h_f, lat_f_deg,lon_f_deg;
 
-    if ( int(input_data[0]) == 0 )
+    if ( int(input_data[ 0 ] ) == 0 )
      {
          //! Assign the initial and final position conditions.
          h_i         = input_data[7]; //0 * 1E3; // m
@@ -224,7 +205,7 @@ int main()
          lat_f_deg   = input_data[11]; //38.9444444444444; //38deg 56’40"N
          lon_f_deg   = input_data[12]; //282.544166666667 //77deg 27’21"W
      }
-     else
+     else if ( int(input_data[ 0 ] ) == 1 )
      {
          //! Assign expected initial values. Only used to display and remind
          //! what the goal values are supposed to be.
@@ -239,7 +220,23 @@ int main()
          h_f         = input_data[13]; //25 * 1E3 m // arbitrary?
          lat_f_deg   = input_data[14]; //5.237222 deg //5 deg 14’14"N // 5.0 deg according to Mooij Dissertation
          lon_f_deg   = input_data[15]; //-52.760556 deg //52 deg 45’38"W// -53.0 deg according to Mooij Dissertation
-     }
+    }
+    else if ( int(input_data[ 0 ] ) == 2 )
+    {
+        //! Assign expected initial values. Only used to display and remind
+        //! what the goal values are supposed to be.
+        v_i         = input_data[7]; //7435.5 m/s // given
+        gamma_i_deg = input_data[8]; //-1.437 * 1E3 kg // given
+        chi_i_deg   = input_data[9]; //70.757 deg // given
+
+        //! Assign the initial and final position conditions.
+        h_i         = input_data[10]; //122 * 1E3 m // given
+        lat_i_deg   = input_data[11]; //-22.37 deg // given
+        lon_i_deg   = input_data[12]; //-106.7 deg // given
+        h_f         = input_data[13]; //25 * 1E3 m // arbitrary?
+        lat_f_deg   = input_data[14]; //5.237222 deg //5 deg 14’14"N // 5.0 deg according to Mooij Dissertation
+        lon_f_deg   = input_data[15]; //-52.760556 deg //52 deg 45’38"W// -53.0 deg according to Mooij Dissertation
+    }
 
     //! Convert angles from degrees to radians
     const double lat_i_rad = unit_conversions::convertDegreesToRadians( lat_i_deg );
@@ -327,7 +324,7 @@ int main()
            std::cout << "Initial heading:            " << chi_i_deg << " degrees." << std::endl;
        }
        std::cout << "Ground distance to cover " << std::endl;
-       std::cout << "  Haversine Formula:        " << d_haversine / 1E3 << " km." << std::endl;
+       std::cout << "  Haversine Formula:        " << unit_conversions::convertRadiansToDegrees( d_angular ) << " degrees." << std::endl;
        std::cout << "  Spherical Law of Cosines: " << d_spherical_law_cosines << " degrees." << std::endl;
        std::cout << "Initial Heading angle:      " << chi_i_deg_calc << " degrees. Calculated."  << std::endl;
        std::cout << "Optimization method:        " << algo_method << std::endl;

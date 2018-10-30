@@ -769,7 +769,69 @@ for p = 1:numel(compilation)
 
 end
 
+%% 'Best' Trajectories on 2D Map - Zoom - per Set
+%close all
+for p = 1:numel(compilation)
+    fig_num = p + 2342310;
+    figure(fig_num)
+    hold on
+    title(strcat('"Best" Trajectories - Zoom - per Set - To Compare',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+    set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
+    xlabel('\tau (deg)') % x-axis label
+    ylabel('\delta (deg)') % y-axis label
+    img = imread('img.jpg');
+    imagesc([-180 180], [-90 90], (flipud(img)));
+    set (gca,'Fontsize',20)
+    set(gca,'YTick', -90:1:90);
+    set(gca,'XTick', -180:1:180);
+    xlim([(lon_f_deg - 10) (lon_f_deg + 10)])
+    ylim([(lat_f_deg - 5) (lat_f_deg + 5)])
+    
+    if compilation(1).validation == 1
+        set(gca,'YTick', -60:20:40);
+        set(gca,'XTick', -140:20:0);
+        ylim([-60 40])
+        xlim([-145 0])
+        
+    end
+        for k = 1:numel(compilation(p).evolutions)
+        best_index(k,:)   = [compilation(p).evolutions(k).best.index];
+    end
+    
+    
+    for k = 1:numel(compilation(p).evolutions)
+        for ii = 1:size(best_index,2)
+            plot(...
+                compilation(p).evolutions(k).trajectories(best_index(k,ii)).individual.longitude_angle,...
+                compilation(p).evolutions(k).trajectories(best_index(k,ii)).individual.latitude_angle,'LineWidth',2)
+            legendtext(k) = cellstr(strcat(strrep(convertCharsToStrings(compilation(p).set),'_',' '),' - Evolution:_{ } ', num2str(k-1)));
+        end
+    end
+    
+    plot(lon_f_deg,lat_f_deg,'MarkerSize',20)
+    plot(lon_f_deg*[1 1],90*[-1 1],'k','LineWidth',2)
+    plot(180*[-1 1],lat_f_deg*[1 1],'k','LineWidth',2)
+    plot(xunit, yunit,'k','LineWidth',2);
+    scatter(lon_f_deg,lat_f_deg,100,'r','x')
+    axP = get(gca,'Position');
+   % legend(legendtext,'Location','southeastoutside')
+    set(gca, 'Position', axP)
+    
+    clear legendtext
+    %xlim([(lon_IAD_deg - 20) (lon_IAD_deg + 20)])
+    %ylim([(lat_IAD_deg - 10) (lat_IAD_deg + 10)])
+    hold off
+    saveas...
+        (figure(fig_num),...
+        strcat(...
+        mainpath,...
+        '/figures/Best_Trajectories_2D_Map_Zoom_Set_To_Compare',...
+        convertCharsToStrings(compilation(p).set),...
+        '.png'),...
+        'png');
+            close(fig_num);
 
+end
 
 
 

@@ -14,7 +14,7 @@ format long
 %%
 online = 0;
 
-mainpath = '/Users/bislip/Cloud Storage/OneDrive/School/TUDelft/Space Flight/Thesis/code/MATLAB-Drive';
+mainpath = '/Users/bislip/tudatBundle/tudatApplications/Space4ErrBody.git/Space4ErrBody_testing/matlab/';
 
 if online == 1
     mainpath = '..';
@@ -68,7 +68,7 @@ end
 % option = 2   Analyze
 % option = 3   Analyze and plot
 
-option = 3;
+option = 1;
 
 
 switch option

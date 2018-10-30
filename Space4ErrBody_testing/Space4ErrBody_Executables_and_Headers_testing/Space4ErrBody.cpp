@@ -91,13 +91,27 @@
 
 Space4ErrBody::Space4ErrBody(
         const std::vector< std::vector< double > > &bounds,
-        const std::vector< double > &input_data,
-        const std::vector< double > &output_settings,
-        const std::string &outputSubFolder):
+        const std::vector< double > &problem_name,
+        const std::vector< double > &vehicleParameterValues,
+        const std::vector< std::string > &aeroCoeffFileList,
+        const std::vector< double > &simulation_settingsValues,
+        const std::vector< double > &initialConditionsValues,
+        const std::vector< double > &terminationConditionsValues,
+        const std::vector< double > &output_settingsValues,
+        const std::string &outputSubFolder ):
     problemBounds_( bounds ),
-    input_data_( input_data ),
-    output_settings_( output_settings ),
+    problem_name_( problem_name ),
+    vehicleParameterValues_( vehicleParameterValues ),
+    aeroCoeffFileList_( aeroCoeffFileList ),
+    simulation_settingsValues_( simulation_settingsValues ),
+    initialConditionsValues_( initialConditionsValues ),
+    terminationConditionsValues_( terminationConditionsValues ),
+    output_settingsValues_( output_settingsValues ),
     outputSubFolder_( outputSubFolder ){ }
+
+
+
+
 
 //        const bool useExtendedDynamics) :
 //    useExtendedDynamics_( useExtendedDynamics ){ }
@@ -105,14 +119,8 @@ Space4ErrBody::Space4ErrBody(
 //! Descriptive name of the problem
 std::string Space4ErrBody::get_name() const
 {
-    if ( int(input_data_[0]) == 0 )
-    {
-        return "AMS to IAD Ballistic Trajectory: 10/28/2018  11:00:00 AM";
-    }
-    else
-    {
-        return "Validation: HORUS Entry towards Kourou";
-    }
+    return problem_name_;
+
 }
 
 //! Get bounds
@@ -175,7 +183,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     const double fixedStepSize = input_data_[3];
 
     //! Assign Reference area
-    const double Ref_area = input_data_[4]; //m^2
+    const double S_ref = input_data_[4]; //m^2
 
     //! Assign initial mass
     const double M_i = input_data_[6]; // kg
@@ -235,30 +243,33 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  //   std::cout << "Creating environment" << std::endl;
 
+    //! Assign central body name.
+    const std::string centralBodyName = "Earth";
+
     //! Declare/define simulation body settings data map.
     std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings =
-            getDefaultBodySettings( { "Earth" },
+            getDefaultBodySettings( { centralBodyName },
                                     simulationStartEpoch - 10.0 * fixedStepSize,
                                     simulationEndEpoch + 10.0 * fixedStepSize );
 
     //! Define atmospheric model.
-    bodySettings[ "Earth" ]->atmosphereSettings = boost::make_shared< AtmosphereSettings >(
+    bodySettings[ centralBodyName ]->atmosphereSettings = boost::make_shared< AtmosphereSettings >(
                 nrlmsise00 );
 
     //! Define ephemeris model settings.
     //! This is an acceptable 'cheat' were Earth is placed at the barycenter.
     //! Use only when there arent any third body perturbations (Moon, Sun, etc.)
-    bodySettings[ "Earth" ]->ephemerisSettings =
+    bodySettings[ centralBodyName ]->ephemerisSettings =
             boost::make_shared< ConstantEphemerisSettings >(
                 Eigen::Vector6d::Zero( ), "SSB", "J2000" );
 
     //! Reset ephemeris to J2000.
-    bodySettings[ "Earth" ]->rotationModelSettings->resetOriginalFrame( "J2000" );
+    bodySettings[ centralBodyName ]->rotationModelSettings->resetOriginalFrame( "J2000" );
 
     //! Define Earth's radius. Using spice here. Is there a way to get a 'radius
     //! field'? Im interested in includig Earth's flattening, yet am unsure how
     //! to properly do it.
-    const double radius_Earth = spice_interface::getAverageRadius( "Earth" );
+    const double radius_Earth = spice_interface::getAverageRadius( centralBodyName );
     double radius_Earth_i = radius_Earth;
     double radius_Earth_f = radius_Earth;
 
@@ -269,7 +280,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     double flattening_Earth = 1 / input_data_.back();
     if (flattening_Earth != 1)
     {
-        bodySettings[ "Earth" ]->shapeModelSettings = boost::make_shared< OblateSphericalBodyShapeSettings >( radius_Earth, flattening_Earth );
+        bodySettings[ centralBodyName ]->shapeModelSettings = boost::make_shared< OblateSphericalBodyShapeSettings >( radius_Earth, flattening_Earth );
 
         // Declare variable in which raw result is to be put by Spice function.
          double radii[ 3 ];
@@ -308,31 +319,34 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
     //! Create Earth's rotational ephemeris.
     boost::shared_ptr< ephemerides::RotationalEphemeris > earthRotationalEphemeris =
-            bodyMap.at( "Earth" )->getRotationalEphemeris( );
+            bodyMap.at( centralBodyName )->getRotationalEphemeris( );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             CREATE VEHICLE            /////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //    std::cout << "Creating vehicle" << std::endl;
+    //! Assign vehicle name.
+    const std::string vehicleName = "HORUS";
 
-    //! Assign reference area
-//    const double referenceArea = input_data_[3];//4.0*000000001;
+    //! Assign coefficient file names.
+    const std::string dragCoefficients = "HORUS_CD.txt";
+    const std::string liftCoefficients = "HORUS_CL.txt";
+   // const std::string dragControlSurfaceForceCoefficients = "HORUS_CD_CS.txt";
+   // const std::string liftControlSurfaceForceCoefficients = "HORUS_CL_CS.txt";
+    const std::string momentCoefficients = "HORUS_Cm.txt";
+   // const std::string controlSurfaceMomentCoefficients = "HORUS_CM_CS.txt";
+    double x_mrc = 13;
+    double b_ref = 13;
+    double c_ref = 13;
 
-    //! Assign constant mass
-//    const double vehicleMass = input_data_[5];//4.0*000000001;
-    //double aerodynamicCoefficient = input_data_[4];//1.2 * 0.0000000000001;
-    //boost::shared_ptr< simulation_setup::AerodynamicCoefficientSettings > aerodynamicCoefficientSettings =
-    //       boost::make_shared< ConstantAerodynamicCoefficientSettings >(
-    //         referenceArea,
-    //         aerodynamicCoefficient * Eigen::Vector3d::UnitX( ), 1, 1 );
+    Eigen::Vector3d R_mrc( x_mrc, 0, 0 );
 
- //   std::cout << "Creating vehicle Aerodynamics" << std::endl;
 
-      ///////// Start: Vehicle Aerodynamics Section
+    ///////// Start: Vehicle Aerodynamics Section
 
     //! Define physical meaning of independent variables
-    //!     Mach number
     //!     Angle of attack
+    //!     Mach number
     std::vector< aerodynamics::AerodynamicCoefficientsIndependentVariables > independentVariableNames;
     independentVariableNames.push_back( aerodynamics::angle_of_attack_dependent );
     independentVariableNames.push_back( aerodynamics::mach_number_dependent );
@@ -343,55 +357,115 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //!     2 : z-direction (C ~L~/C ~Z~)
     //! Gotta get my own for HORUS.
     std::map< int, std::string > forceCoefficientFiles;
-    forceCoefficientFiles[ 0 ] = "HORUS_CD.txt"; // Set drag coefficient file
-    forceCoefficientFiles[ 2 ] = "HORUS_CL.txt"; // Set lift coefficient file
+   // std::map< int, std::string > controlSurfaceForceCoefficientFiles;
+    std::map< int, std::string > momentCoefficientFiles;
+   // std::map< int, std::string > controlSurfaceMomentCoefficientFiles;
+
+    forceCoefficientFiles[ 0 ] = dragCoefficients; // Set drag coefficient file
+    forceCoefficientFiles[ 2 ] = liftCoefficients; // Set lift coefficient file
+   // controlSurfaceForceCoefficientFiles[ 0 ] = dragControlSurfaceForceCoefficients; // Set drag coefficient increment file
+   // controlSurfaceForceCoefficientFiles[ 2 ] = liftControlSurfaceForceCoefficients; // Set lift coefficient increment file
+    momentCoefficientFiles[ 1 ] = momentCoefficients; // Set pitch moment coefficient file
+   // controlSurfaceMomentCoefficientFiles[ 1 ] = controlSurfaceMomentCoefficients; // Set pitch moment coefficient increment file
+
+//       boost::shared_ptr< ControlSurfaceIncrementAerodynamicInterface > controlSurfaceInterface =
+//              boost::make_shared< CustomControlSurfaceIncrementAerodynamicInterface >(
+//                   &dummyControlIncrements,
+//                   boost::assign::list_of( angle_of_attack_dependent )( control_surface_deflection_dependent ) );
+//       std::map< std::string, boost::shared_ptr< ControlSurfaceIncrementAerodynamicInterface >  > controlSurfaceList;
+//       controlSurfaceList[ "bodyflap" ] = controlSurfaceInterface;
 
     //! Define reference frame in which the loaded coefficients are defined.
     //! Have to get some more background info here to properly understand it.
     bool areCoefficientsInAerodynamicFrame = true;
     bool areCoefficientsInNegativeAxisDirection = true;
 
+
     //! Load and parse coefficient files; create coefficient settings.
     boost::shared_ptr< AerodynamicCoefficientSettings > aerodynamicCoefficientSettings =
         readTabulatedAerodynamicCoefficientsFromFiles(
                 forceCoefficientFiles,
-                Ref_area,
+                momentCoefficientFiles,
+                b_ref,
+                S_ref,
+                c_ref,
+                R_mrc,
                 independentVariableNames,
                 areCoefficientsInAerodynamicFrame,
                 areCoefficientsInNegativeAxisDirection );
 
-    //! Define constant angle of attack - ARBITRARY. Shouldn't this be
-    //! a function of time or events? Would that require reading from a file?
-    //! Would that require multiple propagations that are 'stitched' together?
-   // const double constantAngleOfAttack = AoA_deg * mathematical_constants::PI / 180.0;
-    //bodyMap.at( "HORUS" )->getFlightConditions( )->getAerodynamicAngleCalculator( )->setOrientationAngleFunctions(
-    //            boost::lambda::constant( constantAngleOfAttack ) );
+    //! Create shared pointer for aerodynamic coefficient increments.
+   // boost::shared_ptr< system_models::VehicleSystems > systemsModels = boost::make_shared< system_models::VehicleSystems >( );
 
+    //bodyMap.at( vehicleName )->getFlightConditions( )->getAerodynamicAngleCalculator( )->setOrientationAngleFunctions(
+    //            boost::lambda::constant( constantAngleOfAttack ) );
 
     ///////// End: Vehicle Aerodynamics Section
 
-    //std::cout << "Creating vehicle objects" << std::endl;
-
     //! Create vehicle objects.
-    bodyMap[ "HORUS" ] = boost::make_shared< simulation_setup::Body >( );
+    bodyMap[ vehicleName ] = boost::make_shared< simulation_setup::Body >( );
 
     //! Set body Mass.
-    bodyMap[ "HORUS" ]->setConstantBodyMass( M_i );
+    bodyMap[ vehicleName ]->setConstantBodyMass( M_i );
+
+    //! Pass Earth's rotation rate
+    bodyMap[ vehicleName ]->setCentralBodyRotationRate( 7.292115*1E-5 );
+
+    //! Set initial coordinates. Earth-Fixed.
+    bodyMap[ vehicleName ]->setInitialLat( lat_i_rad );
+    bodyMap[ vehicleName ]->setInitialLon( lon_i_rad );
+
+    //! Set target coordinates. Earth-Fixed.
+    bodyMap[ vehicleName ]->setTargetLat( lat_f_rad );
+    bodyMap[ vehicleName ]->setTargetLon( lon_f_rad );
+
+    //! Set initial distance to target.
+    bodyMap[ vehicleName ]->setInitialDistanceToTarget(
+                getAngularDistance(
+                    lat_i_rad,
+                    lon_i_rad,
+                    lat_f_rad,
+                    lon_f_rad) );
+
+    //! Pass starting epoch to body.
+    bodyMap[ vehicleName ]->setStartingEpoch( simulationStartEpoch );
 
     //! Set vehicle aerodynamic coefficients.
-    bodyMap[ "HORUS" ]->setAerodynamicCoefficientInterface(
-                        createAerodynamicCoefficientInterface( aerodynamicCoefficientSettings, "HORUS" ) );
+    bodyMap[ vehicleName ]->setAerodynamicCoefficientInterface(
+                        createAerodynamicCoefficientInterface(
+                    aerodynamicCoefficientSettings,
+                    vehicleName ) );
+
+    //! Set vehicle system models for aerodynamic coefficient increments.
+    //bodyMap[ vehicleName ]->setVehicleSystems( systemsModels );
+    //bodyMap[ vehicleName ]->getAerodynamicCoefficientInterface( )->setControlSurfaceIncrements( controlSurfaceList );
 
     //! Finalize body creation. Not entirely sure what this does. I believe it
     //! may place the body (Earth) at the barycenter. Probably another hack to
     //! facilitate bringing in everything into the inertial frame.
     setGlobalFrameBodyEphemerides( bodyMap, "SSB", "J2000" );
 
+    //! Set spherical elements for vehicle's initial state.
+    //! ARTBITRARILY CHOSEN to be in Earth-Fixed frame.
+    Eigen::Vector6d EntryState_spherical;
+    EntryState_spherical( SphericalOrbitalStateElementIndices::radiusIndex )       = radius_Earth_i + h_i;
+    EntryState_spherical( SphericalOrbitalStateElementIndices::latitudeIndex )     = lat_i_rad;
+    EntryState_spherical( SphericalOrbitalStateElementIndices::longitudeIndex )    = lon_i_rad;
+    EntryState_spherical( SphericalOrbitalStateElementIndices::speedIndex )        = v_i;
+    EntryState_spherical( SphericalOrbitalStateElementIndices::flightPathIndex )   = gamma_i_rad;
+    EntryState_spherical( SphericalOrbitalStateElementIndices::headingAngleIndex ) = chi_i_rad;
+
+    //! Two things are being done here
+    //!     Converting state vector from spherical to Cartesian elements
+    //!     Transforming state vector from Earth-Fixed frame to Inertial frame.
+    const Eigen::Vector6d systemInitialState = transformStateToGlobalFrame(
+                convertSphericalOrbitalToCartesianState( EntryState_spherical ),
+                simulationStartEpoch,
+                earthRotationalEphemeris );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             CREATE ACCELERATIONS            ///////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- //   std::cout << "Creating accelerations" << std::endl;
 
     //! Declare propagator settings variables.
     SelectedAccelerationMap accelerationMap;
@@ -399,25 +473,25 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     std::vector< std::string > centralBodies;
 
     //! Declare acceleration data map.
-    std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > accelerationsOfHORUS;
+    std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > vehicleAccelerations;
 
     //! Define gravitational model. Arbitrary aximum degree/order. According to
     //! Dominic, equivalent functionality to Cartesian with corresponding maximum
     //! degree/order.
-    accelerationsOfHORUS[ "Earth" ].push_back( boost::make_shared< SphericalHarmonicAccelerationSettings >( 5, 5 ) );
+    vehicleAccelerations[ centralBodyName ].push_back( boost::make_shared< SphericalHarmonicAccelerationSettings >( 5, 5 ) );
 
     //! Define aerodynamic accelerations.
     //! Aerodynamic accelerations are attached differently than gravitational. Why?
-    accelerationsOfHORUS[ "Earth" ].push_back( boost::make_shared< AccelerationSettings >( aerodynamic ) );
+    vehicleAccelerations[ centralBodyName ].push_back( boost::make_shared< AccelerationSettings >( aerodynamic ) );
 
-    //! Assign acceleration map from the accelerationsOfHORUS data map.
-    accelerationMap[ "HORUS" ] = accelerationsOfHORUS;
+    //! Assign acceleration map from the vehicleAccelerations data map.
+    accelerationMap[ vehicleName ] = vehicleAccelerations;
 
-    //! Define bodies that will be propagated. Only 1, HORUS.
-    bodiesToPropagate.push_back( "HORUS" );
+    //! Define bodies that will be propagated. Only 1.
+    bodiesToPropagate.push_back( vehicleName );
 
     //! Define central bodies. Only 1, Earth.
-    centralBodies.push_back( "Earth" );
+    centralBodies.push_back( centralBodyName );
 
     //! Set acceleration models
     basic_astrodynamics::AccelerationMap accelerationModelMap =
@@ -427,46 +501,31 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                 bodiesToPropagate,
                 centralBodies );
 
-    //std::cout << "Creating vehicle: Guidance is set AFTER acceleration models" << std::endl;
-
     //! Guidance is set AFTER the accelerations and BEFORE propagating.
-
-    //! Set initial coordinates. Earth-Fixed.
-    bodyMap[ "HORUS" ]->setInitialLat( lat_i_rad );
-    bodyMap[ "HORUS" ]->setInitialLon( lon_i_rad );
-
-    //! Set target coordinates. Earth-Fixed.
-    bodyMap[ "HORUS" ]->setTargetLat( lat_f_rad );
-    bodyMap[ "HORUS" ]->setTargetLon( lon_f_rad );
-
-    //! Set initial distance to target.
-    bodyMap[ "HORUS" ]->setInitialDistanceToTarget( getAngularDistance(lat_i_rad,lon_i_rad,lat_f_rad,lon_f_rad) );
-
-    //! Pass starting epoch to body.
-    bodyMap[ "HORUS" ]->setStartingEpoch( simulationStartEpoch );
-
     //! Declare and assign aerodynamic guidance functions.
     boost::shared_ptr< aerodynamics::AerodynamicGuidance > aerodynamicGuidance;
-    if ( int(input_data_[0]) == 0 )
+    if ( int( input_data_[ 0 ] ) == 0 )
     {
         aerodynamicGuidance =
-            boost::make_shared< MyAerodynamicGuidance >(bodyMap, "HORUS");
+            boost::make_shared< MyAerodynamicGuidance >(
+                    bodyMap,
+                    vehicleName);
     }
     else
     {
         aerodynamicGuidance =
             boost::make_shared< ValidationAerodynamicGuidance >(
                     bodyMap,
-                    "HORUS");
+                    vehicleName);
     }
 
     //! Set Guidance angle functions.
-    setGuidanceAnglesFunctions( aerodynamicGuidance, bodyMap.at( "HORUS" ) );
+    setGuidanceAnglesFunctions( aerodynamicGuidance, bodyMap.at( vehicleName ) );
 
     //! Define constant orientation
     //double constantAngleOfAttack = unit_conversions::convertDegreesToRadians( 30 );
     //double constantBankAngle = unit_conversions::convertDegreesToRadians( 85 );
-    //bodyMap.at( "HORUS" )->getFlightConditions( )->getAerodynamicAngleCalculator( )->setOrientationAngleFunctions(
+    //bodyMap.at( vehicleName )->getFlightConditions( )->getAerodynamicAngleCalculator( )->setOrientationAngleFunctions(
     //            boost::lambda::constant( constantAngleOfAttack ),boost::lambda::constant( 0 ),boost::lambda::constant( constantBankAngle ));
     //std::cout << "Creating vehicle: Guidance is set" << std::endl;
 
@@ -475,107 +534,75 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //    std::cout << "Creating propagation settings" << std::endl;
 
-    //! Set spherical elements for HORUS initial state.
-    //! ARTBITRARILY CHOSEN to be in Earth-Fixed frame.
-    Eigen::Vector6d horusSphericalEntryState;
-    horusSphericalEntryState( SphericalOrbitalStateElementIndices::radiusIndex )       = radius_Earth_i + h_i;
-    horusSphericalEntryState( SphericalOrbitalStateElementIndices::latitudeIndex )     = lat_i_rad;
-    horusSphericalEntryState( SphericalOrbitalStateElementIndices::longitudeIndex )    = lon_i_rad;
-    horusSphericalEntryState( SphericalOrbitalStateElementIndices::speedIndex )        = v_i;
-    horusSphericalEntryState( SphericalOrbitalStateElementIndices::flightPathIndex )   = gamma_i_rad;
-    horusSphericalEntryState( SphericalOrbitalStateElementIndices::headingAngleIndex ) = chi_i_rad;
-
-    //! Set spherical elements for HORUS final state.
-    //! ARTBITRARILY CHOSEN to be in Earth-Fixed frame.
-    Eigen::Vector6d horusSphericalFINALState = horusSphericalEntryState;
-    horusSphericalFINALState( SphericalOrbitalStateElementIndices::radiusIndex )       = radius_Earth_f + h_f;
-    horusSphericalFINALState( SphericalOrbitalStateElementIndices::latitudeIndex )     = lat_f_rad;
-    horusSphericalFINALState( SphericalOrbitalStateElementIndices::longitudeIndex )    = lon_f_rad;
-    horusSphericalFINALState( SphericalOrbitalStateElementIndices::speedIndex )        = 0;
-    horusSphericalFINALState( SphericalOrbitalStateElementIndices::flightPathIndex )   = 0;
-    horusSphericalFINALState( SphericalOrbitalStateElementIndices::headingAngleIndex ) = 0;;
-
-    //! Convert HORUS state vector from spherical to Cartesian elements
-    Eigen::Vector6d systemInitialState = convertSphericalOrbitalToCartesianState(
-                horusSphericalEntryState );
-    Eigen::Vector6d systemFinalStateGOAL = convertSphericalOrbitalToCartesianState(
-                horusSphericalFINALState );
-
-    //! Transform INITIAL state from Earth-fixed frame to Inertial Frame.
-    systemInitialState = transformStateToGlobalFrame(
-                systemInitialState,
-                simulationStartEpoch,
-                earthRotationalEphemeris );
-
     //! Define list of dependent variables to save.
     //! The file that prints out the text saying what is saved has been modified
     //! to mute this message. During optimization this would clutter the
     //! terminal screen and is incredibly annoying.
-    std::vector< boost::shared_ptr< SingleDependentVariableSaveSettings > > dependentVariablesList;
-    dependentVariablesList.push_back(
+    std::vector< boost::shared_ptr< SingleDependentVariableSaveSettings > > dep_varList;
+    dep_varList.push_back(
                 boost::make_shared< SingleDependentVariableSaveSettings >(
                     body_fixed_relative_cartesian_position,
-                    "HORUS",
-                    "Earth" ) );
-    dependentVariablesList.push_back(
+                    vehicleName,
+                    centralBodyName ) );
+    dep_varList.push_back(
                 boost::make_shared< SingleDependentVariableSaveSettings >(
                     body_fixed_relative_spherical_position,
-                    "HORUS",
-                    "Earth" ) );
-    //dependentVariablesList.push_back(
-    //            boost::make_shared< SingleDependentVariableSaveSettings >(
-    //                mach_number_dependent_variable,
-    //                "HORUS" ) );
-    dependentVariablesList.push_back(
+                    vehicleName,
+                    centralBodyName ) );
+    dep_varList.push_back(
+                boost::make_shared< SingleDependentVariableSaveSettings >(
+                    mach_number_dependent_variable,
+                    vehicleName ) );
+    dep_varList.push_back(
                 boost::make_shared< SingleDependentVariableSaveSettings >(
                     altitude_dependent_variable,
-                    "HORUS",
-                    "Earth" ) );
-    //dependentVariablesList.push_back(
-    //            boost::make_shared< SingleAccelerationDependentVariableSaveSettings >(
-    //                aerodynamic,
-    //                "HORUS",
-    //                "Earth",
-    //                1 ) );
-    //dependentVariablesList.push_back(
+                    vehicleName,
+                    centralBodyName ) );
+    dep_varList.push_back(
+                boost::make_shared< SingleAccelerationDependentVariableSaveSettings >(
+                    aerodynamic,
+                    vehicleName,
+                    centralBodyName,
+                    1 ) );
+    //dep_varList.push_back(
     //            boost::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
-    //                "HORUS",
+    //                vehicleName,
     //                latitude_angle,
-    //                "Earth") );
-    //dependentVariablesList.push_back(
+    //                centralBodyName) );
+    //dep_varList.push_back(
     //            boost::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
-    //                "HORUS",
+    //                vehicleName,
     //                longitude_angle,
-    //                "Earth") );
-    dependentVariablesList.push_back(
+    //                centralBodyName) );
+    dep_varList.push_back(
                 boost::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
-                    "HORUS",
+                    vehicleName,
                     heading_angle,
-                    "Earth") );
-    dependentVariablesList.push_back(
+                    centralBodyName) );
+    dep_varList.push_back(
                 boost::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
-                    "HORUS",
+                    vehicleName,
                     flight_path_angle,
-                    "Earth") );
-    dependentVariablesList.push_back(
+                    centralBodyName) );
+    dep_varList.push_back(
                 boost::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
-                    "HORUS",
+                    vehicleName,
                     angle_of_attack,
-                    "Earth") );
-    dependentVariablesList.push_back(
+                    centralBodyName) );
+    dep_varList.push_back(
                 boost::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
-                    "HORUS",
+                    vehicleName,
                     angle_of_sideslip,
-                    "Earth") );
-    dependentVariablesList.push_back(
+                    centralBodyName) );
+    dep_varList.push_back(
                 boost::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
-                    "HORUS",
+                    vehicleName,
                     bank_angle,
-                    "Earth") );
+                    centralBodyName) );
 
     // Create object with list of dependent variables
-    boost::shared_ptr< DependentVariableSaveSettings > dependentVariablesToSave =
-            boost::make_shared< DependentVariableSaveSettings >( dependentVariablesList );
+    boost::shared_ptr< DependentVariableSaveSettings > dep_varToSave =
+            boost::make_shared< DependentVariableSaveSettings >( dep_varList );
 
     //! Define termination conditions
     //! Dominic mentioned something about terminating at exactly the termination
@@ -585,26 +612,30 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //!
     //! Per Dominic:
     //! If I remember correctly, these errors (dnet....) are thrown by NRLMSISE
-    //! when the altitude becomes < 0. The good thing is that the propagation
+    //! when the altitude becomes out of range. The good thing is that the propagation
     //! results up until the error should be saved (numerical solution and
     //! dependent variables), so you can verify whether the last step gets
     //! close to zero. Note that the very last step, where it crashes, won't be
     //! saved, so you may find that the results don't actually show it getting
     //! below zero.
 
-   // boost::shared_ptr< SingleDependentVariableSaveSettings > terminationDependentVariable =
-    //        boost::make_shared< SingleDependentVariableSaveSettings >(
-    //            altitude_dependent_variable,
-    //            "HORUS",
-    //            "Earth" );
+    /* boost::shared_ptr< SingleDependentVariableSaveSettings > terminationDependentVariable =
+             boost::make_shared< SingleDependentVariableSaveSettings >(
+                 altitude_dependent_variable,
+                 vehicleName,
+                 centralBodyName );
 
+    boost::shared_ptr< PropagationTerminationSettings > terminationSettings =
+            boost::make_shared< PropagationDependentVariableTerminationSettings >(
+                terminationDependentVariable,
+                h_f,
+                true );
+*/
 
     //In case your custom function requires more inputs (e.g., it may depend on the position of the spacecraft or other variables that are not the current time), you can use boost::bind to add more inputs.
-
     //As an example, the case where the state of the spacecraft is added as an input is shown below:
-
    // boost::function< Eigen::Vector6d( ) > HORUS_StateFunction =
-     //       boost::bind( &Body::getState, bodyMap.at( "HORUS" ) );
+     //       boost::bind( &Body::getState, bodyMap.at( vehicleName ) );
 
     std::vector< double > term_cond;
     term_cond.push_back( unit_conversions::convertDegreesToRadians( 0.75 ) );
@@ -612,13 +643,8 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
     boost::shared_ptr< PropagationTerminationSettings > terminationSettings =
             boost::make_shared< PropagationCustomTerminationSettings >(
-                boost::bind( &StopOrNot, bodyMap, "HORUS", term_cond ) );
+                boost::bind( &StopOrNot, bodyMap, vehicleName, term_cond ) );
 
-    //boost::shared_ptr< PropagationTerminationSettings > terminationSettings =
-    //        boost::make_shared< PropagationDependentVariableTerminationSettings >(
-    //            terminationDependentVariable,
-    //            h_f,
-    //            true );
 
     //! Create propagation settings.
     boost::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
@@ -629,25 +655,24 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
               systemInitialState,
               terminationSettings,
               cowell,
-              dependentVariablesToSave );
+              dep_varToSave );
+
+    //! Create integrator settings.
     boost::shared_ptr< IntegratorSettings<  > > integratorSettings =
             boost::make_shared< IntegratorSettings< > >
             ( rungeKutta4,
               simulationStartEpoch,
-              fixedStepSize );
-
+              fixedStepSize, 1, false );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             PROPAGATE ORBIT            ////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- //   std::cout << "Propagating" << std::endl;
 
     //! Create simulation object and propagate dynamics.
     SingleArcDynamicsSimulator< double > dynamicsSimulator(
                 bodyMap,
                 integratorSettings,
                 propagatorSettings );
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////        CLEAN UP AND CALCULATE FITNESS                //////////////////////////////////////////
@@ -840,7 +865,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                   std::setw(16) << tof <<
                   std::setw(120) << simulation_file_name_suffix << std::endl;
 
-
+   std::cout <<dynamicsSimulator.getPropagationTerminationReason( )->getPropagationTerminationReason( ) << std::endl;
 
 
 

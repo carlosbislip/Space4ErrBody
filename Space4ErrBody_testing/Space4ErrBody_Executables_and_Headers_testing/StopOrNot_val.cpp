@@ -6,19 +6,17 @@
 #include <Tudat/Astrodynamics/BasicAstrodynamics/unitConversions.h>
 #include <Tudat/Astrodynamics/Aerodynamics/flightConditions.h>
 
-namespace tudat
-{
 
-bool StopOrNot( const simulation_setup::NamedBodyMap& bodyMap,
-                const std::string vehicleName,
+bool StopOrNot( const tudat::simulation_setup::NamedBodyMap& bodyMap,
+                const std::string &vehicleName,
                 const std::vector< double > term_cond ) {
 
     //! Extract current latitude
     //! //const double lat_c_rad = FlightConditions_->getCurrentGeodeticLatitude( );
-    const double lat_c_rad = bodyMap.at( vehicleName )->getFlightConditions( )->getAerodynamicAngleCalculator( )->getAerodynamicAngle( reference_frames::latitude_angle );
+    const double lat_c_rad = bodyMap.at( vehicleName )->getFlightConditions( )->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::latitude_angle );
 
     //! Extract current longitude
-    const double lon_c_rad = bodyMap.at( vehicleName )->getFlightConditions( )->getAerodynamicAngleCalculator( )->getAerodynamicAngle( reference_frames::longitude_angle );
+    const double lon_c_rad = bodyMap.at( vehicleName )->getFlightConditions( )->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::longitude_angle );
 
     //! Extract initial coordinates
     const double lat_i_rad = bodyMap.at( vehicleName )->getInitialLat();
@@ -67,4 +65,3 @@ bool StopOrNot( const simulation_setup::NamedBodyMap& bodyMap,
     
 return done;
 }
-} // namespace tudat

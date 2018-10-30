@@ -174,7 +174,6 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     using namespace bislip;
 
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            UNPACK INPUT DATA             //////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -229,52 +228,26 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //! Assign initial Mach
     const double gamma_i = initialConditionsValues_[4]; // kg
 
+    //! Assign initial coordinates
     const double lat_i_deg = initialConditionsValues_[ 0 ];
     const double lon_i_deg = initialConditionsValues_[ 1 ];
+
+    //! Assign final coordinates and additional termination conditions
     const double lat_f_deg = terminationConditionsValues_[ 0 ];
     const double lon_f_deg = terminationConditionsValues_[ 1 ];
+    const double d_f_deg = terminationConditionsValues_[ 2 ];
     const double h_f = terminationConditionsValues_[ 3 ];
-    //const double V_f = terminationConditionsValues_[ 4 ];
-    const double n_max = terminationConditionsValues_[ 5 ];
+    const double n_max = terminationConditionsValues_[ 4 ];
+    const double q_dot_max = terminationConditionsValues_[ 5 ];
+    const double q_d_max = terminationConditionsValues_[ 6 ];
 
     //! Convert angles from degrees to radians
     const double lat_i_rad = unit_conversions::convertDegreesToRadians( lat_i_deg );
     const double lon_i_rad = unit_conversions::convertDegreesToRadians( lon_i_deg );
     const double lat_f_rad = unit_conversions::convertDegreesToRadians( lat_f_deg );
     const double lon_f_rad = unit_conversions::convertDegreesToRadians( lon_f_deg );
-    /*
-    Eigen::VectorXd xn( nodes );
-    Eigen::VectorXd x_n_copy( nodes );
-    Eigen::VectorXd E( nodes );
-    Eigen::VectorXd E_hat( nodes );
-    Eigen::VectorXd xnn( nodes );
-    Eigen::VectorXd E_mapped( nodes );
-    Eigen::VectorXd alpha_deg( nodes );
-    Eigen::VectorXd eps_T_deg( nodes );
-    Eigen::VectorXd alpha_rad( nodes );
-    Eigen::VectorXd eps_T_rad( nodes );
-    Eigen::VectorXd m_dot( nodes );
-    Eigen::VectorXd gamma_deg( nodes );
-    Eigen::VectorXd sigma_deg( nodes );
-    Eigen::VectorXd gamma_rad( nodes );
-    Eigen::VectorXd sigma_rad( nodes );
-    Eigen::VectorXd chi_i_rad( nodes );
-    Eigen::VectorXd chi_i_deg( nodes );
-    Eigen::VectorXd height( nodes );
-    Eigen::VectorXd Va( nodes );
-    */
 
-    //    std::vector< std::tuple < double, double > > xn_interval;
-    //    std::vector< std::tuple < double, double > > alpha_deg;
-    //    std::vector< std::tuple < double, double > > eps_T_deg;
-    //    std::vector< std::tuple < double, double > > throttle;
-    //    std::vector< std::tuple < double, double > > m_dot;
-    //    std::vector< std::tuple < double, double > > gamma_deg;
-    //    std::vector< std::tuple < double, double > > sigma_deg;
-    //    std::vector< std::tuple < double, double > > chi_i_deg;
-    //    std::vector< std::tuple < double, double > > height;
-    //    std::vector< std::tuple < double, double > > Va;
-
+    //! Declare and allocate vectors of interest.
     Eigen::VectorXd xn_interval( nodes - 1 );
     Eigen::VectorXd xn( nodes );
     Eigen::VectorXd alpha_deg( nodes );
@@ -285,23 +258,8 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     Eigen::VectorXd E( nodes );
     Eigen::VectorXd E_hat( nodes );
     Eigen::VectorXd E_mapped( nodes );
-    /*    Eigen::VectorXd alpha_rad_ordered( nodes );
-    Eigen::VectorXd eps_T_rad_ordered( nodes );
-    Eigen::VectorXd m_dot_ordered( nodes );
-    Eigen::VectorXd gamma_deg_ordered( nodes );
-    Eigen::VectorXd sigma_deg_ordered( nodes );
-    Eigen::VectorXd gamma_rad_ordered( nodes );
-    Eigen::VectorXd sigma_rad_ordered( nodes );
-    Eigen::VectorXd chi_i_rad_ordered( nodes );
-    Eigen::VectorXd chi_i_deg_ordered( nodes );
-    Eigen::VectorXd height_ordered( nodes );
-    Eigen::VectorXd Va_ordered( nodes );
-    Eigen::VectorXd E_ordered( nodes );
-    Eigen::VectorXd E_hat_ordered( nodes );
-    Eigen::VectorXd E_mapped( nodes );
-*/
 
-
+    //! Various parameters
     const double R_E = 6.378137e6;
     const double mu = 3.986004418e14;
     const double omega_E = 7.292115*1E-5;
@@ -313,7 +271,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     double rho, a, g0;
     g0 = gravs.norm();
 
-    int offset;
+    //! Re-allocate desicion vector values into workable vectors.
     for( int i = 0; i < nodes; i++ )
     {
         if ( i < nodes )
@@ -326,22 +284,9 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
         alpha_rad( i ) = unit_conversions::convertDegreesToRadians( alpha_deg( i ) );
         eps_T_rad( i ) = unit_conversions::convertDegreesToRadians( eps_T_deg( i ) );
-        //        gamma_rad_ordered( i ) = unit_conversions::convertDegreesToRadians( gamma_deg_ordered( i ) );
-        //        sigma_rad_ordered( i ) = unit_conversions::convertDegreesToRadians( sigma_deg_ordered( i ) );
-        //        chi_i_rad_ordered( i ) = unit_conversions::convertDegreesToRadians( chi_i_deg_ordered( i ) );
-        //        xn_interval.emplace_back( std::make_tuple( x[ 0 + offset ], i  ) );
-        //        alpha_deg.emplace_back( std::make_tuple( x[ 1 + offset ], x[ 0 + offset ] ) );
-        //        eps_T_deg.emplace_back( std::make_tuple( x[ 2 + offset ], x[ 0 + offset ] ) );
-        //m_dot.emplace_back(     std::make_tuple( x[ 3 + offset ], x[ 0 + offset ] ) );
-        //gamma_deg.emplace_back( std::make_tuple( x[ 4 + offset ], x[ 0 + offset ] ) );
-        //sigma_deg.emplace_back( std::make_tuple( x[ 5 + offset ], x[ 0 + offset ] ) );
-        //height.emplace_back(    std::make_tuple( x[ 6 + offset ], x[ 0 + offset ] ) );
-        //Va.emplace_back(        std::make_tuple( x[ 7 + offset ], x[ 0 + offset ] ) );
-        //chi_i_deg.emplace_back( std::make_tuple( x[ 8 + offset ], x[ 0 + offset ] ) );
-
     }
 
-
+    //! Create vector of node locations
     xn( 0 ) = 0;
     for( int i = 1; i < nodes + 1; i++ )
     {
@@ -352,10 +297,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     std::cout << "x =  " << std::endl;
     for( int i = 0; i < int(x.size()); i++ )
     {
-
         std::cout << i << "   " << x[i] << std::endl;
-
-
     }
     std::cout << "-------" << std::endl;
     std::cout << "xn_interval =  " << xn_interval << std::endl;
@@ -371,20 +313,21 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     std::cout << "-------" << std::endl;
 */
 
-    //! Impose constraints on lowest xn
+    //! Impose constraints on first and last energy nodes
     a = 301.7;//NRLMSISE00Atmosphere::getSpeedOfSound( R_E + height( 0 ), 0, 0, simulationStartEpoch );
-    //height_ordered[ 0 ] = h_i;
     double V_i = a * Mach_i;
     double V_f = 0.99 * sqrt( mu / ( R_E + h_f ) );
     double E_min = g0 * h_i + 0.5 * V_i * V_i;
     double E_max = g0 * h_f + 0.5 * V_f * V_f;
 
+    //! Normalize fist and last Energy nodes
     double E_hat_min = E_min/E_max;
     double E_hat_max = E_max/E_max;
 
+    //! Map energy levels to control node locations
     E_mapped =  ( E_hat_max - E_hat_min ) * xn.array() + E_hat_min;
 
-    //! Load data.
+    //! Associate decision vector values to mapped energy levels within data maps
     std::map< double, double > map_alpha_deg, map_eps_T_deg, map_throttle, map_alpha_rad, map_eps_T_rad;
     for ( unsigned int i = 0; i < E_mapped.size( ); ++i )
     {
@@ -395,15 +338,12 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
         map_eps_T_rad[ E_mapped( i ) ] = alpha_rad( i );
     }
 
-
-
-
     //! Create interpolator
     std::shared_ptr< InterpolatorSettings > interpolatorSettings =
             std::make_shared< tudat::interpolators::InterpolatorSettings >( cubic_spline_interpolator );
     std::shared_ptr< OneDimensionalInterpolator< double, double > > interpolator_alpha_deg =
-           createOneDimensionalInterpolator( map_alpha_deg, interpolatorSettings );
-/*
+            createOneDimensionalInterpolator( map_alpha_deg, interpolatorSettings );
+    /*
     //! Interpolate
     double interpolated_alpha_deg = interpolator_alpha_deg->interpolate( .23 );
     std::cout << "interpolated_alpha_deg" << interpolated_alpha_deg << std::endl;
@@ -411,8 +351,9 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 */
     double lat_f_deg_calc = lat_i_deg;
     double lon_f_deg_calc = lon_i_deg;
-    double d_deg          = unit_conversions::convertRadiansToDegrees( getAngularDistance (lat_i_rad,lon_i_rad,lat_f_rad,lon_f_rad) );
-    std::cout << d_deg << std::endl;
+    double d_i_deg        = unit_conversions::convertRadiansToDegrees( getAngularDistance (lat_i_rad,lon_i_rad,lat_f_rad,lon_f_rad) );
+    double d_f_deg_calc          = d_i_deg;
+    std::cout << d_f_deg_calc << std::endl;
     double h_f_calc       = h_i;
     double tof = simulation_settingsValues_[ 1 ];
     std::string simulation_file_name_suffix;
@@ -815,8 +756,8 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //       boost::bind( &Body::getState, bodyMap.at( vehicle_name_ ) );
 
     std::vector< double > term_cond;
-    term_cond.push_back( terminationConditionsValues_[ 2 ] );
-    term_cond.push_back( terminationConditionsValues_[ 3 ] );
+    term_cond.push_back( d_f_deg );
+    term_cond.push_back( h_f );
 
     boost::shared_ptr< PropagationTerminationSettings > terminationSettings =
             boost::make_shared< PropagationCustomTerminationSettings >(

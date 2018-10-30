@@ -1,0 +1,4 @@
+Node Interval
+Angle of Attack
+Thrust Elevation Angle
+Throttle Setting

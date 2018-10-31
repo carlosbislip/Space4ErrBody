@@ -342,13 +342,12 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     std::shared_ptr< InterpolatorSettings > interpolatorSettings =
             std::make_shared< tudat::interpolators::InterpolatorSettings >( cubic_spline_interpolator );
     std::shared_ptr< OneDimensionalInterpolator< double, double > > interpolator_alpha_deg =
-            createOneDimensionalInterpolator( map_alpha_deg, interpolatorSettings );
-    /*
+            createOneDimensionalInterpolator< double, double >( map_alpha_deg, interpolatorSettings );
+
     //! Interpolate
     double interpolated_alpha_deg = interpolator_alpha_deg->interpolate( .23 );
     std::cout << "interpolated_alpha_deg" << interpolated_alpha_deg << std::endl;
 
-*/
     double lat_f_deg_calc = lat_i_deg;
     double lon_f_deg_calc = lon_i_deg;
     double d_i_deg        = unit_conversions::convertRadiansToDegrees( getAngularDistance (lat_i_rad,lon_i_rad,lat_f_rad,lon_f_rad) );
@@ -372,20 +371,20 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     const std::string centralBodyName = "Earth";
 
     //! Declare/define simulation body settings data map.
-    std::map< std::string, boost::shared_ptr< BodySettings > > bodySettings =
+    std::map< std::string, std::shared_ptr< BodySettings > > bodySettings =
             getDefaultBodySettings( { centralBodyName },
                                     simulationStartEpoch - 10.0 * fixedStepSize,
                                     simulationEndEpoch + 10.0 * fixedStepSize );
 
     //! Define atmospheric model.
-    bodySettings[ centralBodyName ]->atmosphereSettings = boost::make_shared< AtmosphereSettings >(
+    bodySettings[ centralBodyName ]->atmosphereSettings = std::make_shared< AtmosphereSettings >(
                 nrlmsise00 );
 
     //! Define ephemeris model settings.
     //! This is an acceptable 'cheat' were Earth is placed at the barycenter.
     //! Use only when there arent any third body perturbations (Moon, Sun, etc.)
     bodySettings[ centralBodyName ]->ephemerisSettings =
-            boost::make_shared< ConstantEphemerisSettings >(
+            std::make_shared< ConstantEphemerisSettings >(
                 Eigen::Vector6d::Zero( ), "SSB", "J2000" );
 
     //! Reset ephemeris to J2000.
@@ -405,7 +404,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     double flattening_Earth = 1 / 1;//nput_data_.back();
     if (flattening_Earth != 1)
     {
-        bodySettings[ centralBodyName ]->shapeModelSettings = boost::make_shared< OblateSphericalBodyShapeSettings >( radius_Earth, flattening_Earth );
+        bodySettings[ centralBodyName ]->shapeModelSettings = std::make_shared< OblateSphericalBodyShapeSettings >( radius_Earth, flattening_Earth );
 
         // Declare variable in which raw result is to be put by Spice function.
         double radii[ 3 ];
@@ -443,7 +442,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     NamedBodyMap bodyMap = createBodies( bodySettings );
 
     //! Create Earth's rotational ephemeris.
-    boost::shared_ptr< ephemerides::RotationalEphemeris > earthRotationalEphemeris =
+    std::shared_ptr< ephemerides::RotationalEphemeris > earthRotationalEphemeris =
             bodyMap.at( centralBodyName )->getRotationalEphemeris( );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -485,11 +484,11 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     momentCoefficientFiles[ 1 ] = aeroCoeffFileList_[2]; // Set pitch moment coefficient file
     // controlSurfaceMomentCoefficientFiles[ 1 ] = controlSurfaceMomentCoefficients; // Set pitch moment coefficient increment file
 
-    //       boost::shared_ptr< ControlSurfaceIncrementAerodynamicInterface > controlSurfaceInterface =
-    //              boost::make_shared< CustomControlSurfaceIncrementAerodynamicInterface >(
+    //       std::shared_ptr< ControlSurfaceIncrementAerodynamicInterface > controlSurfaceInterface =
+    //              std::make_shared< CustomControlSurfaceIncrementAerodynamicInterface >(
     //                   &dummyControlIncrements,
     //                   boost::assign::list_of( angle_of_attack_dependent )( control_surface_deflection_dependent ) );
-    //       std::map< std::string, boost::shared_ptr< ControlSurfaceIncrementAerodynamicInterface >  > controlSurfaceList;
+    //       std::map< std::string, std::shared_ptr< ControlSurfaceIncrementAerodynamicInterface >  > controlSurfaceList;
     //       controlSurfaceList[ "bodyflap" ] = controlSurfaceInterface;
 
     //! Define reference frame in which the loaded coefficients are defined.
@@ -499,7 +498,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
 
     //! Load and parse coefficient files; create coefficient settings.
-    boost::shared_ptr< AerodynamicCoefficientSettings > aerodynamicCoefficientSettings =
+    std::shared_ptr< AerodynamicCoefficientSettings > aerodynamicCoefficientSettings =
             readTabulatedAerodynamicCoefficientsFromFiles(
                 forceCoefficientFiles,
                 momentCoefficientFiles,
@@ -512,7 +511,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                 areCoefficientsInNegativeAxisDirection );
 
     //! Create shared pointer for aerodynamic coefficient increments.
-    // boost::shared_ptr< system_models::VehicleSystems > systemsModels = boost::make_shared< system_models::VehicleSystems >( );
+    // std::shared_ptr< system_models::VehicleSystems > systemsModels = std::make_shared< system_models::VehicleSystems >( );
 
     //bodyMap.at( vehicle_name_ )->getFlightConditions( )->getAerodynamicAngleCalculator( )->setOrientationAngleFunctions(
     //            boost::lambda::constant( constantAngleOfAttack ) );
@@ -520,7 +519,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     ///////// End: Vehicle Aerodynamics Section
 
     //! Create vehicle objects.
-    bodyMap[ vehicle_name_ ] = boost::make_shared< simulation_setup::Body >( );
+    bodyMap[ vehicle_name_ ] = std::make_shared< simulation_setup::Body >( );
 
     //! Set body Mass.
     bodyMap[ vehicle_name_ ]->setConstantBodyMass( M_i );
@@ -585,16 +584,37 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     std::vector< std::string > centralBodies;
 
     //! Declare acceleration data map.
-    std::map< std::string, std::vector< boost::shared_ptr< AccelerationSettings > > > vehicleAccelerations;
+    std::map< std::string, std::vector< std::shared_ptr< AccelerationSettings > > > vehicleAccelerations;
 
     //! Define gravitational model. Arbitrary aximum degree/order. According to
     //! Dominic, equivalent functionality to Cartesian with corresponding maximum
     //! degree/order.
-    vehicleAccelerations[ centralBodyName ].push_back( boost::make_shared< SphericalHarmonicAccelerationSettings >( 5, 5 ) );
+    vehicleAccelerations[ centralBodyName ].push_back( std::make_shared< SphericalHarmonicAccelerationSettings >( 5, 5 ) );
 
     //! Define aerodynamic accelerations.
     //! Aerodynamic accelerations are attached differently than gravitational. Why?
-    vehicleAccelerations[ centralBodyName ].push_back( boost::make_shared< AccelerationSettings >( aerodynamic ) );
+    vehicleAccelerations[ centralBodyName ].push_back( std::make_shared< AccelerationSettings >( aerodynamic ) );
+
+
+
+    double thrustMagnitude = 25.0;
+    double specificImpulse = 5000.0;
+    std::shared_ptr< ThrustDirectionGuidanceSettings > thrustDirectionGuidanceSettings =
+            std::make_shared< ThrustDirectionGuidanceSettings >(thrust_direction_from_existing_body_orientation, "Earth" );
+    // This line will become a function.. using boost::bind. Leave it as is for now. COntact Dominic in the futre.
+
+    std::shared_ptr< ThrustMagnitudeSettings > thrustMagnitudeSettings =
+          std::make_shared< ConstantThrustMagnitudeSettings >( thrustMagnitude, specificImpulse );
+    //FromFunctionThrustMagnitudeSettings(
+    //         thrustMagnitudeFunction, specificImpulseFunction,
+    //         isEngineOnFunction, bodyFixedThrustDirection );
+
+    // Define acceleration model settings.
+    std::map< std::string, std::vector< std::shared_ptr< AccelerationSettings > > > accelerationsOfVehicle;
+    accelerationsOfVehicle[ "Vehicle" ].push_back(
+                std::make_shared< ThrustAccelerationSettings >( thrustDirectionGuidanceSettings, thrustMagnitudeSettings ) );
+
+
 
     //! Assign acceleration map from the vehicleAccelerations data map.
     accelerationMap[ vehicle_name_ ] = vehicleAccelerations;
@@ -615,13 +635,13 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
     //! Guidance is set AFTER the accelerations and BEFORE propagating.
     //! Declare and assign aerodynamic guidance functions.
-    boost::shared_ptr< aerodynamics::AerodynamicGuidance > aerodynamicGuidance;
+    std::shared_ptr< aerodynamics::AerodynamicGuidance > aerodynamicGuidance;
     //if ( int( input_data_[ 0 ] ) == 0 )
     //{
 
 
     aerodynamicGuidance =
-            boost::make_shared< MyAerodynamicGuidance >(
+            std::make_shared< MyAerodynamicGuidance >(
                 bodyMap,
                 vehicle_name_,
                 xn, alpha_rad, eps_T_rad, throttle, E_mapped );
@@ -632,7 +652,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //else
     // {
     //   aerodynamicGuidance =
-    //           boost::make_shared< ValidationAerodynamicGuidance >(
+    //           std::make_shared< ValidationAerodynamicGuidance >(
     //               bodyMap,
     //              vehicle_name_);
     // }
@@ -656,71 +676,71 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //! The file that prints out the text saying what is saved has been modified
     //! to mute this message. During optimization this would clutter the
     //! terminal screen and is incredibly annoying.
-    std::vector< boost::shared_ptr< SingleDependentVariableSaveSettings > > dep_varList;
+    std::vector< std::shared_ptr< SingleDependentVariableSaveSettings > > dep_varList;
     dep_varList.push_back(
-                boost::make_shared< SingleDependentVariableSaveSettings >(
+                std::make_shared< SingleDependentVariableSaveSettings >(
                     body_fixed_relative_cartesian_position,
                     vehicle_name_,
                     centralBodyName ) );
     dep_varList.push_back(
-                boost::make_shared< SingleDependentVariableSaveSettings >(
+                std::make_shared< SingleDependentVariableSaveSettings >(
                     body_fixed_relative_spherical_position,
                     vehicle_name_,
                     centralBodyName ) );
     dep_varList.push_back(
-                boost::make_shared< SingleDependentVariableSaveSettings >(
+                std::make_shared< SingleDependentVariableSaveSettings >(
                     mach_number_dependent_variable,
                     vehicle_name_ ) );
     dep_varList.push_back(
-                boost::make_shared< SingleDependentVariableSaveSettings >(
+                std::make_shared< SingleDependentVariableSaveSettings >(
                     altitude_dependent_variable,
                     vehicle_name_,
                     centralBodyName ) );
     dep_varList.push_back(
-                boost::make_shared< SingleAccelerationDependentVariableSaveSettings >(
+                std::make_shared< SingleAccelerationDependentVariableSaveSettings >(
                     aerodynamic,
                     vehicle_name_,
                     centralBodyName,
                     1 ) );
     //dep_varList.push_back(
-    //            boost::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
+    //            std::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
     //                vehicle_name_,
     //                latitude_angle,
     //                centralBodyName) );
     //dep_varList.push_back(
-    //            boost::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
+    //            std::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
     //                vehicle_name_,
     //                longitude_angle,
     //                centralBodyName) );
     dep_varList.push_back(
-                boost::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
+                std::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
                     vehicle_name_,
                     heading_angle,
                     centralBodyName) );
     dep_varList.push_back(
-                boost::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
+                std::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
                     vehicle_name_,
                     flight_path_angle,
                     centralBodyName) );
     dep_varList.push_back(
-                boost::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
+                std::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
                     vehicle_name_,
                     angle_of_attack,
                     centralBodyName) );
     dep_varList.push_back(
-                boost::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
+                std::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
                     vehicle_name_,
                     angle_of_sideslip,
                     centralBodyName) );
     dep_varList.push_back(
-                boost::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
+                std::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
                     vehicle_name_,
                     bank_angle,
                     centralBodyName) );
 
     // Create object with list of dependent variables
-    boost::shared_ptr< DependentVariableSaveSettings > dep_varToSave =
-            boost::make_shared< DependentVariableSaveSettings >( dep_varList );
+    std::shared_ptr< DependentVariableSaveSettings > dep_varToSave =
+            std::make_shared< DependentVariableSaveSettings >( dep_varList );
 
     //! Define termination conditions
     //! Dominic mentioned something about terminating at exactly the termination
@@ -737,14 +757,14 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //! saved, so you may find that the results don't actually show it getting
     //! below zero.
 
-    /* boost::shared_ptr< SingleDependentVariableSaveSettings > terminationDependentVariable =
-             boost::make_shared< SingleDependentVariableSaveSettings >(
+    /* std::shared_ptr< SingleDependentVariableSaveSettings > terminationDependentVariable =
+             std::make_shared< SingleDependentVariableSaveSettings >(
                  altitude_dependent_variable,
                  vehicle_name_,
                  centralBodyName );
 
-    boost::shared_ptr< PropagationTerminationSettings > terminationSettings =
-            boost::make_shared< PropagationDependentVariableTerminationSettings >(
+    std::shared_ptr< PropagationTerminationSettings > terminationSettings =
+            std::make_shared< PropagationDependentVariableTerminationSettings >(
                 terminationDependentVariable,
                 h_f,
                 true );
@@ -759,14 +779,14 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     term_cond.push_back( d_f_deg );
     term_cond.push_back( h_f );
 
-    boost::shared_ptr< PropagationTerminationSettings > terminationSettings =
-            boost::make_shared< PropagationCustomTerminationSettings >(
+    std::shared_ptr< PropagationTerminationSettings > terminationSettings =
+            std::make_shared< PropagationCustomTerminationSettings >(
                 boost::bind( &StopOrNot, bodyMap, vehicle_name_, term_cond ) );
 
 
     //! Create propagation settings.
-    boost::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
-            boost::make_shared< TranslationalStatePropagatorSettings< double > >
+    std::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
+            std::make_shared< TranslationalStatePropagatorSettings< double > >
             ( centralBodies,
               accelerationModelMap,
               bodiesToPropagate,
@@ -776,8 +796,8 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
               dep_varToSave );
 
     //! Create integrator settings.
-    boost::shared_ptr< IntegratorSettings<  > > integratorSettings =
-            boost::make_shared< IntegratorSettings< > >
+    std::shared_ptr< IntegratorSettings<  > > integratorSettings =
+            std::make_shared< IntegratorSettings< > >
             ( rungeKutta4,
               simulationStartEpoch,
               fixedStepSize, 1, false );
@@ -862,7 +882,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
     //! Calculate angular distance of final state from target coordinates.
     const double d_rad = getAngularDistance( lat_f_rad_calc, lon_f_rad_calc, lat_f_rad, lon_f_rad );
-    d_deg = unit_conversions::convertRadiansToDegrees( d_rad );
+    double d_deg = unit_conversions::convertRadiansToDegrees( d_rad );
 
 
 

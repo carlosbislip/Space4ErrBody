@@ -674,34 +674,19 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     ///////////////////////             CREATE MASS RATE SETTINGS              ////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/*
     // Create mass rate models
     std::shared_ptr< MassRateModelSettings > massRateModelSettings =
           std::make_shared< FromThrustMassModelSettings >( true );
     std::map< std::string, std::shared_ptr< basic_astrodynamics::MassRateModel > > massRateModels;
-    massRateModels[ "Vehicle" ] = createMassRateModel(
-              "Vehicle", massRateModelSettings, bodyMap, accelerationModelMap );
+    massRateModels[ vehicle_name_ ] = createMassRateModel(
+              vehicle_name_, massRateModelSettings, bodyMap, accelerationModelMap );
 
     // Create settings for propagating the mass of the vehicle.
     std::vector< std::string > bodiesWithMassToPropagate;
-    bodiesWithMassToPropagate.push_back( "Vehicle" );
+    bodiesWithMassToPropagate.push_back( vehicle_name_ );
 
-    Eigen::VectorXd initialBodyMasses = Eigen::VectorXd( 1 );
-    initialBodyMasses( 0 ) = vehicleMass;
-
-    std::shared_ptr< SingleArcPropagatorSettings< double > > massPropagatorSettings =
-          std::make_shared< MassPropagatorSettings< double > >(
-              bodiesWithMassToPropagate, massRateModels, initialBodyMasses, terminationSettings );
-
-    // Create list of propagation settings.
-    std::vector< std::shared_ptr< SingleArcPropagatorSettings< double > > > propagatorSettingsVector;
-    propagatorSettingsVector.push_back( translationalPropagatorSettings );
-    propagatorSettingsVector.push_back( massPropagatorSettings );
-
-    // Create propagation settings for mass and translational dynamics concurrently
-    std::shared_ptr< PropagatorSettings< double > > propagatorSettings =
-          std::make_shared< MultiTypePropagatorSettings< double > >( propagatorSettingsVector, terminationSettings );
-*/
+    Eigen::VectorXd initialBodyMasses( 1 );
+    initialBodyMasses( 0 ) = M_i;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             CREATE PROPAGATION SETTINGS            ////////////////////////////////////////////
@@ -808,20 +793,21 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
     //In case your custom function requires more inputs (e.g., it may depend on the position of the spacecraft or other variables that are not the current time), you can use boost::bind to add more inputs.
     //As an example, the case where the state of the spacecraft is added as an input is shown below:
-    // boost::function< Eigen::Vector6d( ) > HORUS_StateFunction =
-    //       boost::bind( &Body::getState, bodyMap.at( vehicle_name_ ) );
+    // std::function< Eigen::Vector6d( ) > HORUS_StateFunction =
+    //       std::bind( &Body::getState, bodyMap.at( vehicle_name_ ) );
 
+    //! Define vector with termination conditions.
     std::vector< double > term_cond;
     term_cond.push_back( d_f_deg );
     term_cond.push_back( h_f );
 
+    //! Define termination settings.
     std::shared_ptr< PropagationTerminationSettings > terminationSettings =
             std::make_shared< PropagationCustomTerminationSettings >(
                 boost::bind( &StopOrNot, bodyMap, vehicle_name_, term_cond ) );
 
-
-    //! Create propagation settings.
-    std::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
+    //! Create translational propagation settings.
+    std::shared_ptr< TranslationalStatePropagatorSettings< double > > translationalPropagatorSettings =
             std::make_shared< TranslationalStatePropagatorSettings< double > >
             ( centralBodies,
               accelerationModelMap,
@@ -830,6 +816,20 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
               terminationSettings,
               cowell,
               dep_varToSave );
+
+    //! Create mass propagation settings.
+    std::shared_ptr< SingleArcPropagatorSettings< double > > massPropagatorSettings =
+          std::make_shared< MassPropagatorSettings< double > >(
+              bodiesWithMassToPropagate, massRateModels, initialBodyMasses, terminationSettings );
+
+    // Create list of propagation settings.
+    std::vector< std::shared_ptr< SingleArcPropagatorSettings< double > > > propagatorSettingsVector;
+    propagatorSettingsVector.push_back( translationalPropagatorSettings );
+    propagatorSettingsVector.push_back( massPropagatorSettings );
+
+    // Create propagation settings for mass and translational dynamics concurrently
+    std::shared_ptr< PropagatorSettings< double > > propagatorSettings =
+          std::make_shared< MultiTypePropagatorSettings< double > >( propagatorSettingsVector, terminationSettings );
 
     //! Create integrator settings.
     std::shared_ptr< IntegratorSettings<  > > integratorSettings =

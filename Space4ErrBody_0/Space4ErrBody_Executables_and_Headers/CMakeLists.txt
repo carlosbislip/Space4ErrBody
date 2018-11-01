@@ -32,12 +32,18 @@ set(SPACE4ERRBODY_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/getSorting.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/getGamma.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/getCoefficients.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/getCurrentBodyFixedThrustDirection.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/getCurrentThrustMagnitude.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/getCurrentEngineStatus.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/getE_hat.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/getEps_T.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/StopOrNot_val.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/updateGuidance.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/updateGuidance_val.cpp"
 #  "${CMAKE_CURRENT_SOURCE_DIR}/getF.cpp"
 )
+
+
 
 add_library(Space4ErrBody_Executables_and_Headers STATIC ${SPACE4ERRBODY_SOURCES} ${SPACE4ERRBODY_HEADERS})
 setup_tudat_library_target(Space4ErrBody_Executables_and_Headers "${CMAKE_CURRENT_SOURCE_DIR}")

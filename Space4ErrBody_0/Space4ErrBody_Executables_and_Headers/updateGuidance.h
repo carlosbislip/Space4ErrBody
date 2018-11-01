@@ -62,6 +62,7 @@ public:
         interpolator_eps_T_deg_( interpolator_eps_T_deg ),
         interpolator_throttle_( interpolator_throttle ) { }
 
+    //! Destructor.
     ~MyThrustGuidance( ){ }
 
     void updateGuidance( const double currentTime );
@@ -69,6 +70,8 @@ public:
     Eigen::Vector3d getCurrentBodyFixedThrustDirection( );
 
     double getCurrentThrustMagnitude( );
+
+    double getCurrentSpecificImpulse( );
 
     bool getCurrentEngineStatus( );
 
@@ -82,6 +85,7 @@ private:
     double currentEpsilon_;
     Eigen::Vector3d bodyFixedThrustDirection_;
     double currentThrustMagnitude_;
+    double currentSpecificImpulse_;
     bool currentEngineStatus_;
     double E_hat_;
 

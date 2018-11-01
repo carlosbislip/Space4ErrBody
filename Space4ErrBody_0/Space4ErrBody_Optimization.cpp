@@ -308,10 +308,10 @@ int main()
     //! Write original (unevolved) population to file
     if  ( output_settingsValues[ 0 ] == 1 )
     {
-        printPopulationToFile( isl_pert.get_population( ).get_x( ), this_run_settings_1,
-                               outputSubFolder, false );
-        printPopulationToFile( isl_pert.get_population( ).get_f( ), this_run_settings_1,
-                               outputSubFolder, true );
+     //   printPopulationToFile( isl_pert.get_population( ).get_x( ), this_run_settings_1,
+     //                          outputSubFolder, false );
+     //   printPopulationToFile( isl_pert.get_population( ).get_f( ), this_run_settings_1,
+     //                          outputSubFolder, true );
     }
 
     for( int i = 0; i < evolutions; i++ )

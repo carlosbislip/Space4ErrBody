@@ -22,7 +22,6 @@ void MyAerodynamicGuidance::updateGuidance( const double currentTime )
 {
     //! Set of parameters that I am yet to figure out how to pass/extract them around.
     const double c_ref = 13;
-    const double Isp = 472;
     const double del_x = 3;
     const double del_x_T = 0;
     const double del_z_T = -5;
@@ -117,6 +116,8 @@ void MyThrustGuidance::updateGuidance( const double currentTime )
     double thrustMagnitude = 250000.0;
 
     currentThrustMagnitude_ = throttle * thrustMagnitude;
+
+    currentSpecificImpulse_ = 472;
 
     //! Simplified expressions becuase thrust azimuth is known to be zero. I.e. phi_T = 0
     bodyFixedThrustDirection_( 0 ) = std::cos( currentEpsilon_ );

@@ -227,11 +227,11 @@ endif( )
 
 include(tudatLinkLibraries)
 
-list(APPEND TUDAT_APPLICATION_PROPAGATION_LIBRARIES tudat_simulation_setup tudat_ground_stations tudat_propagators
-    tudat_aerodynamics tudat_system_models tudat_geometric_shapes tudat_relativity tudat_gravitation tudat_mission_segments
-    tudat_electro_magnetism tudat_propulsion tudat_ephemerides ${TUDAT_APPLICATION_ITRS_LIBRARIES} tudat_numerical_integrators tudat_reference_frames
-    tudat_statistics tudat_propagators ${TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES} tudat_basic_astrodynamics
-    tudat_root_finders tudat_basic_mathematics tudat_input_output tudat_basics ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
+#list(APPEND TUDAT_APPLICATION_PROPAGATION_LIBRARIES tudat_simulation_setup tudat_ground_stations tudat_propagators
+#    tudat_aerodynamics tudat_system_models tudat_geometric_shapes tudat_relativity tudat_gravitation tudat_mission_segments
+#    tudat_electro_magnetism tudat_propulsion tudat_ephemerides ${TUDAT_APPLICATION_ITRS_LIBRARIES} tudat_numerical_integrators tudat_reference_frames
+#    tudat_statistics tudat_propagators ${TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES} tudat_basic_astrodynamics
+#    tudat_root_finders tudat_basic_mathematics tudat_input_output tudat_basics ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
 
 #list(APPEND TUDAT_APPLICATION_ESTIMATION_LIBRARIES tudat_simulation_setup tudat_observation_models tudat_ground_stations tudat_acceleration_partials
 #    tudat_observation_partials tudat_estimatable_parameters tudat_orbit_determination  tudat_propagators
@@ -244,5 +244,5 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Space4ErrBody_Executables_and_Head
 
 add_executable(Space4ErrBody_Optimization_0 "${SRCROOT}/Space4ErrBody_Optimization.cpp")
 setup_executable_target(Space4ErrBody_Optimization_0 "${SRCROOT}")
-target_link_libraries(Space4ErrBody_Optimization_0 Space4ErrBody_Executables_and_Headers ${TUDAT_APPLICATION_PROPAGATION_LIBRARIES}
+target_link_libraries(Space4ErrBody_Optimization_0 Space4ErrBody_Executables_and_Headers ${TUDAT_PROPAGATION_LIBRARIES}
     pthread ${Boost_LIBRARIES} )

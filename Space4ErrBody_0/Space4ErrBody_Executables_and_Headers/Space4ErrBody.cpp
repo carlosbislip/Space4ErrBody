@@ -335,32 +335,28 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
         map_eps_T_deg[ E_mapped( i ) ] = eps_T_deg( i );
         map_throttle[ E_mapped( i ) ] = throttle( i );
         map_alpha_rad[ E_mapped( i ) ] = alpha_rad( i );
-        map_eps_T_rad[ E_mapped( i ) ] = alpha_rad( i );
+        map_eps_T_rad[ E_mapped( i ) ] = eps_T_rad( i );
     }
 
     //! Create interpolator
     std::shared_ptr< InterpolatorSettings > interpolatorSettings =
             std::make_shared< tudat::interpolators::InterpolatorSettings >( cubic_spline_interpolator );
-    std::shared_ptr< OneDimensionalInterpolator< double, double > > interpolator_alpha_deg =
-            createOneDimensionalInterpolator< double, double >( map_alpha_deg, interpolatorSettings );
+    std::shared_ptr< OneDimensionalInterpolator< double, double > > interpolator_alpha_deg,interpolator_eps_T_deg,interpolator_throttle,interpolator_alpha_rad,interpolator_eps_T_rad =
 
-    //! Interpolate
-    double interpolated_alpha_deg = interpolator_alpha_deg->interpolate( .23 );
-    std::cout << "interpolated_alpha_deg" << interpolated_alpha_deg << std::endl;
+    interpolator_alpha_deg = createOneDimensionalInterpolator< double, double >( map_alpha_deg, interpolatorSettings );
+    interpolator_eps_T_deg =  createOneDimensionalInterpolator< double, double >( map_eps_T_deg, interpolatorSettings );
+    interpolator_throttle = createOneDimensionalInterpolator< double, double >( map_throttle, interpolatorSettings );
+    interpolator_alpha_rad = createOneDimensionalInterpolator< double, double >( map_alpha_rad, interpolatorSettings );
+    interpolator_eps_T_rad = createOneDimensionalInterpolator< double, double >( map_eps_T_rad, interpolatorSettings );
 
     double lat_f_deg_calc = lat_i_deg;
     double lon_f_deg_calc = lon_i_deg;
-    double d_i_deg        = unit_conversions::convertRadiansToDegrees( getAngularDistance (lat_i_rad,lon_i_rad,lat_f_rad,lon_f_rad) );
-    double d_f_deg_calc          = d_i_deg;
+    double d_i_deg        = unit_conversions::convertRadiansToDegrees( getAngularDistance(lat_i_rad,lon_i_rad,lat_f_rad,lon_f_rad) );
+    double d_f_deg_calc   = d_i_deg;
     std::cout << d_f_deg_calc << std::endl;
     double h_f_calc       = h_i;
     double tof = simulation_settingsValues_[ 1 ];
     std::string simulation_file_name_suffix;
-    //! If it was in order, move on to simulation. Kick out otherwise.
-    // if ( check == nodes)
-    //{
-    //move forward with everything else
-    //   std::cout << "This one is in order! " << std::endl;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            CREATE ENVIRONMENT            //////////////////////////////////////////////////////
@@ -524,6 +520,9 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //! Set body Mass.
     bodyMap[ vehicle_name_ ]->setConstantBodyMass( M_i );
 
+    //! Set E_max.
+   // bodyMap[ vehicle_name_ ]->setE_max( E_max );
+
     //! Pass Earth's rotation rate
     bodyMap[ vehicle_name_ ]->setCentralBodyRotationRate( omega_E );
 
@@ -578,7 +577,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     ///////////////////////             CREATE ACCELERATIONS            ///////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    //! Declare propagator settings variables.
+    //! Declare acceleration settings variables.
     SelectedAccelerationMap accelerationMap;
     std::vector< std::string > bodiesToPropagate;
     std::vector< std::string > centralBodies;
@@ -595,26 +594,41 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //! Aerodynamic accelerations are attached differently than gravitational. Why?
     vehicleAccelerations[ centralBodyName ].push_back( std::make_shared< AccelerationSettings >( aerodynamic ) );
 
+    std::shared_ptr< MyThrustGuidance > ThrustGuidance = std::make_shared< MyThrustGuidance >(
+                bodyMap,
+                vehicle_name_,
+                E_max,
+                interpolator_eps_T_deg,
+                interpolator_throttle );
 
+    //double thrustMagnitude = 250000.0;
+    double specificImpulse = 500.0;
 
-    double thrustMagnitude = 25.0;
-    double specificImpulse = 5000.0;
     std::shared_ptr< ThrustDirectionGuidanceSettings > thrustDirectionGuidanceSettings =
             std::make_shared< ThrustDirectionGuidanceSettings >(thrust_direction_from_existing_body_orientation, "Earth" );
+    
+    std::function< double( ) > thrustMagnitudeFunction =
+            std::bind( &MyThrustGuidance::getCurrentThrustMagnitude, ThrustGuidance );
+
+    std::function< bool( ) > isEngineOnFunction =
+            std::bind( &MyThrustGuidance::getCurrentEngineStatus, ThrustGuidance );
+
+    std::function< Eigen::Vector3d( ) > BodyFixedThrustDirection =
+            std::bind( &MyThrustGuidance::getCurrentBodyFixedThrustDirection, ThrustGuidance );
+
+    std::function< void( const double ) > customThrustResetFunction =
+       std::bind( &MyThrustGuidance::updateGuidance, std::placeholders::_1 );
+
     // This line will become a function.. using boost::bind. Leave it as is for now. COntact Dominic in the futre.
-
     std::shared_ptr< ThrustMagnitudeSettings > thrustMagnitudeSettings =
-          std::make_shared< ConstantThrustMagnitudeSettings >( thrustMagnitude, specificImpulse );
-    //FromFunctionThrustMagnitudeSettings(
-    //         thrustMagnitudeFunction, specificImpulseFunction,
-    //         isEngineOnFunction, bodyFixedThrustDirection );
+     std::make_shared< FromFunctionThrustMagnitudeSettings >(
+             thrustMagnitudeFunction, [ = ]( const double ){ return specificImpulse; },
+             isEngineOnFunction, BodyFixedThrustDirection, customThrustResetFunction );
+    // std::make_shared< ConstantThrustMagnitudeSettings >( thrustMagnitude, specificImpulse );
 
-    // Define acceleration model settings.
-    std::map< std::string, std::vector< std::shared_ptr< AccelerationSettings > > > accelerationsOfVehicle;
-    accelerationsOfVehicle[ "Vehicle" ].push_back(
+    //! Define thrust acceleration settings.
+    vehicleAccelerations[ centralBodyName ].push_back(
                 std::make_shared< ThrustAccelerationSettings >( thrustDirectionGuidanceSettings, thrustMagnitudeSettings ) );
-
-
 
     //! Assign acceleration map from the vehicleAccelerations data map.
     accelerationMap[ vehicle_name_ ] = vehicleAccelerations;
@@ -635,30 +649,14 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
     //! Guidance is set AFTER the accelerations and BEFORE propagating.
     //! Declare and assign aerodynamic guidance functions.
-    std::shared_ptr< aerodynamics::AerodynamicGuidance > aerodynamicGuidance;
-    //if ( int( input_data_[ 0 ] ) == 0 )
-    //{
-
-
-    aerodynamicGuidance =
-            std::make_shared< MyAerodynamicGuidance >(
+    std::shared_ptr< aerodynamics::AerodynamicGuidance > AeroGuidance = std::make_shared< MyAerodynamicGuidance >(
                 bodyMap,
                 vehicle_name_,
-                xn, alpha_rad, eps_T_rad, throttle, E_mapped );
-
-
-
-    //}
-    //else
-    // {
-    //   aerodynamicGuidance =
-    //           std::make_shared< ValidationAerodynamicGuidance >(
-    //               bodyMap,
-    //              vehicle_name_);
-    // }
+                E_max,
+                interpolator_alpha_deg );
 
     //! Set Guidance angle functions.
-    setGuidanceAnglesFunctions( aerodynamicGuidance, bodyMap.at( vehicle_name_ ) );
+    setGuidanceAnglesFunctions( AeroGuidance, bodyMap.at( vehicle_name_ ) );
 
     //! Define constant orientation
     //double constantAngleOfAttack = unit_conversions::convertDegreesToRadians( 30 );

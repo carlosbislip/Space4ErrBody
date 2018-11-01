@@ -7,27 +7,18 @@
 #include <Tudat/Astrodynamics/Aerodynamics/aerodynamicGuidance.h>
 #include <Tudat/SimulationSetup/tudatSimulationHeader.h>
 
-namespace tudat { namespace aerodynamics {
+namespace bislip  { // namespace aerodynamics {
 
-
-//! Trying to implement a simple aerodynamic guidance. Initially taken from the
-//! TUDAT website.
-//! http://tudat.tudelft.nl/tutorials/tudatFeatures/accelerationSetup/aerodynamicGuidance.html#FlightConditions
-Eigen::Vector6d MyAerodynamicGuidance::getCoefficients( const double AoA, const double Mach )
+Eigen::Vector6d MyAerodynamicGuidance::getCoefficients( const std::vector< double > &coefficient_input )
 {
-    std::vector< double > CoefficientsInput_;
     Eigen::Vector6d newCoefficients;
 
-    // Define input to aerodynamic coefficients: take care of order of input (this depends on how the coefficients are created)!
-    CoefficientsInput_.push_back( AoA );
-    CoefficientsInput_.push_back( Mach );
-
     // Update and retrieve current aerodynamic coefficients
-    coefficientInterface_->updateCurrentCoefficients( CoefficientsInput_ );
-    newCoefficients = coefficientInterface_->getCurrentAerodynamicCoefficients( );
+    coefficientInterface_->updateCurrentCoefficients( coefficient_input );
+    //newCoefficients = coefficientInterface_->getCurrentAerodynamicCoefficients( );
 
-
-return newCoefficients;
+    return newCoefficients = coefficientInterface_->getCurrentAerodynamicCoefficients( );
 }
+
 } // namespace aerodynamics
-} // namespace tudat
+//} // namespace tudat

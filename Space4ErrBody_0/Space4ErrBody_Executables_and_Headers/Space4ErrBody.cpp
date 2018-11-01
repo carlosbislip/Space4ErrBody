@@ -585,13 +585,12 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //! Declare acceleration data map.
     std::map< std::string, std::vector< std::shared_ptr< AccelerationSettings > > > vehicleAccelerations;
 
-    //! Define gravitational model. Arbitrary aximum degree/order. According to
-    //! Dominic, equivalent functionality to Cartesian with corresponding maximum
+    //! Define gravitational model. The central body acts this force on itself.
+    //! Arbitrary maximum degree/order. Equivalent functionality to Cartesian with corresponding maximum
     //! degree/order.
     vehicleAccelerations[ centralBodyName ].push_back( std::make_shared< SphericalHarmonicAccelerationSettings >( 5, 5 ) );
 
-    //! Define aerodynamic accelerations.
-    //! Aerodynamic accelerations are attached differently than gravitational. Why?
+    //! Define aerodynamic accelerations. The atmosphere of the central body acts this force on the vehicle.
     vehicleAccelerations[ centralBodyName ].push_back( std::make_shared< AccelerationSettings >( aerodynamic ) );
 
     std::shared_ptr< MyThrustGuidance > ThrustGuidance = std::make_shared< MyThrustGuidance >(
@@ -602,32 +601,38 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                 interpolator_throttle );
 
     //double thrustMagnitude = 250000.0;
-    double specificImpulse = 500.0;
+    //double specificImpulse = 500.0;
 
     std::shared_ptr< ThrustDirectionGuidanceSettings > thrustDirectionGuidanceSettings =
             std::make_shared< ThrustDirectionGuidanceSettings >(thrust_direction_from_existing_body_orientation, "Earth" );
     
-    std::function< double( ) > thrustMagnitudeFunction =
+    std::function< double( const double ) > thrustMagnitudeFunction =
             std::bind( &MyThrustGuidance::getCurrentThrustMagnitude, ThrustGuidance );
 
-    std::function< bool( ) > isEngineOnFunction =
+    std::function< double( const double ) > specificImpulseFunction =
+            std::bind( &MyThrustGuidance::getCurrentSpecificImpulse, ThrustGuidance );
+
+    std::function< bool( const double ) > isEngineOnFunction =
             std::bind( &MyThrustGuidance::getCurrentEngineStatus, ThrustGuidance );
 
     std::function< Eigen::Vector3d( ) > BodyFixedThrustDirection =
             std::bind( &MyThrustGuidance::getCurrentBodyFixedThrustDirection, ThrustGuidance );
 
     std::function< void( const double ) > customThrustResetFunction =
-       std::bind( &MyThrustGuidance::updateGuidance, std::placeholders::_1 );
+       std::bind( &MyThrustGuidance::updateGuidance, ThrustGuidance, std::placeholders::_1 );
 
     // This line will become a function.. using boost::bind. Leave it as is for now. COntact Dominic in the futre.
     std::shared_ptr< ThrustMagnitudeSettings > thrustMagnitudeSettings =
      std::make_shared< FromFunctionThrustMagnitudeSettings >(
-             thrustMagnitudeFunction, [ = ]( const double ){ return specificImpulse; },
-             isEngineOnFunction, BodyFixedThrustDirection, customThrustResetFunction );
+                thrustMagnitudeFunction,
+                specificImpulseFunction,
+                isEngineOnFunction,
+                BodyFixedThrustDirection,
+                customThrustResetFunction );
     // std::make_shared< ConstantThrustMagnitudeSettings >( thrustMagnitude, specificImpulse );
 
-    //! Define thrust acceleration settings.
-    vehicleAccelerations[ centralBodyName ].push_back(
+    //! Define thrust acceleration settings. The vehicle acts this force on itself.
+    vehicleAccelerations[ vehicle_name_ ].push_back(
                 std::make_shared< ThrustAccelerationSettings >( thrustDirectionGuidanceSettings, thrustMagnitudeSettings ) );
 
     //! Assign acceleration map from the vehicleAccelerations data map.
@@ -647,7 +652,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                 bodiesToPropagate,
                 centralBodies );
 
-    //! Guidance is set AFTER the accelerations and BEFORE propagating.
+    //! Aerodynamic guidance is set AFTER the accelerations and BEFORE propagating.
     //! Declare and assign aerodynamic guidance functions.
     std::shared_ptr< aerodynamics::AerodynamicGuidance > AeroGuidance = std::make_shared< MyAerodynamicGuidance >(
                 bodyMap,
@@ -664,6 +669,39 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //bodyMap.at( vehicle_name_ )->getFlightConditions( )->getAerodynamicAngleCalculator( )->setOrientationAngleFunctions(
     //            boost::lambda::constant( constantAngleOfAttack ),boost::lambda::constant( 0 ),boost::lambda::constant( constantBankAngle ));
     //std::cout << "Creating vehicle: Guidance is set" << std::endl;
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////             CREATE MASS RATE SETTINGS              ////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/*
+    // Create mass rate models
+    std::shared_ptr< MassRateModelSettings > massRateModelSettings =
+          std::make_shared< FromThrustMassModelSettings >( true );
+    std::map< std::string, std::shared_ptr< basic_astrodynamics::MassRateModel > > massRateModels;
+    massRateModels[ "Vehicle" ] = createMassRateModel(
+              "Vehicle", massRateModelSettings, bodyMap, accelerationModelMap );
+
+    // Create settings for propagating the mass of the vehicle.
+    std::vector< std::string > bodiesWithMassToPropagate;
+    bodiesWithMassToPropagate.push_back( "Vehicle" );
+
+    Eigen::VectorXd initialBodyMasses = Eigen::VectorXd( 1 );
+    initialBodyMasses( 0 ) = vehicleMass;
+
+    std::shared_ptr< SingleArcPropagatorSettings< double > > massPropagatorSettings =
+          std::make_shared< MassPropagatorSettings< double > >(
+              bodiesWithMassToPropagate, massRateModels, initialBodyMasses, terminationSettings );
+
+    // Create list of propagation settings.
+    std::vector< std::shared_ptr< SingleArcPropagatorSettings< double > > > propagatorSettingsVector;
+    propagatorSettingsVector.push_back( translationalPropagatorSettings );
+    propagatorSettingsVector.push_back( massPropagatorSettings );
+
+    // Create propagation settings for mass and translational dynamics concurrently
+    std::shared_ptr< PropagatorSettings< double > > propagatorSettings =
+          std::make_shared< MultiTypePropagatorSettings< double > >( propagatorSettingsVector, terminationSettings );
+*/
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             CREATE PROPAGATION SETTINGS            ////////////////////////////////////////////

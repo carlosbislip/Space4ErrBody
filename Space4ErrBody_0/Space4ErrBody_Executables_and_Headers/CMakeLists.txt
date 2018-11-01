@@ -35,6 +35,7 @@ set(SPACE4ERRBODY_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/getCurrentBodyFixedThrustDirection.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/getCurrentThrustMagnitude.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/getCurrentEngineStatus.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/getCurrentSpecificImpulse.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/getE_hat.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/getEps_T.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/StopOrNot_val.cpp"

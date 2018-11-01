@@ -2,66 +2,92 @@
 #include <Tudat/Astrodynamics/Aerodynamics/flightConditions.h>
 #include <Tudat/Astrodynamics/Aerodynamics/aerodynamicGuidance.h>
 #include <Tudat/SimulationSetup/tudatSimulationHeader.h>
+#include "Tudat/Mathematics/Interpolators/interpolator.h"
+#include "Tudat/Mathematics/Interpolators/oneDimensionalInterpolator.h"
 
-
-//! Trying to implement a simple aerodynamic guidance. Initially taken from the
-//! TUDAT website.
 //! http://tudat.tudelft.nl/tutorials/tudatFeatures/accelerationSetup/aerodynamicGuidance.html#FlightConditions
-namespace tudat
-{
-namespace aerodynamics
-{
-class MyAerodynamicGuidance: public AerodynamicGuidance
+namespace bislip { //namespace aerodynamics {
+
+class MyAerodynamicGuidance: public tudat::aerodynamics::AerodynamicGuidance
 {
 public:
     MyAerodynamicGuidance(
             const tudat::simulation_setup::NamedBodyMap& bodyMap,
             const std::string vehicleName,
-            const Eigen::VectorXd xn,
-            const Eigen::VectorXd alpha_rad,
-            const Eigen::VectorXd eps_T_rad,
-            const Eigen::VectorXd throttle,
-            const Eigen::VectorXd E_mapped )
+            const double E_max,
+            const std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > interpolator_alpha_deg ):
+        bodyMap_( bodyMap ),
+        vehicleName_( vehicleName ),
+        E_max_( E_max ),
+        interpolator_alpha_deg_( interpolator_alpha_deg )
     {
-        bodyMap_ = bodyMap;
-        FlightConditions_ = boost::dynamic_pointer_cast< AtmosphericFlightConditions >(
+        FlightConditions_ = std::dynamic_pointer_cast< tudat::aerodynamics::AtmosphericFlightConditions >(
                     bodyMap.at( vehicleName )->getFlightConditions( ) );
-        vehicleName_ = vehicleName;
-        xn_ = xn;
-        alpha_rad_ = alpha_rad;
-        eps_T_rad_ = eps_T_rad;
-        throttle_ = throttle;
-        E_mapped_ = E_mapped;
         vehicleSystems_ = bodyMap.at( vehicleName )->getVehicleSystems( );
-        coefficientInterface_ = boost::dynamic_pointer_cast< AerodynamicCoefficientInterface >(
+        coefficientInterface_ = std::dynamic_pointer_cast< tudat::aerodynamics::AerodynamicCoefficientInterface >(
                     bodyMap.at( vehicleName )->getAerodynamicCoefficientInterface( ) );
     }
 
     void updateGuidance( const double currentTime );
+
     //double getAoAforCmEqualToZero( const double AoA, const double Mach );
-    Eigen::Vector6d getCoefficients( const double AoA, const double Mach );
-    /* double getF (
-            unsigned i,
-            unsigned j,
-            const Eigen::VectorXd &p,
-            const double &eps,
-            Eigen::Vector2d &x );*/
+
+    Eigen::Vector6d getCoefficients( const std::vector< double > &coefficient_input );
+    double getE_hat( );
 
 private:
-
-    boost::shared_ptr< AtmosphericFlightConditions > FlightConditions_;
-    boost::shared_ptr< system_models::VehicleSystems > vehicleSystems_;
     tudat::simulation_setup::NamedBodyMap bodyMap_;
     std::string vehicleName_;
-    boost::shared_ptr< AerodynamicCoefficientInterface > coefficientInterface_;
-    Eigen::VectorXd xn_;
-    Eigen::VectorXd alpha_rad_;
-    Eigen::VectorXd eps_T_rad_;
-    Eigen::VectorXd throttle_;
-    Eigen::VectorXd E_mapped_;
+    double E_max_;
+    std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > interpolator_alpha_deg_;
+    std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > FlightConditions_;
+    std::shared_ptr< tudat::system_models::VehicleSystems > vehicleSystems_;
+    std::shared_ptr< tudat::aerodynamics::AerodynamicCoefficientInterface > coefficientInterface_;
+    double E_hat_;
 
 };
 
-} // namespace aerodynamics
+class MyThrustGuidance: public tudat::aerodynamics::AerodynamicGuidance
+{
+public:
+    MyThrustGuidance(
+            const tudat::simulation_setup::NamedBodyMap& bodyMap,
+            const std::string vehicleName,
+            const double E_max,
+            const std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > interpolator_eps_T_deg,
+            const std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > interpolator_throttle ):
+        bodyMap_( bodyMap ),
+        vehicleName_( vehicleName ),
+        E_max_( E_max ),
+        interpolator_eps_T_deg_( interpolator_eps_T_deg ),
+        interpolator_throttle_( interpolator_throttle ) { }
 
-} // namespace tudat
+    ~MyThrustGuidance( ){ }
+
+    void updateGuidance( const double currentTime );
+
+    Eigen::Vector3d getCurrentBodyFixedThrustDirection( );
+
+    double getCurrentThrustMagnitude( );
+
+    bool getCurrentEngineStatus( );
+
+private:
+
+    tudat::simulation_setup::NamedBodyMap bodyMap_;
+    std::string vehicleName_;
+    double E_max_;
+    std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > interpolator_eps_T_deg_;
+    std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > interpolator_throttle_;
+    double currentEpsilon_;
+    Eigen::Vector3d bodyFixedThrustDirection_;
+    double currentThrustMagnitude_;
+    bool currentEngineStatus_;
+    double E_hat_;
+
+};
+
+
+
+} // namespace aerodynamics
+//} // namespace tudat

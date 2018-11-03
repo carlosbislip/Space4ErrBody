@@ -120,7 +120,7 @@ void MyGuidance::updateGuidance( const double currentTime )
 
 
 }
-
+/*
 void MyThrustGuidance::updateGuidance( const double currentTime )
 {
     std::cout << "Starting Thrust guidance for this evaluation" << std::endl;
@@ -189,7 +189,7 @@ void MyThrustGuidance::updateGuidance( const double currentTime )
                  std::setw(10) << "  T:    " <<
                  std::setw(16) << currentThrustMagnitude_ << std::endl;
 
-}
+}*/
 
 } // namespace aerodynamics
 //} // namespace tudat

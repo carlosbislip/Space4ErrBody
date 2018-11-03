@@ -26,18 +26,18 @@ public:
     {
 
         FlightConditions_ = std::dynamic_pointer_cast< tudat::aerodynamics::AtmosphericFlightConditions >(
-                   bodyMap_.at( vehicleName_ )->getFlightConditions( ) );
+                    bodyMap_.at( vehicleName_ )->getFlightConditions( ) );
         if( FlightConditions_ == nullptr )
-                {
-                   //throw std::runtime_error( "Error in MyGuidance, expected AtmosphericFlightConditions" );
-                }
+        {
+            throw std::runtime_error( "Error in MyGuidance, expected AtmosphericFlightConditions" );
+        }
         vehicleSystems_ = bodyMap.at( vehicleName )->getVehicleSystems( );
         coefficientInterface_ = std::dynamic_pointer_cast< tudat::aerodynamics::AerodynamicCoefficientInterface >(
                     bodyMap.at( vehicleName )->getAerodynamicCoefficientInterface( ) );
         if( coefficientInterface_ == nullptr )
-                {
-                   // throw std::runtime_error( "Error in MyGuidance, expected AerodynamicCoefficientInterface" );
-                }
+        {
+            throw std::runtime_error( "Error in MyGuidance, expected AerodynamicCoefficientInterface" );
+        }
     }
 
     //! Destructor.
@@ -77,7 +77,7 @@ private:
     bool currentEngineStatus_;
 
 };
-
+/*
 class MyThrustGuidance: public tudat::aerodynamics::AerodynamicGuidance
 {
 public:
@@ -125,7 +125,7 @@ private:
     //double E_hat_;
 
 };
-
+*/
 
 
 } // namespace aerodynamics

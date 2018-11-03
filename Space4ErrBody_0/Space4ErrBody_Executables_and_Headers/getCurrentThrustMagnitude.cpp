@@ -2,7 +2,7 @@
 
 namespace bislip {
 
-double MyThrustGuidance::getCurrentThrustMagnitude( )
+double MyGuidance::getCurrentThrustMagnitude( )
 {
 
     return currentThrustMagnitude_;

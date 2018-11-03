@@ -4,7 +4,7 @@
 
 namespace bislip {
 
-Eigen::Vector3d MyThrustGuidance::getCurrentBodyFixedThrustDirection(  )
+Eigen::Vector3d MyGuidance::getCurrentBodyFixedThrustDirection(  )
 {
     return bodyFixedThrustDirection_;
 }

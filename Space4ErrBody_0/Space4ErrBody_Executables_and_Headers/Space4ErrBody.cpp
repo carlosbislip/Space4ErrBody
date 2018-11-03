@@ -56,9 +56,9 @@
 //#include <boost/random/variate_generator.hpp>
 
 #include <Eigen/Core>
-#include <boost/bind.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/shared_ptr.hpp>
+//#include <boost/bind.hpp>
+//#include <boost/make_shared.hpp>
+//#include <boost/shared_ptr.hpp>
 
 #include <Tudat/SimulationSetup/tudatSimulationHeader.h>
 #include <Tudat/Mathematics/RootFinders/secantRootFinder.h>
@@ -226,7 +226,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     const double Mach_i = initialConditionsValues_[3]; // kg
 
     //! Assign initial Mach
-    const double gamma_i = initialConditionsValues_[4]; // kg
+    const double gamma_i_deg = initialConditionsValues_[4]; // kg
 
     //! Assign initial coordinates
     const double lat_i_deg = initialConditionsValues_[ 0 ];
@@ -246,6 +246,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     const double lon_i_rad = unit_conversions::convertDegreesToRadians( lon_i_deg );
     const double lat_f_rad = unit_conversions::convertDegreesToRadians( lat_f_deg );
     const double lon_f_rad = unit_conversions::convertDegreesToRadians( lon_f_deg );
+    const double gamma_i_rad = unit_conversions::convertDegreesToRadians( gamma_i_deg );
 
     //! Declare and allocate vectors of interest.
     Eigen::VectorXd xn_interval( nodes - 1 );
@@ -343,7 +344,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
             std::make_shared< tudat::interpolators::InterpolatorSettings >( cubic_spline_interpolator );
     std::shared_ptr< OneDimensionalInterpolator< double, double > > interpolator_alpha_deg,interpolator_eps_T_deg,interpolator_throttle,interpolator_alpha_rad,interpolator_eps_T_rad =
 
-    interpolator_alpha_deg = createOneDimensionalInterpolator< double, double >( map_alpha_deg, interpolatorSettings );
+            interpolator_alpha_deg = createOneDimensionalInterpolator< double, double >( map_alpha_deg, interpolatorSettings );
     interpolator_eps_T_deg =  createOneDimensionalInterpolator< double, double >( map_eps_T_deg, interpolatorSettings );
     interpolator_throttle = createOneDimensionalInterpolator< double, double >( map_throttle, interpolatorSettings );
     interpolator_alpha_rad = createOneDimensionalInterpolator< double, double >( map_alpha_rad, interpolatorSettings );
@@ -353,7 +354,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     double lon_f_deg_calc = lon_i_deg;
     double d_i_deg        = unit_conversions::convertRadiansToDegrees( getAngularDistance(lat_i_rad,lon_i_rad,lat_f_rad,lon_f_rad) );
     double d_f_deg_calc   = d_i_deg;
-    std::cout << d_f_deg_calc << std::endl;
+    //std::cout << d_f_deg_calc << std::endl;
     double h_f_calc       = h_i;
     double tof = simulation_settingsValues_[ 1 ];
     std::string simulation_file_name_suffix;
@@ -445,7 +446,6 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     ///////////////////////             CREATE VEHICLE            /////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
     //! Assign coefficient file names.
     //const std::string dragCoefficients = aeroCoeffFileList_[0];
     //const std::string liftCoefficients = aeroCoeffFileList_[1];
@@ -521,7 +521,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     bodyMap[ vehicle_name_ ]->setConstantBodyMass( M_i );
 
     //! Set E_max.
-   // bodyMap[ vehicle_name_ ]->setE_max( E_max );
+    // bodyMap[ vehicle_name_ ]->setE_max( E_max );
 
     //! Pass Earth's rotation rate
     bodyMap[ vehicle_name_ ]->setCentralBodyRotationRate( omega_E );
@@ -562,8 +562,12 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     EntryState_spherical( SphericalOrbitalStateElementIndices::latitudeIndex )     = lat_i_rad;
     EntryState_spherical( SphericalOrbitalStateElementIndices::longitudeIndex )    = lon_i_rad;
     EntryState_spherical( SphericalOrbitalStateElementIndices::speedIndex )        = V_i;
-    EntryState_spherical( SphericalOrbitalStateElementIndices::flightPathIndex )   = gamma_i;
+    EntryState_spherical( SphericalOrbitalStateElementIndices::flightPathIndex )   = gamma_i_rad;
     EntryState_spherical( SphericalOrbitalStateElementIndices::headingAngleIndex ) = getHeadingToTarget( lat_i_rad,lon_i_rad,lat_f_rad,lon_f_rad );
+
+    std::cout << "radius_Earth_i + h_i:  " << radius_Earth_i + h_i << std::endl;
+    std::cout << "V_i:  " << V_i << std::endl;
+    std::cout << "gamma_i_rad:  " << gamma_i_rad << std::endl;
 
     //! Two things are being done here
     //!     Converting state vector from spherical to Cartesian elements
@@ -593,10 +597,11 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //! Define aerodynamic accelerations. The atmosphere of the central body acts this force on the vehicle.
     vehicleAccelerations[ centralBodyName ].push_back( std::make_shared< AccelerationSettings >( aerodynamic ) );
 
-    std::shared_ptr< MyThrustGuidance > ThrustGuidance = std::make_shared< MyThrustGuidance >(
+    std::shared_ptr< MyGuidance > ThrustGuidance = std::make_shared< MyGuidance >(
                 bodyMap,
                 vehicle_name_,
                 E_max,
+                interpolator_alpha_deg,
                 interpolator_eps_T_deg,
                 interpolator_throttle );
 
@@ -607,23 +612,22 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
             std::make_shared< ThrustDirectionGuidanceSettings >(thrust_direction_from_existing_body_orientation, "Earth" );
     
     std::function< double( const double ) > thrustMagnitudeFunction =
-            std::bind( &MyThrustGuidance::getCurrentThrustMagnitude, ThrustGuidance );
+            std::bind( &MyGuidance::getCurrentThrustMagnitude, ThrustGuidance );
 
     std::function< double( const double ) > specificImpulseFunction =
-            std::bind( &MyThrustGuidance::getCurrentSpecificImpulse, ThrustGuidance );
+            std::bind( &MyGuidance::getCurrentSpecificImpulse, ThrustGuidance );
 
     std::function< bool( const double ) > isEngineOnFunction =
-            std::bind( &MyThrustGuidance::getCurrentEngineStatus, ThrustGuidance );
+            std::bind( &MyGuidance::getCurrentEngineStatus, ThrustGuidance );
 
     std::function< Eigen::Vector3d( ) > BodyFixedThrustDirection =
-            std::bind( &MyThrustGuidance::getCurrentBodyFixedThrustDirection, ThrustGuidance );
+            std::bind( &MyGuidance::getCurrentBodyFixedThrustDirection, ThrustGuidance );
 
     std::function< void( const double ) > customThrustResetFunction =
-       std::bind( &MyThrustGuidance::updateGuidance, ThrustGuidance, std::placeholders::_1 );
+            std::bind( &MyGuidance::updateGuidance, ThrustGuidance, std::placeholders::_1 );
 
-    // This line will become a function.. using boost::bind. Leave it as is for now. COntact Dominic in the futre.
     std::shared_ptr< ThrustMagnitudeSettings > thrustMagnitudeSettings =
-     std::make_shared< FromFunctionThrustMagnitudeSettings >(
+            std::make_shared< FromFunctionThrustMagnitudeSettings >(
                 thrustMagnitudeFunction,
                 specificImpulseFunction,
                 isEngineOnFunction,
@@ -654,11 +658,13 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
     //! Aerodynamic guidance is set AFTER the accelerations and BEFORE propagating.
     //! Declare and assign aerodynamic guidance functions.
-    std::shared_ptr< aerodynamics::AerodynamicGuidance > AeroGuidance = std::make_shared< MyAerodynamicGuidance >(
+    std::shared_ptr< MyGuidance > AeroGuidance = std::make_shared< MyGuidance >(
                 bodyMap,
                 vehicle_name_,
                 E_max,
-                interpolator_alpha_deg );
+                interpolator_alpha_deg,
+                interpolator_eps_T_deg,
+                interpolator_throttle);
 
     //! Set Guidance angle functions.
     setGuidanceAnglesFunctions( AeroGuidance, bodyMap.at( vehicle_name_ ) );
@@ -676,10 +682,10 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
     // Create mass rate models
     std::shared_ptr< MassRateModelSettings > massRateModelSettings =
-          std::make_shared< FromThrustMassModelSettings >( true );
+            std::make_shared< FromThrustMassModelSettings >( true );
     std::map< std::string, std::shared_ptr< basic_astrodynamics::MassRateModel > > massRateModels;
     massRateModels[ vehicle_name_ ] = createMassRateModel(
-              vehicle_name_, massRateModelSettings, bodyMap, accelerationModelMap );
+                vehicle_name_, massRateModelSettings, bodyMap, accelerationModelMap );
 
     // Create settings for propagating the mass of the vehicle.
     std::vector< std::string > bodiesWithMassToPropagate;
@@ -691,7 +697,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             CREATE PROPAGATION SETTINGS            ////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //    std::cout << "Creating propagation settings" << std::endl;
+    //  std::cout << "Creating propagation settings" << std::endl;
 
     //! Define list of dependent variables to save.
     //! The file that prints out the text saying what is saved has been modified
@@ -819,8 +825,8 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
     //! Create mass propagation settings.
     std::shared_ptr< SingleArcPropagatorSettings< double > > massPropagatorSettings =
-          std::make_shared< MassPropagatorSettings< double > >(
-              bodiesWithMassToPropagate, massRateModels, initialBodyMasses, terminationSettings );
+            std::make_shared< MassPropagatorSettings< double > >(
+                bodiesWithMassToPropagate, massRateModels, initialBodyMasses, terminationSettings );
 
     // Create list of propagation settings.
     std::vector< std::shared_ptr< SingleArcPropagatorSettings< double > > > propagatorSettingsVector;
@@ -829,7 +835,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
     // Create propagation settings for mass and translational dynamics concurrently
     std::shared_ptr< PropagatorSettings< double > > propagatorSettings =
-          std::make_shared< MultiTypePropagatorSettings< double > >( propagatorSettingsVector, terminationSettings );
+            std::make_shared< MultiTypePropagatorSettings< double > >( propagatorSettingsVector, terminationSettings );
 
     //! Create integrator settings.
     std::shared_ptr< IntegratorSettings<  > > integratorSettings =
@@ -841,6 +847,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             PROPAGATE ORBIT            ////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    std::cout << "Starting propagation" << std::endl;
 
     //! Create simulation object and propagate dynamics.
     SingleArcDynamicsSimulator< double > dynamicsSimulator(

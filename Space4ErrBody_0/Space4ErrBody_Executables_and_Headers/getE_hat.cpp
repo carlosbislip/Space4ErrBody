@@ -9,7 +9,7 @@
 
 namespace bislip  { // namespace aerodynamics {
 
-double MyAerodynamicGuidance::getE_hat( )
+double MyGuidance::getE_hat( )
 {
     //Eigen::Vector6d newCoefficients;
 

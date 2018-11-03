@@ -9,7 +9,7 @@
 
 namespace bislip  { // namespace aerodynamics {
 
-Eigen::Vector6d MyAerodynamicGuidance::getCoefficients( const std::vector< double > &coefficient_input )
+Eigen::Vector6d MyGuidance::getCoefficients( const std::vector< double > &coefficient_input )
 {
     Eigen::Vector6d newCoefficients;
 

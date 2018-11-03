@@ -2,9 +2,8 @@
 
 namespace bislip {
 
-double MyThrustGuidance::getCurrentSpecificImpulse( )
+double MyGuidance::getCurrentSpecificImpulse( )
 {
-
     return currentSpecificImpulse_;
 }
 } // namespace aerodynamics

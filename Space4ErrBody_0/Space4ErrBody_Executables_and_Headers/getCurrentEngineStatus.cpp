@@ -2,7 +2,7 @@
 
 namespace bislip {
 
-bool MyThrustGuidance::getCurrentEngineStatus( )
+bool MyGuidance::getCurrentEngineStatus( )
 {
     return currentEngineStatus_;
 }

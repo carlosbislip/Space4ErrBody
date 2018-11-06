@@ -20,6 +20,18 @@ namespace bislip { //namespace aerodynamics {
 
 void MyGuidance::updateGuidance( const double currentTime )
 {
+
+    if( FlightConditions_ == nullptr )
+    {
+        FlightConditions_ = std::dynamic_pointer_cast< tudat::aerodynamics::AtmosphericFlightConditions >( bodyMap_.at( vehicleName_ )->getFlightConditions( ) );
+    }
+
+    if( coefficientInterface_ == nullptr )
+    {
+        coefficientInterface_ = std::dynamic_pointer_cast< tudat::aerodynamics::AerodynamicCoefficientInterface >(
+                    bodyMap_.at( vehicleName_ )->getAerodynamicCoefficientInterface( ) );
+    }
+
     std::cout << "Starting Aerodynamic guidance for this evaluation" << std::endl;
 
     //! Set of parameters that I am yet to figure out how to pass/extract them around.
@@ -50,7 +62,7 @@ void MyGuidance::updateGuidance( const double currentTime )
     double m = bodyMap_.at( vehicleName_ )->getBodyMass( );//bodyMap_.at( vehicleName_ )->getCurrentMass( );
     const double delta_rad = bodyMap_.at( vehicleName_ )->getFlightConditions( )->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::latitude_angle );
     const double chi_rad = bodyMap_.at( vehicleName_ )->getFlightConditions( )->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::heading_angle );
-    const double omega = bodyMap_.at( vehicleName_ )->getCentralBodyRotationRate( );
+    const double omega = 7.292115*1E-5;//bodyMap_.at( vehicleName_ )->getCentralBodyRotationRate( );
     const Eigen::Vector6d current_state = bodyMap_.at( vehicleName_ )->getFlightConditions( )->getCurrentBodyCenteredBodyFixedState( );
     const Eigen::Vector3d r = current_state.segment( 0, 3 );
     const Eigen::Vector3d V = current_state.segment( 3, 3 );

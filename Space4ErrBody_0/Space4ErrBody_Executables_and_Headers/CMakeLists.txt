@@ -15,9 +15,9 @@ set(SPACE4ERRBODY_HEADERS
   "${CMAKE_CURRENT_SOURCE_DIR}/applicationOutput_pagmo.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/saveOptimizationResults.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/getStuff.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/StopOrNot_val.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/StopOrNot.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/updateGuidance.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/updateGuidance_val.h"
+  #"${CMAKE_CURRENT_SOURCE_DIR}/updateGuidance_val.h"
 )
 
 set(SPACE4ERRBODY_SOURCES
@@ -38,9 +38,9 @@ set(SPACE4ERRBODY_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/getCurrentSpecificImpulse.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/getE_hat.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/getEps_T.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/StopOrNot_val.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/StopOrNot.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/updateGuidance.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/updateGuidance_val.cpp"
+ # "${CMAKE_CURRENT_SOURCE_DIR}/updateGuidance_val.cpp"
 #  "${CMAKE_CURRENT_SOURCE_DIR}/getF.cpp"
 )
 

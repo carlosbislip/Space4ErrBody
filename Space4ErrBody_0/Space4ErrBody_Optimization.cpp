@@ -206,9 +206,11 @@ int main()
     std::cout << "--------------------------------------------------------" << std::endl;
     std::cout << "--------------------------------------------------------" << std::endl;
     std::cout << "Parameters to vary" << std::endl;
+    p=0;
     for( int i = 0; i < int( parameterList.size() ); i++)
     {
-        std::cout << boost::format("%-25s %-2s %-8.1f %-2s %-8.1f %-2s\n") % parameterList[i] % "[" % bounds[0][i] % "," % bounds[1][i] % "]";
+        std::cout << boost::format("%-25s %-2s %-8.1f %-2s %-8.1f %-2s\n") % parameterList[i] % "[" % parameterBounds[p] % "," % parameterBounds[p+1] % "]";
+    p+=2;
     }
     std::cout << "--------------------------------------------------------" << std::endl;
     std::cout << "Vehicle Parameters" << std::endl;

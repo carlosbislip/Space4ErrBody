@@ -1,5 +1,5 @@
 #include "Space4ErrBody.h"
-#include "StopOrNot_val.h"
+#include "StopOrNot.h"
 #include "getStuff.h"
 
 #include <Tudat/SimulationSetup/tudatSimulationHeader.h>
@@ -9,7 +9,8 @@
 
 bool StopOrNot( const tudat::simulation_setup::NamedBodyMap& bodyMap,
                 const std::string &vehicleName,
-                const std::vector< double > term_cond ) {
+                const std::vector< double > term_cond,
+                const std::vector< double > additional_data ) {
 
     //! Extract current latitude
     //! //const double lat_c_rad = FlightConditions_->getCurrentGeodeticLatitude( );
@@ -19,12 +20,12 @@ bool StopOrNot( const tudat::simulation_setup::NamedBodyMap& bodyMap,
     const double lon_c_rad = bodyMap.at( vehicleName )->getFlightConditions( )->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::longitude_angle );
 
     //! Extract initial coordinates
-    const double lat_i_rad = bodyMap.at( vehicleName )->getInitialLat();
-    const double lon_i_rad = bodyMap.at( vehicleName )->getInitialLon();
+    const double lat_i_rad = additional_data[ 0 ];
+    const double lon_i_rad = additional_data[ 1 ];
 
     //! Extract target coordinates
-    const double lat_f_rad = bodyMap.at( vehicleName )->getTargetLat();
-    const double lon_f_rad = bodyMap.at( vehicleName )->getTargetLon();
+    const double lat_f_rad = additional_data[ 2 ];
+    const double lon_f_rad = additional_data[ 3 ];
 
     //////////////// Calc Distance to target
     //! Calculate ground distance to cover using Haversine formula and Sperical Law of Cosines: https://www.movable-type.co.uk/scripts/latlong.html
@@ -41,7 +42,7 @@ bool StopOrNot( const tudat::simulation_setup::NamedBodyMap& bodyMap,
     //const double d_traveled_deg = unit_conversions::convertRadiansToDegrees( d_traveled_rad );
 
     //! Extract Initial distance to target
-    const double initial_d_to_target = bodyMap.at( vehicleName )->getInitialDistanceToTarget();
+    const double initial_d_to_target = additional_data[ 4 ];
 
     //! Extract current altitude
     const double current_altitude = bodyMap.at( vehicleName )->getFlightConditions( )->getCurrentAltitude();

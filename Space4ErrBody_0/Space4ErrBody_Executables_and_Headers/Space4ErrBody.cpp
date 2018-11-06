@@ -84,8 +84,8 @@
 #include "applicationOutput_tudat.h"
 #include "getStuff.h"
 #include "updateGuidance.h"
-#include "updateGuidance_val.h"
-#include "StopOrNot_val.h"
+//#include "updateGuidance_val.h"
+#include "StopOrNot.h"
 //#include "getAngularDistance.h"
 
 //#include <Tudat/Astrodynamics/BasicAstrodynamics/stateVectorIndices.h>
@@ -524,21 +524,11 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     // bodyMap[ vehicle_name_ ]->setE_max( E_max );
 
     //! Pass Earth's rotation rate
-    bodyMap[ vehicle_name_ ]->setCentralBodyRotationRate( omega_E );
+    //bodyMap[ vehicle_name_ ]->setCentralBodyRotationRate( omega_E );
 
-    //! Set initial coordinates. Earth-Fixed.
-    bodyMap[ vehicle_name_ ]->setInitialLat( lat_i_rad );
-    bodyMap[ vehicle_name_ ]->setInitialLon( lon_i_rad );
-
-    //! Set target coordinates. Earth-Fixed.
-    bodyMap[ vehicle_name_ ]->setTargetLat( lat_f_rad );
-    bodyMap[ vehicle_name_ ]->setTargetLon( lon_f_rad );
-
-    //! Set initial distance to target.
-    bodyMap[ vehicle_name_ ]->setInitialDistanceToTarget( getAngularDistance( lat_i_rad,lon_i_rad,lat_f_rad,lon_f_rad) );
 
     //! Pass starting epoch to body.
-    bodyMap[ vehicle_name_ ]->setStartingEpoch( simulationStartEpoch );
+    //bodyMap[ vehicle_name_ ]->setStartingEpoch( simulationStartEpoch );
 
     //! Set vehicle aerodynamic coefficients.
     bodyMap[ vehicle_name_ ]->setAerodynamicCoefficientInterface(
@@ -807,10 +797,24 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     term_cond.push_back( d_f_deg );
     term_cond.push_back( h_f );
 
+    std::vector< double > additional_data;
+    //! Set initial coordinates. Earth-Fixed.
+    additional_data.push_back( lat_i_rad );
+    additional_data.push_back( lon_i_rad );
+
+    //! Set target coordinates. Earth-Fixed.
+    additional_data.push_back( lat_f_rad );
+    additional_data.push_back( lon_f_rad );
+
+    //! Set initial distance to target.
+    additional_data.push_back( getAngularDistance( lat_i_rad,lon_i_rad,lat_f_rad,lon_f_rad) );
+
+
+
     //! Define termination settings.
     std::shared_ptr< PropagationTerminationSettings > terminationSettings =
             std::make_shared< PropagationCustomTerminationSettings >(
-                boost::bind( &StopOrNot, bodyMap, vehicle_name_, term_cond ) );
+                boost::bind( &StopOrNot, bodyMap, vehicle_name_, term_cond, additional_data ) );
 
     //! Create translational propagation settings.
     std::shared_ptr< TranslationalStatePropagatorSettings< double > > translationalPropagatorSettings =

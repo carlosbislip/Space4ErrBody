@@ -25,19 +25,19 @@ public:
         interpolator_throttle_( interpolator_throttle )
     {
 
-        FlightConditions_ = std::dynamic_pointer_cast< tudat::aerodynamics::AtmosphericFlightConditions >(
-                    bodyMap_.at( vehicleName_ )->getFlightConditions( ) );
-        if( FlightConditions_ == nullptr )
-        {
-            throw std::runtime_error( "Error in MyGuidance, expected AtmosphericFlightConditions" );
-        }
-        vehicleSystems_ = bodyMap.at( vehicleName )->getVehicleSystems( );
-        coefficientInterface_ = std::dynamic_pointer_cast< tudat::aerodynamics::AerodynamicCoefficientInterface >(
-                    bodyMap.at( vehicleName )->getAerodynamicCoefficientInterface( ) );
-        if( coefficientInterface_ == nullptr )
-        {
-            throw std::runtime_error( "Error in MyGuidance, expected AerodynamicCoefficientInterface" );
-        }
+       // FlightConditions_ = std::dynamic_pointer_cast< tudat::aerodynamics::AtmosphericFlightConditions >(
+        //            bodyMap_.at( vehicleName_ )->getFlightConditions( ) );
+        //if( FlightConditions_ == nullptr )
+       // {
+       //     throw std::runtime_error( "Error in MyGuidance, expected AtmosphericFlightConditions" );
+       // }
+        //vehicleSystems_ = bodyMap.at( vehicleName )->getVehicleSystems( );
+        //coefficientInterface_ = std::dynamic_pointer_cast< tudat::aerodynamics::AerodynamicCoefficientInterface >(
+        //            bodyMap.at( vehicleName )->getAerodynamicCoefficientInterface( ) );
+        //if( coefficientInterface_ == nullptr )
+       // {
+       //     throw std::runtime_error( "Error in MyGuidance, expected AerodynamicCoefficientInterface" );
+       // }
     }
 
     //! Destructor.

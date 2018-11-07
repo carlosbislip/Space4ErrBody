@@ -23,7 +23,8 @@ void MyGuidance::updateGuidance( const double currentTime )
 
     if( FlightConditions_ == nullptr )
     {
-        FlightConditions_ = std::dynamic_pointer_cast< tudat::aerodynamics::AtmosphericFlightConditions >( bodyMap_.at( vehicleName_ )->getFlightConditions( ) );
+        FlightConditions_ = std::dynamic_pointer_cast< tudat::aerodynamics::AtmosphericFlightConditions >(
+                    bodyMap_.at( vehicleName_ )->getFlightConditions( ) );
     }
 
     if( coefficientInterface_ == nullptr )
@@ -52,14 +53,19 @@ void MyGuidance::updateGuidance( const double currentTime )
     double current_h = FlightConditions_->getCurrentAltitude( );
     std::cout << "current_h:  " << current_h << std::endl;
     double current_rho = FlightConditions_->getCurrentDensity( );
+    std::cout << "current_rho:  " << current_rho << std::endl;
     double current_M = FlightConditions_->getCurrentMachNumber( );
     std::cout << "current_M:  " << current_M << std::endl;
     double current_gamma = FlightConditions_->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::flight_path_angle );
+    std::cout << "current_gamma:  " << current_gamma << std::endl;
     double current_V = FlightConditions_->getCurrentAirspeed();
     std::cout << "current_V:  " << current_V << std::endl;
     double current_AoA = FlightConditions_->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::angle_of_attack );
+    std::cout << "current_AoA:  " << current_AoA << std::endl;
     double S_ref = bodyMap_.at( vehicleName_ )->getAerodynamicCoefficientInterface( )->getReferenceArea( );
+    std::cout << "S_ref:  " << S_ref << std::endl;
     double m = bodyMap_.at( vehicleName_ )->getBodyMass( );//bodyMap_.at( vehicleName_ )->getCurrentMass( );
+    std::cout << "m:  " << m << std::endl;
     const double delta_rad = bodyMap_.at( vehicleName_ )->getFlightConditions( )->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::latitude_angle );
     const double chi_rad = bodyMap_.at( vehicleName_ )->getFlightConditions( )->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::heading_angle );
     const double omega = 7.292115*1E-5;//bodyMap_.at( vehicleName_ )->getCentralBodyRotationRate( );

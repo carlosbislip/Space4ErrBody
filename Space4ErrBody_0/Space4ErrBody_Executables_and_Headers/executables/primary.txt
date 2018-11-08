@@ -14,4 +14,4 @@ initialConditionsValues.txt
 terminationConditionsList.txt
 terminationConditionsValues.txt
 AMS to IAD Ballistic Trajectory: 10/28/2018  11:00:00 AM
-HORUS
+Vehicle

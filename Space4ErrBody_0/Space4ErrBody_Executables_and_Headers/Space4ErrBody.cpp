@@ -236,10 +236,11 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     const double lat_f_deg = terminationConditionsValues_[ 0 ];
     const double lon_f_deg = terminationConditionsValues_[ 1 ];
     const double d_f_deg = terminationConditionsValues_[ 2 ];
-    const double h_f = terminationConditionsValues_[ 3 ];
-    const double n_max = terminationConditionsValues_[ 4 ];
-    const double q_dot_max = terminationConditionsValues_[ 5 ];
-    const double q_d_max = terminationConditionsValues_[ 6 ];
+    const double h_UP = terminationConditionsValues_[ 3 ];
+    const double h_DN = terminationConditionsValues_[ 4 ];
+    const double n_max = terminationConditionsValues_[ 5 ];
+    const double q_dot_max = terminationConditionsValues_[ 6 ];
+    const double q_d_max = terminationConditionsValues_[ 7 ];
 
     //! Convert angles from degrees to radians
     const double lat_i_rad = unit_conversions::convertDegreesToRadians( lat_i_deg );
@@ -317,9 +318,9 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //! Impose constraints on first and last energy nodes
     a = 301.7;//NRLMSISE00Atmosphere::getSpeedOfSound( R_E + height( 0 ), 0, 0, simulationStartEpoch );
     double V_i = a * Mach_i;
-    double V_f = 0.99 * sqrt( mu / ( R_E + h_f ) );
+    double V_f = 0.99 * sqrt( mu / ( R_E + h_UP ) );
     double E_min = g0 * h_i + 0.5 * V_i * V_i;
-    double E_max = g0 * h_f + 0.5 * V_f * V_f;
+    double E_max = g0 * h_UP + 0.5 * V_f * V_f;
 
     //! Normalize fist and last Energy nodes
     double E_hat_min = E_min/E_max;
@@ -342,11 +343,11 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //! Create interpolator
     std::shared_ptr< InterpolatorSettings > interpolatorSettings =
             std::make_shared< tudat::interpolators::InterpolatorSettings >( cubic_spline_interpolator );
-    std::shared_ptr< OneDimensionalInterpolator< double, double > > interpolator_alpha_deg,interpolator_eps_T_deg,interpolator_throttle,interpolator_alpha_rad,interpolator_eps_T_rad =
+    std::shared_ptr< OneDimensionalInterpolator< double, double > > interpolator_alpha_deg,interpolator_eps_T_deg,interpolator_throttle,interpolator_alpha_rad,interpolator_eps_T_rad;
 
-            interpolator_alpha_deg = createOneDimensionalInterpolator< double, double >( map_alpha_deg, interpolatorSettings );
-    interpolator_eps_T_deg =  createOneDimensionalInterpolator< double, double >( map_eps_T_deg, interpolatorSettings );
-    interpolator_throttle = createOneDimensionalInterpolator< double, double >( map_throttle, interpolatorSettings );
+    interpolator_alpha_deg = createOneDimensionalInterpolator< double, double >( map_alpha_deg, interpolatorSettings );
+    interpolator_eps_T_deg = createOneDimensionalInterpolator< double, double >( map_eps_T_deg, interpolatorSettings );
+    interpolator_throttle  = createOneDimensionalInterpolator< double, double >( map_throttle,  interpolatorSettings );
     interpolator_alpha_rad = createOneDimensionalInterpolator< double, double >( map_alpha_rad, interpolatorSettings );
     interpolator_eps_T_rad = createOneDimensionalInterpolator< double, double >( map_eps_T_rad, interpolatorSettings );
 
@@ -355,7 +356,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     double d_i_deg        = unit_conversions::convertRadiansToDegrees( getAngularDistance(lat_i_rad,lon_i_rad,lat_f_rad,lon_f_rad) );
     double d_f_deg_calc   = d_i_deg;
     //std::cout << d_f_deg_calc << std::endl;
-    double h_f_calc       = h_i;
+    double h_UP_calc       = h_i;
     double tof = simulation_settingsValues_[ 1 ];
     std::string simulation_file_name_suffix;
 
@@ -392,7 +393,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //! to properly do it.
     const double radius_Earth = spice_interface::getAverageRadius( centralBodyName );
     double radius_Earth_i = radius_Earth;
-    double radius_Earth_f = radius_Earth;
+    double radius_Earth_UP = radius_Earth;
 
     //!---------------------------- Still playing around with this section
 
@@ -427,10 +428,10 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
         const double radius_Earth_i_y = radii[ 1 ] * std::cos(polar_angle_i_rad) * std::sin(lon_i_rad);
         const double radius_Earth_i_z = radii[ 2 ] * std::sin(polar_angle_i_rad);
         radius_Earth_i = std::sqrt(pow(radius_Earth_i_x,2) + pow(radius_Earth_i_y,2) + pow(radius_Earth_i_z,2));
-        const double radius_Earth_f_x = radii[ 0 ] * std::cos(polar_angle_f_rad) * std::cos(lon_f_rad);
-        const double radius_Earth_f_y = radii[ 1 ] * std::cos(polar_angle_f_rad) * std::sin(lon_f_rad);
-        const double radius_Earth_f_z = radii[ 2 ] * std::sin(polar_angle_f_rad);
-        radius_Earth_f = std::sqrt(pow(radius_Earth_f_x,2) + pow(radius_Earth_f_y,2) + pow(radius_Earth_f_z,2));
+        const double radius_Earth_UP_x = radii[ 0 ] * std::cos(polar_angle_f_rad) * std::cos(lon_f_rad);
+        const double radius_Earth_UP_y = radii[ 1 ] * std::cos(polar_angle_f_rad) * std::sin(lon_f_rad);
+        const double radius_Earth_UP_z = radii[ 2 ] * std::sin(polar_angle_f_rad);
+        radius_Earth_UP = std::sqrt(pow(radius_Earth_UP_x,2) + pow(radius_Earth_UP_y,2) + pow(radius_Earth_UP_z,2));
 
     }
     //!--------------------------------------------------------------
@@ -520,16 +521,6 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //! Set body Mass.
     bodyMap[ vehicle_name_ ]->setConstantBodyMass( M_i );
 
-    //! Set E_max.
-    // bodyMap[ vehicle_name_ ]->setE_max( E_max );
-
-    //! Pass Earth's rotation rate
-    //bodyMap[ vehicle_name_ ]->setCentralBodyRotationRate( omega_E );
-
-
-    //! Pass starting epoch to body.
-    //bodyMap[ vehicle_name_ ]->setStartingEpoch( simulationStartEpoch );
-
     //! Set vehicle aerodynamic coefficients.
     bodyMap[ vehicle_name_ ]->setAerodynamicCoefficientInterface(
                 createAerodynamicCoefficientInterface(
@@ -555,9 +546,9 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     EntryState_spherical( SphericalOrbitalStateElementIndices::flightPathIndex )   = gamma_i_rad;
     EntryState_spherical( SphericalOrbitalStateElementIndices::headingAngleIndex ) = getHeadingToTarget( lat_i_rad,lon_i_rad,lat_f_rad,lon_f_rad );
 
-    std::cout << "radius_Earth_i + h_i:  " << radius_Earth_i + h_i << std::endl;
-    std::cout << "V_i:  " << V_i << std::endl;
-    std::cout << "gamma_i_rad:  " << gamma_i_rad << std::endl;
+    //std::cout << "radius_Earth_i + h_i:  " << radius_Earth_i + h_i << std::endl;
+    //std::cout << "V_i:  " << V_i << std::endl;
+    //std::cout << "gamma_i_rad:  " << gamma_i_rad << std::endl;
 
     //! Two things are being done here
     //!     Converting state vector from spherical to Cartesian elements
@@ -571,10 +562,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     ///////////////////////             CREATE ACCELERATIONS            ///////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    //! Declare acceleration settings variables.
-    SelectedAccelerationMap accelerationMap;
-    std::vector< std::string > bodiesToPropagate;
-    std::vector< std::string > centralBodies;
+
 
     //! Declare acceleration data map.
     std::map< std::string, std::vector< std::shared_ptr< AccelerationSettings > > > vehicleAccelerations;
@@ -626,8 +614,12 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     // std::make_shared< ConstantThrustMagnitudeSettings >( thrustMagnitude, specificImpulse );
 
     //! Define thrust acceleration settings. The vehicle acts this force on itself.
-    vehicleAccelerations[ vehicle_name_ ].push_back(
-                std::make_shared< ThrustAccelerationSettings >( thrustDirectionGuidanceSettings, thrustMagnitudeSettings ) );
+    vehicleAccelerations[ vehicle_name_ ].push_back( std::make_shared< ThrustAccelerationSettings >( thrustDirectionGuidanceSettings, thrustMagnitudeSettings ) );
+
+    //! Declare acceleration settings variables.
+    SelectedAccelerationMap accelerationMap;
+    std::vector< std::string > bodiesToPropagate;
+    std::vector< std::string > centralBodies;
 
     //! Assign acceleration map from the vehicleAccelerations data map.
     accelerationMap[ vehicle_name_ ] = vehicleAccelerations;
@@ -660,32 +652,61 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     setGuidanceAnglesFunctions( AeroGuidance, bodyMap.at( vehicle_name_ ) );
 
     //! Define constant orientation
-    //double constantAngleOfAttack = unit_conversions::convertDegreesToRadians( 30 );
-    //double constantBankAngle = unit_conversions::convertDegreesToRadians( 85 );
+    //double constantAngleOfAttack = unit_conversions::convertDegreesToRadians( 10 );
+    //double constantBankAngle = unit_conversions::convertDegreesToRadians( 0 );
+    //double constantSideSlipeAngle = unit_conversions::convertDegreesToRadians( 0 );
     //bodyMap.at( vehicle_name_ )->getFlightConditions( )->getAerodynamicAngleCalculator( )->setOrientationAngleFunctions(
-    //            boost::lambda::constant( constantAngleOfAttack ),boost::lambda::constant( 0 ),boost::lambda::constant( constantBankAngle ));
+    //            [ = ]( ){ return constantAngleOfAttack; }, [ = ]( ){ return constantSideSlipeAngle; }, [ = ]( ){ return constantBankAngle; } );
     //std::cout << "Creating vehicle: Guidance is set" << std::endl;
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ///////////////////////             CREATE MASS RATE SETTINGS              ////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    // Create mass rate models
-    std::shared_ptr< MassRateModelSettings > massRateModelSettings =
-            std::make_shared< FromThrustMassModelSettings >( true );
-    std::map< std::string, std::shared_ptr< basic_astrodynamics::MassRateModel > > massRateModels;
-    massRateModels[ vehicle_name_ ] = createMassRateModel(
-                vehicle_name_, massRateModelSettings, bodyMap, accelerationModelMap );
-
-    // Create settings for propagating the mass of the vehicle.
-    std::vector< std::string > bodiesWithMassToPropagate;
-    bodiesWithMassToPropagate.push_back( vehicle_name_ );
-
-    Eigen::VectorXd initialBodyMasses( 1 );
-    initialBodyMasses( 0 ) = M_i;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ///////////////////////             CREATE PROPAGATION SETTINGS            ////////////////////////////////////////////
+    ///////////////////////             CREATE TERMINATION SETTINGS            ////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /* std::shared_ptr< SingleDependentVariableSaveSettings > terminationDependentVariable =
+             std::make_shared< SingleDependentVariableSaveSettings >(
+                 altitude_dependent_variable,
+                 vehicle_name_,
+                 centralBodyName );
+
+    std::shared_ptr< PropagationTerminationSettings > terminationSettings =
+            std::make_shared< PropagationDependentVariableTerminationSettings >(
+                terminationDependentVariable,
+                h_UP,
+                true );
+*/
+
+    //In case your custom function requires more inputs (e.g., it may depend on the position of the spacecraft or other variables that are not the current time), you can use boost::bind to add more inputs.
+    //As an example, the case where the state of the spacecraft is added as an input is shown below:
+    // std::function< Eigen::Vector6d( ) > HORUS_StateFunction =
+    //       std::bind( &Body::getState, bodyMap.at( vehicle_name_ ) );
+
+    //! Define vector with termination conditions.
+    std::vector< double > term_cond;
+    term_cond.push_back( d_f_deg );
+    term_cond.push_back( h_UP );
+    term_cond.push_back( h_DN );
+
+    std::vector< double > additional_data;
+    //! Set initial coordinates. Earth-Fixed.
+    additional_data.push_back( lat_i_rad );
+    additional_data.push_back( lon_i_rad );
+
+    //! Set target coordinates. Earth-Fixed.
+    additional_data.push_back( lat_f_rad );
+    additional_data.push_back( lon_f_rad );
+
+    //! Set initial distance to target.
+    additional_data.push_back( getAngularDistance( lat_i_rad,lon_i_rad,lat_f_rad,lon_f_rad) );
+
+    //! Define termination settings.
+    std::shared_ptr< PropagationTerminationSettings > terminationSettings =
+            std::make_shared< PropagationCustomTerminationSettings >(
+                boost::bind( &bislip::StopOrNot, bodyMap, vehicle_name_, term_cond, additional_data ) );
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////          CREATE LIST OF DEPENDENT VARIABLES        ////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //  std::cout << "Creating propagation settings" << std::endl;
 
@@ -754,67 +775,18 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                     vehicle_name_,
                     bank_angle,
                     centralBodyName) );
+    //dep_varList.push_back(
+    //            std::make_shared< SingleDependentVariableSaveSettings >(
+    //                total_mass_rate_dependent_variables,
+    //                vehicle_name_ ) );
 
     // Create object with list of dependent variables
     std::shared_ptr< DependentVariableSaveSettings > dep_varToSave =
             std::make_shared< DependentVariableSaveSettings >( dep_varList );
 
-    //! Define termination conditions
-    //! Dominic mentioned something about terminating at exactly the termination
-    //! condition. Somewhere in the documentation. This works for now, though
-    //! the altitude temrination condition may yield a "nearest neighbor" or
-    //! dnet error with nrlmsise00 as the atmospheric model.
-    //!
-    //! Per Dominic:
-    //! If I remember correctly, these errors (dnet....) are thrown by NRLMSISE
-    //! when the altitude becomes out of range. The good thing is that the propagation
-    //! results up until the error should be saved (numerical solution and
-    //! dependent variables), so you can verify whether the last step gets
-    //! close to zero. Note that the very last step, where it crashes, won't be
-    //! saved, so you may find that the results don't actually show it getting
-    //! below zero.
-
-    /* std::shared_ptr< SingleDependentVariableSaveSettings > terminationDependentVariable =
-             std::make_shared< SingleDependentVariableSaveSettings >(
-                 altitude_dependent_variable,
-                 vehicle_name_,
-                 centralBodyName );
-
-    std::shared_ptr< PropagationTerminationSettings > terminationSettings =
-            std::make_shared< PropagationDependentVariableTerminationSettings >(
-                terminationDependentVariable,
-                h_f,
-                true );
-*/
-
-    //In case your custom function requires more inputs (e.g., it may depend on the position of the spacecraft or other variables that are not the current time), you can use boost::bind to add more inputs.
-    //As an example, the case where the state of the spacecraft is added as an input is shown below:
-    // std::function< Eigen::Vector6d( ) > HORUS_StateFunction =
-    //       std::bind( &Body::getState, bodyMap.at( vehicle_name_ ) );
-
-    //! Define vector with termination conditions.
-    std::vector< double > term_cond;
-    term_cond.push_back( d_f_deg );
-    term_cond.push_back( h_f );
-
-    std::vector< double > additional_data;
-    //! Set initial coordinates. Earth-Fixed.
-    additional_data.push_back( lat_i_rad );
-    additional_data.push_back( lon_i_rad );
-
-    //! Set target coordinates. Earth-Fixed.
-    additional_data.push_back( lat_f_rad );
-    additional_data.push_back( lon_f_rad );
-
-    //! Set initial distance to target.
-    additional_data.push_back( getAngularDistance( lat_i_rad,lon_i_rad,lat_f_rad,lon_f_rad) );
-
-
-
-    //! Define termination settings.
-    std::shared_ptr< PropagationTerminationSettings > terminationSettings =
-            std::make_shared< PropagationCustomTerminationSettings >(
-                boost::bind( &StopOrNot, bodyMap, vehicle_name_, term_cond, additional_data ) );
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////           CREATE PROPAGATION SETTINGS              ////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //! Create translational propagation settings.
     std::shared_ptr< TranslationalStatePropagatorSettings< double > > translationalPropagatorSettings =
@@ -827,19 +799,49 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
               cowell,
               dep_varToSave );
 
+
+    ///////////////////////             CREATE MASS RATE SETTINGS              ////////////////////////////////////////////
+
+    // Create mass rate models
+    std::shared_ptr< MassRateModelSettings > massRateModelSettings =
+            std::make_shared< FromThrustMassModelSettings >( true );
+    //std::map< std::string, std::vector< std::shared_ptr< MassRateModelSettings > > > massRateModelSettings =
+
+    std::map< std::string, std::shared_ptr< MassRateModel > > massRateModels;
+    massRateModels[ vehicle_name_ ] = createMassRateModel(
+                vehicle_name_, massRateModelSettings, bodyMap, accelerationModelMap );
+
+    // Create settings for propagating the mass of the vehicle.
+    std::vector< std::string > bodiesWithMassToPropagate;
+    bodiesWithMassToPropagate.push_back( vehicle_name_ );
+
+    //! Set initial mass of vehicle.
+    Eigen::VectorXd initialBodyMasses( 1 );
+    initialBodyMasses( 0 ) = M_i;
+
     //! Create mass propagation settings.
     std::shared_ptr< SingleArcPropagatorSettings< double > > massPropagatorSettings =
             std::make_shared< MassPropagatorSettings< double > >(
-                bodiesWithMassToPropagate, massRateModels, initialBodyMasses, terminationSettings );
+                bodiesWithMassToPropagate, massRateModels, initialBodyMasses, terminationSettings, dep_varToSave );
 
-    // Create list of propagation settings.
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // !Create list of propagation settings.
     std::vector< std::shared_ptr< SingleArcPropagatorSettings< double > > > propagatorSettingsVector;
     propagatorSettingsVector.push_back( translationalPropagatorSettings );
     propagatorSettingsVector.push_back( massPropagatorSettings );
 
-    // Create propagation settings for mass and translational dynamics concurrently
-    std::shared_ptr< PropagatorSettings< double > > propagatorSettings =
-            std::make_shared< MultiTypePropagatorSettings< double > >( propagatorSettingsVector, terminationSettings );
+    //! Create propagation settings for both mass and translational dynamics.
+    //std::shared_ptr< PropagatorSettings< double > > propagatorSettings =
+    //        std::make_shared< MultiTypePropagatorSettings< double > >( propagatorSettingsVector, terminationSettings, dep_varToSave );
+
+    //! Create propagation settings for ONLY translational dynamics.
+      std::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
+            translationalPropagatorSettings;
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////           CREATE INTEGRATION SETTINGS              ////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //! Create integrator settings.
     std::shared_ptr< IntegratorSettings<  > > integratorSettings =
@@ -851,7 +853,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             PROPAGATE ORBIT            ////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    std::cout << "Starting propagation" << std::endl;
+    //std::cout << "Starting propagation" << std::endl;
 
     //! Create simulation object and propagate dynamics.
     SingleArcDynamicsSimulator< double > dynamicsSimulator(
@@ -886,7 +888,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     tof = simulationEndEpoch_calc - simulationStartEpoch;
 
     //! Transform final state from Inertial Frame to Earth-Fixed Frame
-    //Eigen::Vector6d systemFinalState_EARTH_FIXED = transformStateToTargetFrame( systemFinalState, simulationEndEpoch_calc, earthRotationalEphemeris );
+    //Eigen::Vector6d systemFinalState_EARTh_UPIXED = transformStateToTargetFrame( systemFinalState, simulationEndEpoch_calc, earthRotationalEphemeris );
 
     //! Transform expected final state to Inertial frame. This is where the
     //! destination is located at the termination of the simulation.
@@ -914,14 +916,17 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //!
 
     Eigen::VectorXd dep_var_FINAL_STATE = ( dynamicsSimulator.getDependentVariableHistory( ).rbegin() )->second;
+    //std::cout << "dep_var_FINAL_STATE: " << dep_var_FINAL_STATE << std::endl;
+
+
     //const double altitude_f_calc = dep_var_FINAL_STATE[3];
-    const double lat_f_rad_calc  = dep_var_FINAL_STATE[4];
-    const double lon_f_rad_calc  = dep_var_FINAL_STATE[5];
-    h_f_calc                     = dep_var_FINAL_STATE[6];
-    //const double altitude_f_calc = std::sqrt( pow(systemFinalState_EARTH_FIXED[0],2) +
-    //       pow(systemFinalState_EARTH_FIXED[1],2) + pow(systemFinalState_EARTH_FIXED[2],2) ) ;
-    //const double lon_f_rad_calc = std::atan2(systemFinalState_EARTH_FIXED[1] , systemFinalState_EARTH_FIXED[0]);
-    //const double lat_f_rad_calc = std::asin(systemFinalState_EARTH_FIXED[2] / altitude_f_calc) ;
+    const double lat_f_rad_calc  = dep_var_FINAL_STATE[ 4 ];
+    const double lon_f_rad_calc  = dep_var_FINAL_STATE[ 5 ];
+    h_UP_calc                    = dep_var_FINAL_STATE[ 7 ];
+    //const double altitude_f_calc = std::sqrt( pow(systemFinalState_EARTh_UPIXED[0],2) +
+    //       pow(systemFinalState_EARTh_UPIXED[1],2) + pow(systemFinalState_EARTh_UPIXED[2],2) ) ;
+    //const double lon_f_rad_calc = std::atan2(systemFinalState_EARTh_UPIXED[1] , systemFinalState_EARTh_UPIXED[0]);
+    //const double lat_f_rad_calc = std::asin(systemFinalState_EARTh_UPIXED[2] / altitude_f_calc) ;
 
     //! Convert coordinates of final state to degrees: Earth-Fixed Frame
     lat_f_deg_calc = unit_conversions::convertRadiansToDegrees( lat_f_rad_calc );
@@ -1003,12 +1008,12 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //! Calculate offset of final angular distance to termination condition distance.
     const double dif_d_deg = d_deg - terminationConditionsValues_[ 2 ];
     //! Calculate offset from goal elevation.
-    const double dif_h = h_f_calc - terminationConditionsValues_[ 3 ];
+    const double dif_h = h_UP - h_UP_calc;
 
 
 
-    double dif_xn = xn( nodes ) - 1;
-    double dif_E_mapped = E_mapped( nodes ) - 1;
+    double dif_xn = xn( nodes - 1 ) - 1;
+    double dif_E_mapped = E_mapped( nodes - 1 ) - 1;
 
     //! Assign values to Fitness vector! At the moment these are all 'objective
     //! functions'. No constraints have been implemented. To modify this I have
@@ -1025,18 +1030,20 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     delta.push_back( dif_xn );
     delta.push_back( dif_E_mapped );
 
+    //std::cout << "h_UP: " << h_UP << std::endl;
+    //std::cout << "h_UP_calc: " << h_UP_calc << std::endl;
 
     //! Print results to terminal. Used to gauge progress.
     std::cout << std::fixed << std::setprecision(10) <<
                  std::setw(15) << "dif_xn = " <<
                  std::setw(14) << dif_xn <<
-                 std::setw(13) << "dif_E_mapped = " <<
+                 std::setw(15) << " dif_E_mapped = " <<
                  std::setw(16) <<  dif_E_mapped <<
-                 std::setw(12) << "dif_norm = " <<
+                 std::setw(15) << " dif_norm = " <<
                  std::setw(16) << dif_norm <<
-                 std::setw(14) << "dif_lat_deg = " <<
+                 std::setw(15) << " dif_lat_deg = " <<
                  std::setw(16) << dif_lat_deg <<
-                 std::setw(14) << "dif_lon_deg = " <<
+                 std::setw(15) << " dif_lon_deg = " <<
                  std::setw(16) << dif_lon_deg <<
                  std::setw(13) << "dif_d_deg = " <<
                  std::setw(16) << dif_d_deg <<
@@ -1046,7 +1053,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                  std::setw(16) << tof <<
                  std::setw(120) << simulation_file_name_suffix << std::endl;
 
-    //    std::cout <<dynamicsSimulator.getPropagationTerminationReason( )->getPropagationTerminationReason( ) << std::endl;
+    // std::cout <<dynamicsSimulator.getPropagationTerminationReason( )->getPropagationTerminationReason( ) << std::endl;
 
 
 

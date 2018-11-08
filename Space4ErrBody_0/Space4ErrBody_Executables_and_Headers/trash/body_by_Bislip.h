@@ -1030,6 +1030,11 @@ public:
         initial_d_to_target_ = initial_d_to_target;
     }
 
+    void setCentralBodyRotationRate( const double omega )
+    {
+        omega_ = omega;
+    }
+
     void setStartingEpoch( const double startingEpoch )
     {
         startingEpoch_ = startingEpoch;
@@ -1089,6 +1094,10 @@ public:
     double getInitialDistanceToTarget( )
     {
         return initial_d_to_target_;
+    }
+    double getCentralBodyRotationRate( )
+    {
+        return omega_;
     }
     double getStartingEpoch( )
     {
@@ -1296,6 +1305,9 @@ private:
 
    //! Passing initial distance to target
     double initial_d_to_target_;
+
+   //! Passing central body rotation rate
+    double omega_;
 
     //! Passing starting epoch for guidance logic
     double startingEpoch_;

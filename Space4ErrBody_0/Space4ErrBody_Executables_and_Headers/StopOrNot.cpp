@@ -6,6 +6,7 @@
 #include <Tudat/Astrodynamics/BasicAstrodynamics/unitConversions.h>
 #include <Tudat/Astrodynamics/Aerodynamics/flightConditions.h>
 
+namespace bislip {
 
 bool StopOrNot( const tudat::simulation_setup::NamedBodyMap& bodyMap,
                 const std::string &vehicleName,
@@ -53,11 +54,28 @@ bool StopOrNot( const tudat::simulation_setup::NamedBodyMap& bodyMap,
 
     //! Currently 3 conditions could temrinate a simulation
     //!     When distance to target is less than a specified number
+    //!     When altitude is more than a specified number
     //!     When altitude is less than a specified number
     //!     When angular distance traveled is larger than angular distance among endpoints
-    if ( ( d_togo_rad <= term_cond[0] ) || ( current_altitude <= term_cond[1] ) || ( d_traveled_rad >= initial_d_to_target ) )
+    if ( ( d_togo_rad <= tudat::unit_conversions::convertDegreesToRadians( term_cond[ 0 ] )  ) || ( current_altitude >= term_cond[ 1 ] ) || ( d_traveled_rad >= initial_d_to_target ) )
     {
         done = true;
+        //std::cout << "d_togo_rad:  " << d_togo_rad << std::endl;
+        //std::cout << "term_cond[ 0 ] :  " << term_cond[ 0 ]  << std::endl;
+        //std::cout << "current_altitude:  " << current_altitude << std::endl;
+        //std::cout << "term_cond[ 1 ] :  " << term_cond[ 1 ]  << std::endl;
+        //std::cout << "d_traveled_rad:  " << d_traveled_rad << std::endl;
+        //std::cout << "initial_d_to_target:  " << initial_d_to_target << std::endl;
+        //std::cout << "Stopping propagation" << std::endl;
+
+    }
+    else if  ( current_altitude <= term_cond[ 2 ] )
+    {
+        done = true;
+        //std::cout << "current_altitude:  " << current_altitude << std::endl;
+        //std::cout << "term_cond[ 2 ] :  " << term_cond[ 2 ]  << std::endl;
+        //std::cout << "Stopping propagation" << std::endl;
+
     }
     else
     {
@@ -65,4 +83,5 @@ bool StopOrNot( const tudat::simulation_setup::NamedBodyMap& bodyMap,
     }
     
 return done;
+}
 }

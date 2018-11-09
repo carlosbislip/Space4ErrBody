@@ -801,8 +801,9 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
 
     ///////////////////////             CREATE MASS RATE SETTINGS              ////////////////////////////////////////////
+    std::cout << "Create mass rate models" << std::endl;
 
-    // Create mass rate models
+    //! Create mass rate models
     std::shared_ptr< MassRateModelSettings > massRateModelSettings =
             std::make_shared< FromThrustMassModelSettings >( true );
     //std::map< std::string, std::vector< std::shared_ptr< MassRateModelSettings > > > massRateModelSettings =
@@ -811,13 +812,15 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     massRateModels[ vehicle_name_ ] = createMassRateModel(
                 vehicle_name_, massRateModelSettings, bodyMap, accelerationModelMap );
 
-    // Create settings for propagating the mass of the vehicle.
+    //! Create settings for propagating the mass of the vehicle.
     std::vector< std::string > bodiesWithMassToPropagate;
     bodiesWithMassToPropagate.push_back( vehicle_name_ );
 
     //! Set initial mass of vehicle.
     Eigen::VectorXd initialBodyMasses( 1 );
     initialBodyMasses( 0 ) = M_i;
+
+    std::cout << "Create mass propagation settings." << std::endl;
 
     //! Create mass propagation settings.
     std::shared_ptr< SingleArcPropagatorSettings< double > > massPropagatorSettings =
@@ -826,22 +829,25 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // !Create list of propagation settings.
+    //! Create list of propagation settings.
     std::vector< std::shared_ptr< SingleArcPropagatorSettings< double > > > propagatorSettingsVector;
     propagatorSettingsVector.push_back( translationalPropagatorSettings );
     propagatorSettingsVector.push_back( massPropagatorSettings );
 
+    std::cout << "Create propagation settings for both mass and translational dynamics." << std::endl;
+
     //! Create propagation settings for both mass and translational dynamics.
-    //std::shared_ptr< PropagatorSettings< double > > propagatorSettings =
-    //        std::make_shared< MultiTypePropagatorSettings< double > >( propagatorSettingsVector, terminationSettings, dep_varToSave );
+    std::shared_ptr< PropagatorSettings< double > > propagatorSettings =
+            std::make_shared< MultiTypePropagatorSettings< double > >( propagatorSettingsVector, terminationSettings, dep_varToSave );
 
     //! Create propagation settings for ONLY translational dynamics.
-      std::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
-            translationalPropagatorSettings;
+    //  std::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
+    //        translationalPropagatorSettings;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////           CREATE INTEGRATION SETTINGS              ////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    std::cout << "Create integrator settings." << std::endl;
 
     //! Create integrator settings.
     std::shared_ptr< IntegratorSettings<  > > integratorSettings =
@@ -853,7 +859,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             PROPAGATE ORBIT            ////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //std::cout << "Starting propagation" << std::endl;
+    std::cout << "Starting propagation" << std::endl;
 
     //! Create simulation object and propagate dynamics.
     SingleArcDynamicsSimulator< double > dynamicsSimulator(

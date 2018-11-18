@@ -58,11 +58,11 @@ struct Space4ErrBody {
 
     std::vector< double >::size_type get_nobj() const
     {
-        return 6u;
+        return 8u;
     }
     std::vector< double >::size_type get_nec() const
     {
-        return 2u;
+        return 0u;
     }
 
     //! Serialization function for Pagmo compatibility

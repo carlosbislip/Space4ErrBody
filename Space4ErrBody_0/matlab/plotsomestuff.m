@@ -21,6 +21,214 @@ if compilation(1).validation == 1
 end
 
 
+%% Interpolators: Angle of Attack
+for p = 1:numel(compilation)
+
+    for k = 1:numel(compilation(p).evolutions)
+        fig_num = p*100 + 3459000 + k*1;
+        figure(fig_num)
+        set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
+        set (gca,'Fontsize',15)
+            title(strcat('Interpolated AoA - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+        %ylim([0 10])
+        %max_tof = max([compilation(p).evolutions.max_tof]);
+        xlim([0 1])
+        xlabel('Normalized Mass-normalized Energy (s)') % x-axis label
+        ylabel('Angle of attack - (deg)') % y-axis label
+        %set(gca,'YTick', 0:1:10);
+        set(gca,'XTick', 0:.1:1);
+        hold on
+
+        for ii = 1:numel(compilation(p).evolutions(k).trajectories)
+            plot(compilation(p).evolutions(k).trajectories(ii).individual.interp_E,...
+                compilation(p).evolutions(k).trajectories(ii).individual.interp_angle_of_attack);
+        end
+
+        %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
+        hold off
+        saveas(...
+            figure(fig_num),...
+            strcat(...
+            mainpath,...
+            '/figures/interp_AoA_Evolution_',...
+            num2str(ii - 1),...
+            '_Set',...
+        convertCharsToStrings(compilation(p).set),...
+        '.png'),...
+        'png');
+        %close(fig_num);
+    end
+end
+
+%% Interpolators: Thrust Elevation Angle
+for p = 1:numel(compilation)
+
+    for k = 1:numel(compilation(p).evolutions)
+        fig_num = p*100 + 3459000 + k*1;
+        figure(fig_num)
+        set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
+        set (gca,'Fontsize',15)
+            title(strcat('Interpolated eps_T - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+        ylim([0 10])
+       % max_tof = max([compilation(p).evolutions.max_tof]);
+        xlim([0 1])
+        xlabel('Normalized Mass-normalized Energy (s)') % x-axis label
+        ylabel('Thrust Elevation Angle - (deg)') % y-axis label
+       % set(gca,'YTick', 0:1:10);
+        set(gca,'XTick', 0:.1:1);
+        hold on
+
+        for ii = 1:numel(compilation(p).evolutions(k).trajectories)
+            plot(compilation(p).evolutions(k).trajectories(ii).individual.interp_E,...
+                compilation(p).evolutions(k).trajectories(ii).individual.interp_thrust_angle);
+        end
+
+        %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
+        hold off
+        saveas(...
+            figure(fig_num),...
+            strcat(...
+            mainpath,...
+            '/figures/interp_eps_T_Evolution_',...
+            num2str(ii - 1),...
+            '_Set',...
+        convertCharsToStrings(compilation(p).set),...
+        '.png'),...
+        'png');
+        %close(fig_num);
+    end
+end
+
+
+%% Time History: G-load - per Evolution
+for p = 1:numel(compilation)
+
+    for k = 1:numel(compilation(p).evolutions)
+        fig_num = p*100 + 3457000 + k*1;
+        figure(fig_num)
+        set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
+        set (gca,'Fontsize',15)
+            title(strcat('G-load through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+        ylim([0 10])
+        max_tof = max([compilation(p).evolutions.max_tof]);
+        xlim([0 max_tof])
+        xlabel('Propagation Time (s)') % x-axis label
+        ylabel('G-load (g)') % y-axis label
+        set(gca,'YTick', 0:1:10);
+        set(gca,'XTick', 0:10:max_tof);
+        hold on
+
+        for ii = 1:numel(compilation(p).evolutions(k).trajectories)
+            plot(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
+                compilation(p).evolutions(k).trajectories(ii).individual.E);
+        end
+
+        %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
+        hold off
+        saveas(...
+            figure(fig_num),...
+            strcat(...
+            mainpath,...
+            '/figures/E_v_T_Evolution_',...
+            num2str(ii - 1),...
+            '_Set',...
+        convertCharsToStrings(compilation(p).set),...
+        '.png'),...
+        'png');
+        %close(fig_num);
+    end
+end
+
+%% Time History: Mass-normalized Energy - per Evolution
+for p = 1:numel(compilation)
+
+    for k = 1:numel(compilation(p).evolutions)
+        fig_num = p*100 + 3457000 + k*1;
+        figure(fig_num)
+        set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
+        set (gca,'Fontsize',15)
+            title(strcat('Mass-normalized E through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+        ylim([0 2e6])
+        max_tof = max([compilation(p).evolutions.max_tof]);
+        xlim([0 max_tof])
+        xlabel('Propagation Time (s)') % x-axis label
+        ylabel('Mass-normalized Energy (E)') % y-axis label
+        set(gca,'YTick', 0:2e5:2e6);
+        set(gca,'XTick', 0:10:max_tof);
+        hold on
+
+        for ii = 1:numel(compilation(p).evolutions(k).trajectories)
+            plot(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
+                compilation(p).evolutions(k).trajectories(ii).individual.E);
+        end
+
+        %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
+        hold off
+        saveas(...
+            figure(fig_num),...
+            strcat(...
+            mainpath,...
+            '/figures/E_v_T_Evolution_',...
+            num2str(ii - 1),...
+            '_Set',...
+        convertCharsToStrings(compilation(p).set),...
+        '.png'),...
+        'png');
+        %close(fig_num);
+    end
+end
+
+%% Time History: Normalized Mass-normalized Energy - per Evolution
+for p = 1:numel(compilation)
+
+    
+    a = 301.7;
+    R_E = 6.378137e6;
+    h_UP = 122000;
+    mu = 3.986004418e14;
+     omega_E = 7.292115e-5;
+   % double V_i = a * Mach_i;
+   V_f = 0.99 * sqrt( mu / ( R_E + h_UP ) );
+    %double E_min = g0 * h_i + 0.5 * V_i * V_i;
+    E_max = 9.81 * h_UP + 0.5 * V_f * V_f;
+    
+    for k = 1:numel(compilation(p).evolutions)
+        fig_num = p*100 + 3458000 + k*1;
+        figure(fig_num)
+        set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
+        set (gca,'Fontsize',15)
+            title(strcat('Normalized Mass-normalized E through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+       % ylim([0 .11])
+        max_tof = max([compilation(p).evolutions.max_tof]);
+        xlim([0 max_tof])
+        xlabel('Propagation Time (s)') % x-axis label
+        ylabel('Normalized Mass-normalized Energy') % y-axis label
+       % set(gca,'YTick', 0:.1);
+        set(gca,'XTick', 0:10:max_tof);
+        hold on
+
+        for ii = 1:numel(compilation(p).evolutions(k).trajectories)
+            plot(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
+                compilation(p).evolutions(k).trajectories(ii).individual.E/(compilation(p).evolutions(k).trajectories(ii).individual.E(end)));
+        end
+
+        %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
+        hold off
+        saveas(...
+            figure(fig_num),...
+            strcat(...
+            mainpath,...
+            '/figures/E_v_T_Evolution_',...
+            num2str(ii - 1),...
+            '_Set',...
+        convertCharsToStrings(compilation(p).set),...
+        '.png'),...
+        'png');
+        %close(fig_num);
+    end
+end
+
+
 
 %% Termination State on 2D Map - per Set
 %close all

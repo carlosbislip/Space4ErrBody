@@ -1,4 +1,4 @@
-function [ evolutions ] = Get_Trajectories(evolutions,prop_path,depvar_path,v_i,gamma_i,pop_i,lon_i_rad,lat_f_deg,lon_f_deg, startEpoch)
+function [ evolutions ] = Get_Trajectories(evolutions,prop_path,depvar_path,interp_path,v_i,gamma_i,pop_i,lon_i_rad,lat_f_deg,lon_f_deg, startEpoch)
 %UNTITLED7 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -23,6 +23,7 @@ for k = 1:(numel(pop_i) + 1)
     pp = 1;
     %     prop_source = prop_path(start(k):finish(k),:);
     depvar_source = depvar_path(start(k):finish(k),:);
+    interp_source = interp_path(start(k):finish(k),:);
     for p = 1:population
         
         % Open this file and read in the contents
@@ -33,6 +34,9 @@ for k = 1:(numel(pop_i) + 1)
         depvar = dlmread(depvar_source{p,:},',');
         fclose(fid);
         
+        fid = fopen(interp_source{p,:});
+        interp = dlmread(interp_source{p,:},',');
+        fclose(fid);
         
         % analyzed_simulations(k).tof = data(1,1) - data(end,1);
         %data = [2458419.95833333, -1730261.1974541, 3489942.65996152, 5041452.57112492, 1817.13843876246, 7053.76703722487, 474.632964784125]
@@ -188,7 +192,12 @@ for k = 1:(numel(pop_i) + 1)
         evolutions(k).trajectories(p).individual.d_deg             = d_deg;
         evolutions(k).trajectories(p).individual.heading_error     = chi_err_deg;
         evolutions(k).trajectories(p).individual.heading_required  = chi_req_deg;
-        
+                evolutions(k).trajectories(p).individual.airspeed  = depvar(1:end,16);
+                evolutions(k).trajectories(p).individual.E  = 9.81*depvar(1:end,8) + 0.5*(depvar(1:end,16)).^2;
+            evolutions(k).trajectories(p).individual.interp_E  = interp(1:end,1);
+            evolutions(k).trajectories(p).individual.interp_angle_of_attack   = interp(1:end,2);
+            evolutions(k).trajectories(p).individual.interp_thrust_angle      = interp(1:end,3);
+            evolutions(k).trajectories(p).individual.interp_throttle_setting  = interp(1:end,4);
         
         
         evolutions(k).individuals.gamma_i(p) = evolutions(k).trajectories(p).individual.flight_path_angle(1);

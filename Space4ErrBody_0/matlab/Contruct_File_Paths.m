@@ -1,10 +1,11 @@
-function [prop_path,depvar_path,v_i,gamma_i,chi_i,lat_f,lon_f,pop_path,pop_i,fit_path,fit_i] = Contruct_File_Paths(prop_Output_files,n_prop_Output_files,depvar_Output_files,n_depvar_Output_files,pop_files,npop_files,fit_files,nfit_files)
+function [prop_path,depvar_path,interp_path,tof,v_i,gamma_i,chi_i,lat_f,lon_f,pop_path,pop_i,fit_path,fit_i] = Contruct_File_Paths(prop_Output_files,n_prop_Output_files,depvar_Output_files,n_depvar_Output_files,interp_Output_files,pop_files,npop_files,fit_files,nfit_files)
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 
 
 prop_path{n_prop_Output_files,1} = [];
 depvar_path{n_prop_Output_files,1} = [];
+interp_path{n_prop_Output_files,1} = [];
 v_i = nan(n_prop_Output_files,1);
 gamma_i = nan(n_prop_Output_files,1);
 chi_i = nan(n_prop_Output_files,1);
@@ -19,22 +20,26 @@ for i = 1:n_prop_Output_files
     prop_Output_files(i).datenum_sorted = datenum_sorted(i);
     prop_Output_files(i).name_sorted = prop_Output_files(I(i)).name;
     
-end
+%end
 
-for i = 1:n_prop_Output_files
+%for i = 1:n_prop_Output_files
     
     depvar_Output_files(i).datenum_sorted = datenum_sorted(i);
     depvar_Output_files(i).name_sorted = depvar_Output_files(I(i)).name;
+    
+    interp_Output_files(i).datenum_sorted = datenum_sorted(i);
+    interp_Output_files(i).name_sorted = interp_Output_files(I(i)).name;
     
 end
 
 % Loop used to create each file's path and extract the initial conditions
 % from the file path/name.
-parfor i = 1:n_prop_Output_files
+for i = 1:n_prop_Output_files
     
     % Create file path string from known data
     prop_path(i,:) = {strcat(prop_Output_files(i).folder,'/',prop_Output_files(i).name_sorted)};
     depvar_path(i,:) = {strcat(depvar_Output_files(i).folder,'/',depvar_Output_files(i).name_sorted)};
+    interp_path(i,:) = {strcat(interp_Output_files(i).folder,'/',interp_Output_files(i).name_sorted)};
     
 % check this on out to not have to do it with a loop    
 %     info{1} = '/data/input/1001_1094.png';
@@ -48,18 +53,18 @@ parfor i = 1:n_prop_Output_files
     % Extract strings of initial conditions from file path/name
     conditions = extractBetween(prop_Output_files(i).name_sorted,'_','.dat');
     conditions_split = strsplit(conditions{:},'_');
-    v_i_string = conditions_split{1};
-    gamma_i_string = conditions_split{2};
-    chi_i_string = conditions_split{3};
-   % tof_string = conditions_split{4};
-    lat_f_string = conditions_split{5};
-    lon_f_string = conditions_split{6};
+    %v_i_string = conditions_split{1};
+    %gamma_i_string = conditions_split{2};
+    %chi_i_string = conditions_split{3};
+    tof_string = conditions_split{1};
+    lat_f_string = conditions_split{2};
+    lon_f_string = conditions_split{3};
     
     % Create set of Initial velocity and Initial flight-path angle
-    v_i(i) = str2double(v_i_string);
-    gamma_i(i) = str2double(gamma_i_string);
-    chi_i(i) = str2double(chi_i_string);
-  %  tof(i) = str2double(tof_string);
+   % v_i(i) = str2double(v_i_string);
+   % gamma_i(i) = str2double(gamma_i_string);
+   % chi_i(i) = str2double(chi_i_string);
+    tof(i) = str2double(tof_string);
     lat_f(i) = str2double(lat_f_string);
     lon_f(i) = str2double(lon_f_string);
 end

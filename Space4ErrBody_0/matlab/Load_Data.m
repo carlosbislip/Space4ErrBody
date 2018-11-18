@@ -21,7 +21,7 @@ switch option
         if exist(output,'file') == 2
             load(output)
         else
-            Disp('Run again with option 2 or 3. No .mat file found.');
+            disp('Run again with option 2 or 3. No .mat file found.');
             
             %             k = npop_files + 1;
             %             evolutions(k).evolution(npop_files)    = nan;
@@ -71,6 +71,13 @@ switch option
             evolutions(k).trajectories.individual.angle_of_sideslip = nan;
             evolutions(k).trajectories.individual.bank_angle        = nan;
             evolutions(k).trajectories.individual.d_deg             = nan;
+            evolutions(k).trajectories.individual.airspeed          = nan;
+            evolutions(k).trajectories.individual.E                 = nan;
+            evolutions(k).trajectories.individual.interp_E                 = nan;
+            evolutions(k).trajectories.individual.interp_angle_of_attack   = nan;
+            evolutions(k).trajectories.individual.interp_thrust_angle      = nan;
+            evolutions(k).trajectories.individual.interp_throttle_setting  = nan;
+%            evolutions(k).trajectories.individual.angle_of_attack   = nan;
             evolutions(k).individuals.v_i     = nan;
             evolutions(k).individuals.gamma_i = nan;
             evolutions(k).individuals.chi_i   = nan;

@@ -14,12 +14,12 @@ format long
 %%
 online = 0;
 
-mainpath = '/Users/bislip/tudatBundle/tudatApplications/Space4ErrBody.git/Space4ErrBody_testing/matlab/';
+mainpath = '/Users/bislip/tudatBundle/tudatApplications/Space4ErrBody.git/Space4ErrBody_0/matlab/';
 
 if online == 1
     mainpath = '..';
 end
-pop_Location = strcat(mainpath,'/SimulationOutput/');
+pop_Location = strcat(mainpath,'SimulationOutput/');
 pop_prefix = 'population*';
 
 fit_Location = pop_Location;
@@ -27,10 +27,11 @@ fit_prefix = 'fitness*';
 
 Output_Location = pop_Location;
 %Folder_prefix = 'HORUS_OUTPUT*';
-Folder_prefix = 'HORUS_VALIDATION*';
+Folder_prefix = 'OUTPUT*';
 %File_prefix = 'HORUSsystemFinalStateGOAL*';
 prop_File_prefix = 'HORUSPropHistory*';
 depvar_File_prefix = 'HORUSDepVar*';
+interp_File_prefix = 'interpolators*';
 
 
 % Hardcoded coordinates of origin: AMS
@@ -57,9 +58,9 @@ end
 
 %% Construct file prefix
 [Folder_Path_List,prop_File_Path_List_prefix,...
-    depvar_File_Path_List_prefix,pop_file_path_prefix,...
+    depvar_File_Path_List_prefix,interp_File_Path_List_prefix,pop_file_path_prefix,...
     fit_file_path_prefix] = Contruct_File_prefix(Output_Location,...
-    Folder_prefix,prop_File_prefix,depvar_File_prefix,pop_Location,pop_prefix,fit_Location,...
+    Folder_prefix,prop_File_prefix,depvar_File_prefix,interp_File_prefix,pop_Location,pop_prefix,fit_Location,...
     fit_prefix);
 
 %% Scan directories
@@ -68,7 +69,7 @@ end
 % option = 2   Analyze
 % option = 3   Analyze and plot
 
-option = 1;
+option = 3;
 
 
 switch option
@@ -79,9 +80,9 @@ switch option
         for p = 1:numel(prop_File_Path_List_prefix)
             
             % Prepare what's needed for the analysis
-            [evolutions,prop_path,depvar_path,v_i,gamma_i,chi_i,lat_f,lon_f,pop_path,...
+            [evolutions,prop_path,depvar_path,interp_path,tof,v_i,gamma_i,chi_i,lat_f,lon_f,pop_path,...
                 pop_i,fit_path,fit_i,output] = Path_Prep(option,p,...
-                prop_File_Path_List_prefix,depvar_File_Path_List_prefix,...
+                prop_File_Path_List_prefix,depvar_File_Path_List_prefix,interp_File_Path_List_prefix,...
                 Folder_Path_List,pop_file_path_prefix,fit_file_path_prefix);
             
             compilation(p).set = char(strcat(extractBetween(output,'evolutions','.mat')));
@@ -101,9 +102,9 @@ switch option
         for p = 1:numel(prop_File_Path_List_prefix)
             
             % Prepare what's needed for the analysis
-            [evolutions,prop_path,depvar_path,v_i,gamma_i,chi_i,lat_f,lon_f,pop_path,...
+            [evolutions,prop_path,depvar_path,interp_path,tof,v_i,gamma_i,chi_i,lat_f,lon_f,pop_path,...
                 pop_i,fit_path,fit_i,output] = Path_Prep(option,p,...
-                prop_File_Path_List_prefix,depvar_File_Path_List_prefix,...
+                prop_File_Path_List_prefix,depvar_File_Path_List_prefix,interp_File_Path_List_prefix,...
                 Folder_Path_List,pop_file_path_prefix,fit_file_path_prefix);
             
 %             if isempty(idx) == 1
@@ -117,9 +118,9 @@ switch option
             [ evolutions ] = Analyze_Evolution(evolutions,v_i,gamma_i,chi_i,lat_f,lon_f,prop_path,pop_path,pop_i,fit_path,fit_i,lat_f_deg,lon_f_deg);
 
             % Analyze simulations
-            [ evolutions ] = Get_Trajectories(evolutions,prop_path,depvar_path,v_i,gamma_i,pop_i,lon_i_rad,lat_f_deg,lon_f_deg,startEpoch);
+            [ evolutions ] = Get_Trajectories(evolutions,prop_path,depvar_path,interp_path,v_i,gamma_i,pop_i,lon_i_rad,lat_f_deg,lon_f_deg,startEpoch);
             
-            save(output, 'evolutions');
+            save(output,'evolutions');
 %            textprogressbar(p*100/numel(File_Path_List_prefix))
             
         end
@@ -132,9 +133,9 @@ switch option
         for p = 1:numel(prop_File_Path_List_prefix)
             
             % Prepare what's needed for the analysis
-            [evolutions,prop_path,depvar_path,v_i,gamma_i,chi_i,lat_f,lon_f,pop_path,...
+            [evolutions,prop_path,depvar_path,interp_path,tof,v_i,gamma_i,chi_i,lat_f,lon_f,pop_path,...
                 pop_i,fit_path,fit_i,output] = Path_Prep(option,p,...
-                prop_File_Path_List_prefix,depvar_File_Path_List_prefix,...
+                prop_File_Path_List_prefix,depvar_File_Path_List_prefix,interp_File_Path_List_prefix,...
                 Folder_Path_List,pop_file_path_prefix,fit_file_path_prefix);
             
 %            if isempty(idx) == 1
@@ -151,7 +152,7 @@ switch option
             [ evolutions ] = Analyze_Evolution(evolutions,v_i,gamma_i,chi_i,lat_f,lon_f,prop_path,pop_path,pop_i,fit_path,fit_i,lat_f_deg,lon_f_deg);
 
             % Analyze simulations
-            [ evolutions ] = Get_Trajectories(evolutions,prop_path,depvar_path,v_i,gamma_i,pop_i,lon_i_rad,lat_f_deg,lon_f_deg,startEpoch);
+            [ evolutions ] = Get_Trajectories(evolutions,prop_path,depvar_path,interp_path,v_i,gamma_i,pop_i,lon_i_rad,lat_f_deg,lon_f_deg,startEpoch);
             
             save(output, 'evolutions');
             compilation(p).set = char(strcat(extractBetween(output,'evolutions','.mat')));

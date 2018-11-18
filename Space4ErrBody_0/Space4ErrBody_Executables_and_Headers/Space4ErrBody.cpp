@@ -331,13 +331,16 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
     //! Associate decision vector values to mapped energy levels within data maps
     std::map< double, double > map_alpha_deg, map_eps_T_deg, map_throttle, map_alpha_rad, map_eps_T_rad;
+    std::map< double, Eigen::VectorXd > map_DV_mapped;
+    Eigen::VectorXd DV_mapped ( 5);
     for ( unsigned int i = 0; i < E_mapped.size( ); ++i )
     {
-        map_alpha_deg[ E_mapped( i ) ] = alpha_deg( i );
-        map_eps_T_deg[ E_mapped( i ) ] = eps_T_deg( i );
-        map_throttle[ E_mapped( i ) ] = throttle( i );
-        map_alpha_rad[ E_mapped( i ) ] = alpha_rad( i );
-        map_eps_T_rad[ E_mapped( i ) ] = eps_T_rad( i );
+        map_alpha_deg[ E_mapped( i ) ] = DV_mapped( 0 ) = alpha_deg( i );
+        map_eps_T_deg[ E_mapped( i ) ] = DV_mapped( 1 ) = eps_T_deg( i );
+        map_throttle[ E_mapped( i ) ] = DV_mapped( 2 ) = throttle( i );
+        map_alpha_rad[ E_mapped( i ) ] = DV_mapped( 3 ) = alpha_rad( i );
+        map_eps_T_rad[ E_mapped( i ) ] = DV_mapped( 4 ) = eps_T_rad( i );
+        map_DV_mapped[ E_mapped( i ) ] = DV_mapped;
     }
 
     //! Create interpolator
@@ -350,6 +353,37 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     interpolator_throttle  = createOneDimensionalInterpolator< double, double >( map_throttle,  interpolatorSettings );
     interpolator_alpha_rad = createOneDimensionalInterpolator< double, double >( map_alpha_rad, interpolatorSettings );
     interpolator_eps_T_rad = createOneDimensionalInterpolator< double, double >( map_eps_T_rad, interpolatorSettings );
+
+
+    //! Create vector containing interpolated values.
+    //std::vector< std::vector< double > > interpolators( 101, std::vector< double >( 6, 0.0 ) );
+    //! -------------------------------------------------^ for # of rows            ^ for # of columns
+    std::map< double, Eigen::VectorXd > interpolators;
+    Eigen::VectorXd  interpolated_values( 5 );
+    double eval;
+    //! Loop to populate vector of interpolated values.
+    for ( unsigned int i = 0; i < 1001; ++i )
+    {
+        // E_mapped =  ( E_hat_max - E_hat_min ) * xn.array() + E_hat_min;
+        eval = (double)i * E_mapped( nodes - 1 ) / 1000;
+        interpolated_values( 0 ) =  interpolator_alpha_deg->interpolate( eval );
+        interpolated_values( 1 ) =  interpolator_eps_T_deg->interpolate( eval );
+        interpolated_values( 2 ) =  interpolator_throttle->interpolate( eval );
+        interpolated_values( 3 ) =  interpolator_alpha_rad->interpolate( eval );
+        interpolated_values( 4 ) =  interpolator_eps_T_rad->interpolate( eval );
+
+        interpolators[ eval ] = interpolated_values;
+
+    }
+
+    //  std::cout << "interpolators " << interpolators << std::endl;
+
+    //  for( int i = 0; i < 101; i++ )
+    //  {
+    //      std::cout << std::fixed << std::setprecision(10) <<
+    //                   std::setw(15) << (double)i/100 <<
+    //                   std::setw(17) <<  interpolators[ (double)i/100 ] << std::endl;
+    //  }
 
     double lat_f_deg_calc = lat_i_deg;
     double lon_f_deg_calc = lon_i_deg;
@@ -565,15 +599,20 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
 
     //! Declare acceleration data map.
-    std::map< std::string, std::vector< std::shared_ptr< AccelerationSettings > > > vehicleAccelerations;
+ //   std::map< std::string, std::vector< std::shared_ptr< AccelerationSettings > > > accelerationSettingsMap;
+    //std::map< std::string, std::map< std::string, std::vector< std::shared_ptr< AccelerationSettings > > > >accelerationSettingsMap;
+    //! Declare acceleration settings variables.
+    SelectedAccelerationMap accelerationSettingsMap;
+
+    //std::cout << "Setting Accelerations" << std::endl;
 
     //! Define gravitational model. The central body acts this force on itself.
     //! Arbitrary maximum degree/order. Equivalent functionality to Cartesian with corresponding maximum
     //! degree/order.
-    vehicleAccelerations[ centralBodyName ].push_back( std::make_shared< SphericalHarmonicAccelerationSettings >( 5, 5 ) );
+    accelerationSettingsMap[ vehicle_name_ ][ centralBodyName ].push_back( std::make_shared< SphericalHarmonicAccelerationSettings >( 5, 5 ) );
 
     //! Define aerodynamic accelerations. The atmosphere of the central body acts this force on the vehicle.
-    vehicleAccelerations[ centralBodyName ].push_back( std::make_shared< AccelerationSettings >( aerodynamic ) );
+    accelerationSettingsMap[ vehicle_name_ ][ centralBodyName ].push_back( std::make_shared< AccelerationSettings >( aerodynamic ) );
 
     std::shared_ptr< MyGuidance > ThrustGuidance = std::make_shared< MyGuidance >(
                 bodyMap,
@@ -614,28 +653,25 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     // std::make_shared< ConstantThrustMagnitudeSettings >( thrustMagnitude, specificImpulse );
 
     //! Define thrust acceleration settings. The vehicle acts this force on itself.
-    vehicleAccelerations[ vehicle_name_ ].push_back( std::make_shared< ThrustAccelerationSettings >( thrustDirectionGuidanceSettings, thrustMagnitudeSettings ) );
+    accelerationSettingsMap[ vehicle_name_ ][ vehicle_name_ ].push_back( std::make_shared< ThrustAccelerationSettings >( thrustDirectionGuidanceSettings, thrustMagnitudeSettings ) );
 
-    //! Declare acceleration settings variables.
-    SelectedAccelerationMap accelerationMap;
-    std::vector< std::string > bodiesToPropagate;
+    //std::cout << "Accelerations Set" << std::endl;
+
+    std::vector< std::string > bodiesToIntegrate;
     std::vector< std::string > centralBodies;
 
-    //! Assign acceleration map from the vehicleAccelerations data map.
-    accelerationMap[ vehicle_name_ ] = vehicleAccelerations;
-
     //! Define bodies that will be propagated. Only 1.
-    bodiesToPropagate.push_back( vehicle_name_ );
+    bodiesToIntegrate.push_back( vehicle_name_ );
 
     //! Define central bodies. Only 1, Earth.
     centralBodies.push_back( centralBodyName );
 
     //! Set acceleration models
-    basic_astrodynamics::AccelerationMap accelerationModelMap =
+    basic_astrodynamics::AccelerationMap accelerationsMap =
             createAccelerationModelsMap(
                 bodyMap,
-                accelerationMap,
-                bodiesToPropagate,
+                accelerationSettingsMap,
+                bodiesToIntegrate,
                 centralBodies );
 
     //! Aerodynamic guidance is set AFTER the accelerations and BEFORE propagating.
@@ -658,6 +694,35 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //bodyMap.at( vehicle_name_ )->getFlightConditions( )->getAerodynamicAngleCalculator( )->setOrientationAngleFunctions(
     //            [ = ]( ){ return constantAngleOfAttack; }, [ = ]( ){ return constantSideSlipeAngle; }, [ = ]( ){ return constantBankAngle; } );
     //std::cout << "Creating vehicle: Guidance is set" << std::endl;
+
+    std::cout << "main file" << std::endl;
+
+    SelectedAccelerationList orderedAccelerationPerBody =
+            orderSelectedAccelerationMap( accelerationSettingsMap );
+    
+    
+    
+    //basic_astrodynamics::AccelerationMap accelerationModelList =
+    //        std::dynamic_pointer_cast< NBodyStateDerivative< StateScalarType, TimeType > >(
+    //            stateDerivativeModels.at( propagators::translational_state ).at( 0 ) )->getAccelerationsMap( );
+int i = 0;
+
+
+    for( SelectedAccelerationList::const_iterator bodyIterator =
+         orderedAccelerationPerBody.begin( ); bodyIterator != orderedAccelerationPerBody.end( );
+         bodyIterator++ )
+    {
+
+    std::string bodyUndergoingAcceleration = bodyIterator->first;
+    std::vector< std::pair< std::string, std::shared_ptr< AccelerationSettings > > >
+            accelerationsForBody = bodyIterator->second;
+    //std::cout << "bodyIterator:                   " << bodyIterator << std::endl;
+    std::cout << "bodyUndergoingAcceleration:     " << bodyUndergoingAcceleration << std::endl;
+    std::cout << "accelerationsForBody:           " << accelerationsForBody[i].first << " : " << accelerationsForBody[i].second << std::endl;
+i = i + 1;
+    }
+   // std::string currentCentralBodyName = centralBodies.at( bodyUndergoingAcceleration );
+
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -775,11 +840,40 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                     vehicle_name_,
                     bank_angle,
                     centralBodyName) );
+    dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    airspeed_dependent_variable,
+                    vehicle_name_ ) );
+    dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    total_aerodynamic_g_load_variable,
+                    vehicle_name_ ) );
+    dep_varList.push_back(
+                std::make_shared< SingleAccelerationDependentVariableSaveSettings >(
+                    aerodynamic,
+                    vehicle_name_,
+                    centralBodyName,
+                    false,
+                    -1 )); // false prints vector components. -1 prints all elements
+    dep_varList.push_back(
+                std::make_shared< SingleAccelerationDependentVariableSaveSettings >(
+                    spherical_harmonic_gravity,
+                    vehicle_name_,
+                    centralBodyName,
+                    false,
+                    -1 )); // false prints vector components. -1 prints all elements
+    dep_varList.push_back(
+                std::make_shared< SingleAccelerationDependentVariableSaveSettings >(
+                    thrust_acceleration,
+                    vehicle_name_,
+                    vehicle_name_,
+                    false,
+                    -1 )); // false prints vector components. -1 prints all elements
+
     //dep_varList.push_back(
     //            std::make_shared< SingleDependentVariableSaveSettings >(
     //                total_mass_rate_dependent_variables,
     //                vehicle_name_ ) );
-
     // Create object with list of dependent variables
     std::shared_ptr< DependentVariableSaveSettings > dep_varToSave =
             std::make_shared< DependentVariableSaveSettings >( dep_varList );
@@ -792,8 +886,8 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     std::shared_ptr< TranslationalStatePropagatorSettings< double > > translationalPropagatorSettings =
             std::make_shared< TranslationalStatePropagatorSettings< double > >
             ( centralBodies,
-              accelerationModelMap,
-              bodiesToPropagate,
+              accelerationsMap,
+              bodiesToIntegrate,
               systemInitialState,
               terminationSettings,
               cowell,
@@ -801,7 +895,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
 
     ///////////////////////             CREATE MASS RATE SETTINGS              ////////////////////////////////////////////
-    std::cout << "Create mass rate models" << std::endl;
+    //std::cout << "Create mass rate models" << std::endl;
 
     //! Create mass rate models
     std::shared_ptr< MassRateModelSettings > massRateModelSettings =
@@ -810,7 +904,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
     std::map< std::string, std::shared_ptr< MassRateModel > > massRateModels;
     massRateModels[ vehicle_name_ ] = createMassRateModel(
-                vehicle_name_, massRateModelSettings, bodyMap, accelerationModelMap );
+                vehicle_name_, massRateModelSettings, bodyMap, accelerationsMap );
 
     //! Create settings for propagating the mass of the vehicle.
     std::vector< std::string > bodiesWithMassToPropagate;
@@ -820,7 +914,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     Eigen::VectorXd initialBodyMasses( 1 );
     initialBodyMasses( 0 ) = M_i;
 
-    std::cout << "Create mass propagation settings." << std::endl;
+    //std::cout << "Create mass propagation settings." << std::endl;
 
     //! Create mass propagation settings.
     std::shared_ptr< SingleArcPropagatorSettings< double > > massPropagatorSettings =
@@ -834,20 +928,22 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     propagatorSettingsVector.push_back( translationalPropagatorSettings );
     propagatorSettingsVector.push_back( massPropagatorSettings );
 
-    std::cout << "Create propagation settings for both mass and translational dynamics." << std::endl;
+    //std::cout << "Create propagation settings for both mass and translational dynamics." << std::endl;
 
     //! Create propagation settings for both mass and translational dynamics.
-    std::shared_ptr< PropagatorSettings< double > > propagatorSettings =
-            std::make_shared< MultiTypePropagatorSettings< double > >( propagatorSettingsVector, terminationSettings, dep_varToSave );
+    //std::shared_ptr< PropagatorSettings< double > > propagatorSettings =
+     //       std::make_shared< MultiTypePropagatorSettings< double > >( propagatorSettingsVector, terminationSettings, dep_varToSave );
+
+    //std::cout << "Create propagation settings for ONLY translational dynamics." << std::endl;
 
     //! Create propagation settings for ONLY translational dynamics.
-    //  std::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
-    //        translationalPropagatorSettings;
+    std::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
+          translationalPropagatorSettings;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////           CREATE INTEGRATION SETTINGS              ////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    std::cout << "Create integrator settings." << std::endl;
+    //std::cout << "Create integrator settings." << std::endl;
 
     //! Create integrator settings.
     std::shared_ptr< IntegratorSettings<  > > integratorSettings =
@@ -966,6 +1062,8 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
     std::string complete_file_name_Prop = "HORUSPropHistory_" + simulation_file_name_suffix + ".dat";
     std::string complete_file_name_DepVar = "HORUSDepVar_" + simulation_file_name_suffix + ".dat";
+    std::string complete_file_name_interpolators = "interpolators_" + simulation_file_name_suffix + ".dat";
+    std::string complete_file_name_map_DV_mapped = "map_DV_mapped_" + simulation_file_name_suffix + ".dat";
 
     //! Will print out depending on some input values. Each entry corresponds to
     //! a different type of output. Entries are binary, 0 or 1.
@@ -986,6 +1084,23 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
         //! Write HORUS dependent variables' history to file.
         writeDataMapToTextFile( dynamicsSimulator.getDependentVariableHistory( ),
                                 complete_file_name_DepVar,
+                                tudat_applications::getOutputPath( ) + outputSubFolder_,
+                                "",
+                                std::numeric_limits< double >::digits10,
+                                std::numeric_limits< double >::digits10,
+                                "," );
+    }
+    if ( output_settingsValues_[ 3 ] == 1 )//&& check == nodes )
+    {
+        writeDataMapToTextFile( interpolators,
+                                complete_file_name_interpolators,
+                                tudat_applications::getOutputPath( ) + outputSubFolder_,
+                                "",
+                                std::numeric_limits< double >::digits10,
+                                std::numeric_limits< double >::digits10,
+                                "," );
+        writeDataMapToTextFile( map_DV_mapped,
+                                complete_file_name_map_DV_mapped,
                                 tudat_applications::getOutputPath( ) + outputSubFolder_,
                                 "",
                                 std::numeric_limits< double >::digits10,

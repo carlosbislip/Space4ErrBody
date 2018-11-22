@@ -37,6 +37,7 @@ struct Space4ErrBody {
                    const std::string &problem_name,
                    const std::string &vehicle_name,
                    const std::vector< std::string > &parameterList,
+                   const std::vector< double > &parameterBounds,
                    const std::vector< double > &vehicleParameterValues,
                    const std::vector< std::string > &aeroCoeffFileList,
                    const std::vector< double > &simulation_settingsValues,
@@ -78,6 +79,7 @@ private:
     const std::string problem_name_;
     const std::string vehicle_name_;
     const std::vector< std::string > parameterList_;
+    const std::vector< double > parameterBounds_;
     const std::vector< double > vehicleParameterValues_;
     const std::vector< std::string > aeroCoeffFileList_;
     const std::vector< double > simulation_settingsValues_;

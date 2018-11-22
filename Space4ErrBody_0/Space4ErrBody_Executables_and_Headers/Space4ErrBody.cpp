@@ -102,6 +102,7 @@ Space4ErrBody::Space4ErrBody(
         const std::string &problem_name,
         const std::string &vehicle_name,
         const std::vector< std::string > &parameterList,
+        const std::vector< double > &parameterBounds,
         const std::vector< double > &vehicleParameterValues,
         const std::vector< std::string > &aeroCoeffFileList,
         const std::vector< double > &simulation_settingsValues,
@@ -113,6 +114,7 @@ Space4ErrBody::Space4ErrBody(
     problem_name_( problem_name ),
     vehicle_name_( vehicle_name ),
     parameterList_( parameterList ),
+    parameterBounds_( parameterBounds ),
     vehicleParameterValues_( vehicleParameterValues ),
     aeroCoeffFileList_( aeroCoeffFileList ),
     simulation_settingsValues_( simulation_settingsValues ),
@@ -219,6 +221,9 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //! Assign specific impulse
     const double Isp = vehicleParameterValues_[15]; // kg
 
+    //! Assign maximum engine thrust
+    const double maxThrust = vehicleParameterValues_[16]; // kg
+
     //! Assign initial height
     const double h_i = initialConditionsValues_[2]; // kg
 
@@ -238,9 +243,10 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     const double d_f_deg = terminationConditionsValues_[ 2 ];
     const double h_UP = terminationConditionsValues_[ 3 ];
     const double h_DN = terminationConditionsValues_[ 4 ];
-    const double n_max = terminationConditionsValues_[ 5 ];
-    const double q_dot_max = terminationConditionsValues_[ 6 ];
-    const double q_d_max = terminationConditionsValues_[ 7 ];
+    const double V_max = terminationConditionsValues_[ 5 ];
+    const double n_max = terminationConditionsValues_[ 6 ];
+    const double q_dot_max = terminationConditionsValues_[ 7 ];
+    const double q_dyn_max = terminationConditionsValues_[ 8 ];
 
     //! Convert angles from degrees to radians
     const double lat_i_rad = unit_conversions::convertDegreesToRadians( lat_i_deg );
@@ -248,6 +254,21 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     const double lat_f_rad = unit_conversions::convertDegreesToRadians( lat_f_deg );
     const double lon_f_rad = unit_conversions::convertDegreesToRadians( lon_f_deg );
     const double gamma_i_rad = unit_conversions::convertDegreesToRadians( gamma_i_deg );
+
+
+    //! Pre-define various variables used to determine fitness.
+    double lat_f_deg_calc = lat_i_deg;
+    double lon_f_deg_calc = lon_i_deg;
+    double d_i_deg        = unit_conversions::convertRadiansToDegrees( getAngularDistance(lat_i_rad,lon_i_rad,lat_f_rad,lon_f_rad) );
+    double d_f_deg_calc   = d_i_deg;
+    //std::cout << d_f_deg_calc << std::endl;
+    double h_UP_calc       = h_i;
+    double tof = simulation_settingsValues_[ 1 ];
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////            CREATE NODAL STRUCTURE             /////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //! Declare and allocate vectors of interest.
     Eigen::VectorXd xn_interval( nodes - 1 );
@@ -259,19 +280,18 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     Eigen::VectorXd eps_T_rad( nodes );
     Eigen::VectorXd E( nodes );
     Eigen::VectorXd E_hat( nodes );
-    Eigen::VectorXd E_mapped( nodes );
 
     //! Various parameters
     const double R_E = 6.378137e6;
-    const double mu = 3.986004418e14;
+    //const double mu = 3.986004418e14;
     const double omega_E = 7.292115*1E-5;
     const double J2 = 1082.626523e-6;
     const double J3 = 2.532153e-7;
     const double J4 = 1.6109876e-7;
 
-    Eigen::Vector2d gravs = getGravs ( mu, J2, J3, J4, R_E, R_E, 0.0000001 );
+    //Eigen::Vector2d gravs = getGravs ( mu, J2, J3, J4, R_E, R_E, 0.0000001 );
     double rho, a, g0;
-    g0 = gravs.norm();
+    g0 = 9.80665;
 
     //! Re-allocate desicion vector values into workable vectors.
     for( int i = 0; i < nodes; i++ )
@@ -315,84 +335,8 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     std::cout << "-------" << std::endl;
 */
 
-    //! Impose constraints on first and last energy nodes
-    a = 301.7;//NRLMSISE00Atmosphere::getSpeedOfSound( R_E + height( 0 ), 0, 0, simulationStartEpoch );
-    double V_i = a * Mach_i;
-    double V_f = 0.99 * sqrt( mu / ( R_E + h_UP ) );
-    double E_min = g0 * h_i + 0.5 * V_i * V_i;
-    double E_max = g0 * h_UP + 0.5 * V_f * V_f;
-
-    //! Normalize fist and last Energy nodes
-    double E_hat_min = E_min/E_max;
-    double E_hat_max = E_max/E_max;
-
-    //! Map energy levels to control node locations
-    E_mapped =  ( E_hat_max - E_hat_min ) * xn.array() + E_hat_min;
-
-    //! Associate decision vector values to mapped energy levels within data maps
-    std::map< double, double > map_alpha_deg, map_eps_T_deg, map_throttle, map_alpha_rad, map_eps_T_rad;
-    std::map< double, Eigen::VectorXd > map_DV_mapped;
-    Eigen::VectorXd DV_mapped ( 5);
-    for ( unsigned int i = 0; i < E_mapped.size( ); ++i )
-    {
-        map_alpha_deg[ E_mapped( i ) ] = DV_mapped( 0 ) = alpha_deg( i );
-        map_eps_T_deg[ E_mapped( i ) ] = DV_mapped( 1 ) = eps_T_deg( i );
-        map_throttle[ E_mapped( i ) ] = DV_mapped( 2 ) = throttle( i );
-        map_alpha_rad[ E_mapped( i ) ] = DV_mapped( 3 ) = alpha_rad( i );
-        map_eps_T_rad[ E_mapped( i ) ] = DV_mapped( 4 ) = eps_T_rad( i );
-        map_DV_mapped[ E_mapped( i ) ] = DV_mapped;
-    }
-
-    //! Create interpolator
-    std::shared_ptr< InterpolatorSettings > interpolatorSettings =
-            std::make_shared< tudat::interpolators::InterpolatorSettings >( cubic_spline_interpolator );
-    std::shared_ptr< OneDimensionalInterpolator< double, double > > interpolator_alpha_deg,interpolator_eps_T_deg,interpolator_throttle,interpolator_alpha_rad,interpolator_eps_T_rad;
-
-    interpolator_alpha_deg = createOneDimensionalInterpolator< double, double >( map_alpha_deg, interpolatorSettings );
-    interpolator_eps_T_deg = createOneDimensionalInterpolator< double, double >( map_eps_T_deg, interpolatorSettings );
-    interpolator_throttle  = createOneDimensionalInterpolator< double, double >( map_throttle,  interpolatorSettings );
-    interpolator_alpha_rad = createOneDimensionalInterpolator< double, double >( map_alpha_rad, interpolatorSettings );
-    interpolator_eps_T_rad = createOneDimensionalInterpolator< double, double >( map_eps_T_rad, interpolatorSettings );
 
 
-    //! Create vector containing interpolated values.
-    //std::vector< std::vector< double > > interpolators( 101, std::vector< double >( 6, 0.0 ) );
-    //! -------------------------------------------------^ for # of rows            ^ for # of columns
-    std::map< double, Eigen::VectorXd > interpolators;
-    Eigen::VectorXd  interpolated_values( 5 );
-    double eval;
-    //! Loop to populate vector of interpolated values.
-    for ( unsigned int i = 0; i < 1001; ++i )
-    {
-        // E_mapped =  ( E_hat_max - E_hat_min ) * xn.array() + E_hat_min;
-        eval = (double)i * E_mapped( nodes - 1 ) / 1000;
-        interpolated_values( 0 ) =  interpolator_alpha_deg->interpolate( eval );
-        interpolated_values( 1 ) =  interpolator_eps_T_deg->interpolate( eval );
-        interpolated_values( 2 ) =  interpolator_throttle->interpolate( eval );
-        interpolated_values( 3 ) =  interpolator_alpha_rad->interpolate( eval );
-        interpolated_values( 4 ) =  interpolator_eps_T_rad->interpolate( eval );
-
-        interpolators[ eval ] = interpolated_values;
-
-    }
-
-    //  std::cout << "interpolators " << interpolators << std::endl;
-
-    //  for( int i = 0; i < 101; i++ )
-    //  {
-    //      std::cout << std::fixed << std::setprecision(10) <<
-    //                   std::setw(15) << (double)i/100 <<
-    //                   std::setw(17) <<  interpolators[ (double)i/100 ] << std::endl;
-    //  }
-
-    double lat_f_deg_calc = lat_i_deg;
-    double lon_f_deg_calc = lon_i_deg;
-    double d_i_deg        = unit_conversions::convertRadiansToDegrees( getAngularDistance(lat_i_rad,lon_i_rad,lat_f_rad,lon_f_rad) );
-    double d_f_deg_calc   = d_i_deg;
-    //std::cout << d_f_deg_calc << std::endl;
-    double h_UP_calc       = h_i;
-    double tof = simulation_settingsValues_[ 1 ];
-    std::string simulation_file_name_suffix;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            CREATE ENVIRONMENT            //////////////////////////////////////////////////////
@@ -570,6 +514,16 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //! facilitate bringing in everything into the inertial frame.
     setGlobalFrameBodyEphemerides( bodyMap, "SSB", "J2000" );
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////            CREATE KNOWN STATES              ///////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    //! Impose constraints on first and last energy nodes
+    const double mu = spice_interface::getBodyGravitationalParameter( centralBodyName );
+    a = 301.7;//NRLMSISE00Atmosphere::getSpeedOfSound( R_E + height( 0 ), 0, 0, simulationStartEpoch );
+    double V_i = a * Mach_i;
+    double V_f = 0.99 * sqrt( mu / ( R_E + h_UP ) );
+
     //! Set spherical elements for vehicle's initial state.
     //! ARTBITRARILY CHOSEN to be in Earth-Fixed frame.
     Eigen::Vector6d EntryState_spherical;
@@ -593,13 +547,108 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                 earthRotationalEphemeris );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////            CREATE INTERPOLATORS             ///////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    //! Set initial and final energy levels
+    double E_min = g0 * h_i + 0.5 * V_i * V_i;
+    double E_max = g0 * h_UP + 0.5 * V_f * V_f;
+
+    //! Normalize fist and last Energy nodes
+    double E_hat_min = E_min/E_max;
+    double E_hat_max = E_max/E_max;
+
+    //! Map energy levels to control node locations
+    Eigen::VectorXd E_mapped( nodes );
+    E_mapped =  ( E_hat_max - E_hat_min ) * xn.array() + E_hat_min;
+
+    // const double E_hat = ( g0 * current_height + 0.5 * current_V * current_V ) / E_max;
+
+    //! Associate decision vector values to mapped energy levels within data maps
+    std::map< double, double > map_alpha_deg, map_eps_T_deg, map_throttle, map_alpha_rad, map_eps_T_rad;
+    std::map< double, Eigen::VectorXd > map_DV_mapped;
+    Eigen::VectorXd DV_mapped ( 5 );
+    for ( unsigned int i = 0; i < E_mapped.size( ); ++i )
+    {
+        map_alpha_deg[ E_mapped( i ) ] = DV_mapped( 0 ) = alpha_deg( i );
+        map_eps_T_deg[ E_mapped( i ) ] = DV_mapped( 1 ) = eps_T_deg( i );
+        map_throttle[ E_mapped( i ) ]  = DV_mapped( 2 ) = throttle( i );
+        map_alpha_rad[ E_mapped( i ) ] = DV_mapped( 3 ) = alpha_rad( i );
+        map_eps_T_rad[ E_mapped( i ) ] = DV_mapped( 4 ) = eps_T_rad( i );
+        map_DV_mapped[ E_mapped( i ) ] = DV_mapped;
+    }
+
+    //! Create interpolator
+    std::shared_ptr< InterpolatorSettings > interpolatorSettings =
+            std::make_shared< tudat::interpolators::InterpolatorSettings >( cubic_spline_interpolator );
+    std::shared_ptr< OneDimensionalInterpolator< double, double > > interpolator_alpha_deg,interpolator_eps_T_deg,interpolator_throttle,interpolator_alpha_rad,interpolator_eps_T_rad;
+
+    interpolator_alpha_deg = createOneDimensionalInterpolator< double, double >( map_alpha_deg, interpolatorSettings );
+    interpolator_eps_T_deg = createOneDimensionalInterpolator< double, double >( map_eps_T_deg, interpolatorSettings );
+    interpolator_throttle  = createOneDimensionalInterpolator< double, double >( map_throttle,  interpolatorSettings );
+    interpolator_alpha_rad = createOneDimensionalInterpolator< double, double >( map_alpha_rad, interpolatorSettings );
+    interpolator_eps_T_rad = createOneDimensionalInterpolator< double, double >( map_eps_T_rad, interpolatorSettings );
+
+
+    //! Create vector containing interpolated values.
+    //std::vector< std::vector< double > > interpolators( 101, std::vector< double >( 6, 0.0 ) );
+    //! -------------------------------------------------^ for # of rows            ^ for # of columns
+    std::map< double, Eigen::VectorXd > interpolators;
+    Eigen::VectorXd  interpolated_values( 5 );
+    double eval;
+    //! Loop to populate vector of interpolated values.
+    for ( unsigned int i = 0; i < 1001; ++i )
+    {
+        // E_mapped =  ( E_hat_max - E_hat_min ) * xn.array() + E_hat_min;
+        eval = (double)i * E_mapped( nodes - 1 ) / 1000;
+        interpolated_values( 0 ) =  interpolator_alpha_deg->interpolate( eval );
+        interpolated_values( 1 ) =  interpolator_eps_T_deg->interpolate( eval );
+        interpolated_values( 2 ) =  interpolator_throttle->interpolate( eval );
+        interpolated_values( 3 ) =  interpolator_alpha_rad->interpolate( eval );
+        interpolated_values( 4 ) =  interpolator_eps_T_rad->interpolate( eval );
+
+        interpolators[ eval ] = interpolated_values;
+
+    }
+
+
+
+    writeDataMapToTextFile( interpolators,
+                            "interpolators_pre",
+                            tudat_applications::getOutputPath( ) + outputSubFolder_,
+                            "",
+                            std::numeric_limits< double >::digits10,
+                            std::numeric_limits< double >::digits10,
+                            "," );
+    writeDataMapToTextFile( map_DV_mapped,
+                            "DV_mapped_pre",
+                            tudat_applications::getOutputPath( ) + outputSubFolder_,
+                            "",
+                            std::numeric_limits< double >::digits10,
+                            std::numeric_limits< double >::digits10,
+                            "," );
+
+
+
+
+    //  std::cout << "interpolators " << interpolators << std::endl;
+
+    //  for( int i = 0; i < 101; i++ )
+    //  {
+    //      std::cout << std::fixed << std::setprecision(10) <<
+    //                   std::setw(15) << (double)i/100 <<
+    //                   std::setw(17) <<  interpolators[ (double)i/100 ] << std::endl;
+    //  }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             CREATE ACCELERATIONS            ///////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
     //! Declare acceleration data map.
- //   std::map< std::string, std::vector< std::shared_ptr< AccelerationSettings > > > accelerationSettingsMap;
+    //   std::map< std::string, std::vector< std::shared_ptr< AccelerationSettings > > > accelerationSettingsMap;
     //std::map< std::string, std::map< std::string, std::vector< std::shared_ptr< AccelerationSettings > > > >accelerationSettingsMap;
     //! Declare acceleration settings variables.
     SelectedAccelerationMap accelerationSettingsMap;
@@ -617,7 +666,8 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     std::shared_ptr< MyGuidance > ThrustGuidance = std::make_shared< MyGuidance >(
                 bodyMap,
                 vehicle_name_,
-                E_max,
+                parameterBounds_,
+                Isp,maxThrust,E_max,
                 interpolator_alpha_deg,
                 interpolator_eps_T_deg,
                 interpolator_throttle );
@@ -679,7 +729,8 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     std::shared_ptr< MyGuidance > AeroGuidance = std::make_shared< MyGuidance >(
                 bodyMap,
                 vehicle_name_,
-                E_max,
+                parameterBounds_,
+                Isp,maxThrust,E_max,
                 interpolator_alpha_deg,
                 interpolator_eps_T_deg,
                 interpolator_throttle);
@@ -694,14 +745,14 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //bodyMap.at( vehicle_name_ )->getFlightConditions( )->getAerodynamicAngleCalculator( )->setOrientationAngleFunctions(
     //            [ = ]( ){ return constantAngleOfAttack; }, [ = ]( ){ return constantSideSlipeAngle; }, [ = ]( ){ return constantBankAngle; } );
     //std::cout << "Creating vehicle: Guidance is set" << std::endl;
-
+    /*
     std::cout << "main file" << std::endl;
 
     SelectedAccelerationList orderedAccelerationPerBody =
             orderSelectedAccelerationMap( accelerationSettingsMap );
-    
-    
-    
+
+
+
     //basic_astrodynamics::AccelerationMap accelerationModelList =
     //        std::dynamic_pointer_cast< NBodyStateDerivative< StateScalarType, TimeType > >(
     //            stateDerivativeModels.at( propagators::translational_state ).at( 0 ) )->getAccelerationsMap( );
@@ -721,7 +772,8 @@ int i = 0;
     std::cout << "accelerationsForBody:           " << accelerationsForBody[i].first << " : " << accelerationsForBody[i].second << std::endl;
 i = i + 1;
     }
-   // std::string currentCentralBodyName = centralBodies.at( bodyUndergoingAcceleration );
+ */
+    // std::string currentCentralBodyName = centralBodies.at( bodyUndergoingAcceleration );
 
 
 
@@ -759,16 +811,16 @@ i = i + 1;
     additional_data.push_back( lon_i_rad );
 
     //! Set target coordinates. Earth-Fixed.
-    additional_data.push_back( lat_f_rad );
-    additional_data.push_back( lon_f_rad );
+    //additional_data.push_back( lat_f_rad );
+    //additional_data.push_back( lon_f_rad );
 
     //! Set initial distance to target.
-    additional_data.push_back( getAngularDistance( lat_i_rad,lon_i_rad,lat_f_rad,lon_f_rad) );
+    //additional_data.push_back( getAngularDistance( lat_i_rad,lon_i_rad,lat_f_rad,lon_f_rad) );
 
     //! Define termination settings.
     std::shared_ptr< PropagationTerminationSettings > terminationSettings =
             std::make_shared< PropagationCustomTerminationSettings >(
-                boost::bind( &bislip::StopOrNot, bodyMap, vehicle_name_, term_cond, additional_data ) );
+                boost::bind( &bislip::StopOrNot, bodyMap, vehicle_name_, parameterBounds_, terminationConditionsValues_, additional_data, E_max, interpolator_throttle, interpolator_eps_T_deg ) );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////          CREATE LIST OF DEPENDENT VARIABLES        ////////////////////////////////////////////
@@ -790,21 +842,6 @@ i = i + 1;
                     body_fixed_relative_spherical_position,
                     vehicle_name_,
                     centralBodyName ) );
-    dep_varList.push_back(
-                std::make_shared< SingleDependentVariableSaveSettings >(
-                    mach_number_dependent_variable,
-                    vehicle_name_ ) );
-    dep_varList.push_back(
-                std::make_shared< SingleDependentVariableSaveSettings >(
-                    altitude_dependent_variable,
-                    vehicle_name_,
-                    centralBodyName ) );
-    dep_varList.push_back(
-                std::make_shared< SingleAccelerationDependentVariableSaveSettings >(
-                    aerodynamic,
-                    vehicle_name_,
-                    centralBodyName,
-                    1 ) );
     //dep_varList.push_back(
     //            std::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
     //                vehicle_name_,
@@ -842,12 +879,22 @@ i = i + 1;
                     centralBodyName) );
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
+                    altitude_dependent_variable,
+                    vehicle_name_,
+                    centralBodyName ) );
+    dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    mach_number_dependent_variable,
+                    vehicle_name_ ) );
+    dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
                     airspeed_dependent_variable,
                     vehicle_name_ ) );
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     total_aerodynamic_g_load_variable,
-                    vehicle_name_ ) );
+                    vehicle_name_,
+                    centralBodyName) );
     dep_varList.push_back(
                 std::make_shared< SingleAccelerationDependentVariableSaveSettings >(
                     aerodynamic,
@@ -869,7 +916,21 @@ i = i + 1;
                     vehicle_name_,
                     false,
                     -1 )); // false prints vector components. -1 prints all elements
-
+    dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    local_dynamic_pressure_dependent_variable,
+                    vehicle_name_,
+                    centralBodyName) );
+    dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    local_aerodynamic_heat_rate_dependent_variable,
+                    vehicle_name_,
+                    centralBodyName) );
+    /*dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    stagnation_point_heat_flux_dependent_variable,
+                    vehicle_name_,
+                    centralBodyName) );*/
     //dep_varList.push_back(
     //            std::make_shared< SingleDependentVariableSaveSettings >(
     //                total_mass_rate_dependent_variables,
@@ -892,7 +953,6 @@ i = i + 1;
               terminationSettings,
               cowell,
               dep_varToSave );
-
 
     ///////////////////////             CREATE MASS RATE SETTINGS              ////////////////////////////////////////////
     //std::cout << "Create mass rate models" << std::endl;
@@ -932,13 +992,13 @@ i = i + 1;
 
     //! Create propagation settings for both mass and translational dynamics.
     //std::shared_ptr< PropagatorSettings< double > > propagatorSettings =
-     //       std::make_shared< MultiTypePropagatorSettings< double > >( propagatorSettingsVector, terminationSettings, dep_varToSave );
+    //      std::make_shared< MultiTypePropagatorSettings< double > >( propagatorSettingsVector, terminationSettings, dep_varToSave );
 
     //std::cout << "Create propagation settings for ONLY translational dynamics." << std::endl;
 
     //! Create propagation settings for ONLY translational dynamics.
     std::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
-          translationalPropagatorSettings;
+            translationalPropagatorSettings;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////           CREATE INTEGRATION SETTINGS              ////////////////////////////////////////////
@@ -955,7 +1015,7 @@ i = i + 1;
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             PROPAGATE ORBIT            ////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    std::cout << "Starting propagation" << std::endl;
+    // std::cout << "Starting propagation" << std::endl;
 
     //! Create simulation object and propagate dynamics.
     SingleArcDynamicsSimulator< double > dynamicsSimulator(
@@ -1017,9 +1077,8 @@ i = i + 1;
     //!
     //!
 
-    Eigen::VectorXd dep_var_FINAL_STATE = ( dynamicsSimulator.getDependentVariableHistory( ).rbegin() )->second;
+    const Eigen::VectorXd dep_var_FINAL_STATE = ( dynamicsSimulator.getDependentVariableHistory( ).rbegin() )->second;
     //std::cout << "dep_var_FINAL_STATE: " << dep_var_FINAL_STATE << std::endl;
-
 
     //const double altitude_f_calc = dep_var_FINAL_STATE[3];
     const double lat_f_rad_calc  = dep_var_FINAL_STATE[ 4 ];
@@ -1036,12 +1095,48 @@ i = i + 1;
 
     //! Calculate angular distance of final state from target coordinates.
     const double d_rad = getAngularDistance( lat_f_rad_calc, lon_f_rad_calc, lat_f_rad, lon_f_rad );
-    double d_deg = unit_conversions::convertRadiansToDegrees( d_rad );
+    const double d_deg = unit_conversions::convertRadiansToDegrees( d_rad );
 
+    //! Calculate offset of final state from GOAL state: Earth-Fixed Frame
+    //const double dif_lat_rad = lat_f_rad - lat_f_rad_calc;
+    //const double dif_lon_rad = lon_f_rad - lon_f_rad_calc;
 
+    //! Calculate offsets of final state in degrees: Earth-Fixed Frame
+    const double dif_lat_deg = lat_f_deg - lat_f_deg_calc;
+    const double dif_lon_deg = lon_f_deg - lon_f_deg_calc;
+
+    //! Calculate "norm" of offsets. This is an arbitrary function I have
+    //! implemented to pass on as an 'objective function'. It relates the
+    //! differences such that when minimizing the offsets, there is an additional
+    //! unsigned value that always goes to zero. Most definitely unsure about how
+    //!  'proper' it is, yet is what works for the current BALLISTIC case.
+    const double dif_norm = std::sqrt( ( dif_lat_deg * dif_lat_deg ) + ( dif_lon_deg * dif_lon_deg ) );
+
+    //! Calculate offset of final angular distance to termination condition distance.
+    const double dif_d_deg = d_deg - terminationConditionsValues_[ 2 ];
+    //! Calculate offset from goal elevation.
+    const double dif_h_UP = h_UP - h_UP_calc;
+
+    const double dif_xn = xn( nodes - 1 ) - 1;
+    const double dif_E_mapped = E_mapped( nodes - 1 ) - 1;
+
+    //! Assign values to Fitness vector! At the moment these are all 'objective
+    //! functions'. No constraints have been implemented. To modify this I have
+    //! change the header file and define how many are elements are objective
+    //! function, equality contraints, and inequlity constraints. This vector
+    //! here must contain them is that exact order: nOF, nEC, nIC.
+    std::vector< double > delta;
+    delta.push_back( dif_norm );
+    delta.push_back( dif_lat_deg );
+    delta.push_back( dif_lon_deg );
+    delta.push_back( dif_d_deg );
+    delta.push_back( dif_h_UP );
+    delta.push_back( tof );  // Not sure yet how this one affects the optimization. Included for completion.
+    delta.push_back( dif_xn );
+    delta.push_back( dif_E_mapped );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ///////////////////////        PROVIDE OUTPUT TO FILE                        //////////////////////////////////////////
+    ///////////////////////        PRINT SIMULATION OUTPUT TO FILE               //////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //! Get time stamp for this specific simulation. This avoids overwriting the
@@ -1050,7 +1145,7 @@ i = i + 1;
     std::string simulation_save_time = getCurrentDateTime( false );
 
     //! Create unique filename that cannot be overwritten due to the timestamp.
-    simulation_file_name_suffix =
+    std::string simulation_file_name_suffix =
             // std::to_string( Va_ordered( 0 ) ) + "_" +
             // std::to_string( gamma_rad_ordered( 0 ) ) + "_" +
             // std::to_string( chi_i_deg_ordered( 0 ) ) + "_" +
@@ -1111,45 +1206,7 @@ i = i + 1;
 
     //  }
 
-    //! Calculate offset of final state from GOAL state: Earth-Fixed Frame
-    //const double dif_lat_rad = lat_f_rad - lat_f_rad_calc;
-    //const double dif_lon_rad = lon_f_rad - lon_f_rad_calc;
 
-    //! Calculate offsets of final state in degrees: Earth-Fixed Frame
-    const double dif_lat_deg = lat_f_deg - lat_f_deg_calc;
-    const double dif_lon_deg = lon_f_deg - lon_f_deg_calc;
-
-    //! Calculate "norm" of offsets. This is an arbitrary function I have
-    //! implemented to pass on as an 'objective function'. It relates the
-    //! differences such that when minimizing the offsets, there is an additional
-    //! unsigned value that always goes to zero. Most definitely unsure about how
-    //!  'proper' it is, yet is what works for the current BALLISTIC case.
-    const double dif_norm = std::sqrt( ( dif_lat_deg * dif_lat_deg ) + ( dif_lon_deg * dif_lon_deg ) );
-
-    //! Calculate offset of final angular distance to termination condition distance.
-    const double dif_d_deg = d_deg - terminationConditionsValues_[ 2 ];
-    //! Calculate offset from goal elevation.
-    const double dif_h = h_UP - h_UP_calc;
-
-
-
-    double dif_xn = xn( nodes - 1 ) - 1;
-    double dif_E_mapped = E_mapped( nodes - 1 ) - 1;
-
-    //! Assign values to Fitness vector! At the moment these are all 'objective
-    //! functions'. No constraints have been implemented. To modify this I have
-    //! change the header file and define how many are elements are objective
-    //! function, equality contraints, and inequlity constraints. This vector
-    //! here must contain them is that exact order: nOF, nEC, nIC.
-    std::vector< double > delta;
-    delta.push_back( dif_norm );
-    delta.push_back( dif_lat_deg );
-    delta.push_back( dif_lon_deg );
-    delta.push_back( dif_d_deg );
-    delta.push_back( dif_h );
-    delta.push_back( tof );  // Not sure yet how this one affects the optimization. Included for completion.
-    delta.push_back( dif_xn );
-    delta.push_back( dif_E_mapped );
 
     //std::cout << "h_UP: " << h_UP << std::endl;
     //std::cout << "h_UP_calc: " << h_UP_calc << std::endl;
@@ -1168,11 +1225,11 @@ i = i + 1;
                  std::setw(16) << dif_lon_deg <<
                  std::setw(13) << "dif_d_deg = " <<
                  std::setw(16) << dif_d_deg <<
-                 std::setw(9) << "dif_h = " <<
-                 std::setw(16) << dif_h <<
+                 std::setw(9) << "dif_h_UP = " <<
+                 std::setw(16) << dif_h_UP <<
                  std::setw(7) << "tof = " <<
                  std::setw(16) << tof <<
-                 std::setw(120) << simulation_file_name_suffix << std::endl;
+                 std::setw(60) << simulation_file_name_suffix << std::endl;
 
     // std::cout <<dynamicsSimulator.getPropagationTerminationReason( )->getPropagationTerminationReason( ) << std::endl;
 

@@ -13,13 +13,19 @@ public:
     MyGuidance(
             const tudat::simulation_setup::NamedBodyMap& bodyMap,
             const std::string vehicleName,
+            const std::vector< double > parameterBounds,
             const double E_max,
+            const double Isp,
+            const double maxThrust,
             const std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > interpolator_alpha_deg,
             const std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > interpolator_eps_T_deg,
             const std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > interpolator_throttle ):
         bodyMap_( bodyMap ),
         vehicleName_( vehicleName ),
+        parameterBounds_( parameterBounds ),
         E_max_( E_max ),
+        Isp_( Isp ),
+        maxThrust_( maxThrust ),
         interpolator_alpha_deg_( interpolator_alpha_deg ),
         interpolator_eps_T_deg_( interpolator_eps_T_deg ),
         interpolator_throttle_( interpolator_throttle )
@@ -62,7 +68,10 @@ public:
 private:
     tudat::simulation_setup::NamedBodyMap bodyMap_;
     std::string vehicleName_;
+    std::vector< double > parameterBounds_;
     double E_max_;
+    double Isp_;
+    double maxThrust_;
     std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > interpolator_alpha_deg_;
     std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > interpolator_eps_T_deg_;
     std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > interpolator_throttle_;

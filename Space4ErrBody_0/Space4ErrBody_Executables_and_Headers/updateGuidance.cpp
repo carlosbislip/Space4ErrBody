@@ -31,11 +31,11 @@ void MyGuidance::updateGuidance( const double currentTime )
                         bodyMap_.at( vehicleName_ )->getFlightConditions( ) );
         }
 
- //       if( coefficientInterface_ == nullptr )
- //       {
- //           coefficientInterface_ = std::dynamic_pointer_cast< tudat::aerodynamics::AerodynamicCoefficientInterface >(
- //                       bodyMap_.at( vehicleName_ )->getAerodynamicCoefficientInterface( ) );
- //       }
+        //       if( coefficientInterface_ == nullptr )
+        //       {
+        //           coefficientInterface_ = std::dynamic_pointer_cast< tudat::aerodynamics::AerodynamicCoefficientInterface >(
+        //                       bodyMap_.at( vehicleName_ )->getAerodynamicCoefficientInterface( ) );
+        //       }
 
 
         //! Set of parameters that I am yet to figure out how to pass/extract them around.
@@ -53,7 +53,7 @@ void MyGuidance::updateGuidance( const double currentTime )
         //                bodyMap_.at( vehicleName_ )->getFlightConditions( ) );
 
         //! Extract various parameters form current flight conditions
-        double current_h = FlightConditions_->getCurrentAltitude( );
+        double current_height = FlightConditions_->getCurrentAltitude( );
         //std::cout << "current_h:  " << current_h << std::endl;
         double current_rho = FlightConditions_->getCurrentDensity( );
         //std::cout << "current_rho:  " << current_rho << std::endl;
@@ -90,16 +90,27 @@ void MyGuidance::updateGuidance( const double currentTime )
         //! to what TUDAT generates, then this should be replaced.
         //Eigen::VectorXd gravs ( 2 );
         //
-        const double g0 = bislip::getGravs ( mu, J2, J3, J4, R_E, r_norm, delta_rad ).norm();
+        const double g0 = 9.80665;//bislip::getGravs ( mu, J2, J3, J4, R_E, r_norm, delta_rad ).norm();
+
         //const double g_n = gravs(0);
         //const double g_d = gravs(1);
         //const double g0 = g0_vector.norm();
 
-        E_hat_ = ( g0 * current_h + 0.5 * current_V * current_V ) / E_max_;
+        E_hat_ = ( g0 * current_height + 0.5 * current_V * current_V ) / E_max_;
         //std::cout << "E_hat_" << E_hat_ << std::endl;
 
+        double AoA = interpolator_alpha_deg_->interpolate( E_hat_ );
+        if ( AoA < parameterBounds_[ 2 ] )
+        {
+            AoA = parameterBounds_[ 2 ];
+        }
+        if ( AoA > parameterBounds_[ 3 ] )
+        {
+            AoA = parameterBounds_[ 3 ];
+        }
+
         //double throttle = interpolator_throttle_->interpolate( E_hat );
-        currentAngleOfAttack_ = tudat::unit_conversions::convertDegreesToRadians( interpolator_alpha_deg_->interpolate( E_hat_ ) );
+        currentAngleOfAttack_ = tudat::unit_conversions::convertDegreesToRadians( AoA );
         currentBankAngle_ = 0;
         currentAngleOfSideslip_ = 0;
 
@@ -111,8 +122,8 @@ void MyGuidance::updateGuidance( const double currentTime )
         coefficient_input.push_back( currentAngleOfAttack_ );
         coefficient_input.push_back( current_M );
 
- //       Eigen::Vector6d newCoefficients = MyGuidance::getCoefficients( coefficient_input );
-/*
+        //       Eigen::Vector6d newCoefficients = MyGuidance::getCoefficients( coefficient_input );
+        /*
         std::cout << std::fixed << std::setprecision(10) <<
                      std::setw(15) << "  E_hat:  " <<
                      std::setw(16) << E_hat_ <<

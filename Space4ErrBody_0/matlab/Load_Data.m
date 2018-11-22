@@ -57,10 +57,8 @@ switch option
             evolutions(k).trajectories.individual.x_R = nan;
             evolutions(k).trajectories.individual.y_R = nan;
             evolutions(k).trajectories.individual.z_R = nan;
-            evolutions(k).trajectories.individual.R_R_norm   = nan;
             evolutions(k).trajectories.individual.lat = nan;
             evolutions(k).trajectories.individual.lon = nan;
-            evolutions(k).trajectories.individual.h   = nan;
             evolutions(k).trajectories.individual.latitude_angle    = nan;
             evolutions(k).trajectories.individual.longitude_angle   = nan;
             evolutions(k).trajectories.individual.heading_angle     = nan;
@@ -72,6 +70,9 @@ switch option
             evolutions(k).trajectories.individual.bank_angle        = nan;
             evolutions(k).trajectories.individual.d_deg             = nan;
             evolutions(k).trajectories.individual.airspeed          = nan;
+            evolutions(k).trajectories.individual.altitude          = nan;
+            evolutions(k).trajectories.individual.height            = nan;
+            evolutions(k).trajectories.individual.mach              = nan;
             evolutions(k).trajectories.individual.E                 = nan;
             evolutions(k).trajectories.individual.interp_E                 = nan;
             evolutions(k).trajectories.individual.interp_angle_of_attack   = nan;

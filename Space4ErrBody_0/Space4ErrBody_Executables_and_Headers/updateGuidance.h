@@ -71,7 +71,7 @@ public:
 
 
 
-//protected:
+    //protected:
     tudat::simulation_setup::NamedBodyMap bodyMap_;
     std::string vehicleName_;
     std::vector< double > parameterBounds_;
@@ -85,9 +85,10 @@ public:
     std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > FlightConditions_;// = std::dynamic_pointer_cast< tudat::aerodynamics::AtmosphericFlightConditions >( bodyMap_.at( vehicleName_ )->getFlightConditions( ) );
     std::shared_ptr< tudat::system_models::VehicleSystems > vehicleSystems_;
     std::shared_ptr< tudat::aerodynamics::AerodynamicCoefficientInterface > coefficientInterface_;
-
-
-
+    Eigen::Vector3d bodyFixedThrustDirection_;
+    double currentThrustMagnitude_;
+    double currentSpecificImpulse_;
+    double currentEngineStatus_;
 
 };
 /*

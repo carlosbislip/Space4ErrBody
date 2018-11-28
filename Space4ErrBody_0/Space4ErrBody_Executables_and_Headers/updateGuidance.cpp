@@ -27,9 +27,16 @@ void MyGuidance::updateGuidance( const double currentTime )
 
         if( FlightConditions_ == nullptr )
         {
+            //std::cout << "1 " << std::endl;
+
             FlightConditions_ = std::dynamic_pointer_cast< tudat::aerodynamics::AtmosphericFlightConditions >(
                         bodyMap_.at( vehicleName_ )->getFlightConditions( ) );
+
         }
+
+
+        // E_hat = getE_hat();
+        //std::cout << "E_hat: " << E_hat << std::endl;
 
         //       if( coefficientInterface_ == nullptr )
         //       {
@@ -39,7 +46,8 @@ void MyGuidance::updateGuidance( const double currentTime )
 
 
         //! Set of parameters that I am yet to figure out how to pass/extract them around.
-        const double c_ref = 13;
+        const double b_ref = 13;
+        const double c_ref = 23;
         const double del_x = 3;
         const double del_x_T = 0;
         const double del_z_T = -5;
@@ -67,7 +75,7 @@ void MyGuidance::updateGuidance( const double currentTime )
         //std::cout << "current_AoA:  " << current_AoA << std::endl;
         double S_ref = bodyMap_.at( vehicleName_ )->getAerodynamicCoefficientInterface( )->getReferenceArea( );
         //std::cout << "S_ref:  " << S_ref << std::endl;
-        double m = bodyMap_.at( vehicleName_ )->getBodyMass( );//bodyMap_.at( vehicleName_ )->getCurrentMass( );
+        double currentMass = bodyMap_.at( vehicleName_ )->getBodyMass( );//bodyMap_.at( vehicleName_ )->getCurrentMass( );
         //std::cout << "m:  " << m << std::endl;
         const double delta_rad = bodyMap_.at( vehicleName_ )->getFlightConditions( )->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::latitude_angle );
         const double chi_rad = bodyMap_.at( vehicleName_ )->getFlightConditions( )->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::heading_angle );
@@ -78,6 +86,11 @@ void MyGuidance::updateGuidance( const double currentTime )
         const double r_norm = r.norm( );
         const double V_norm = current_V;
 
+        double currentHeight = FlightConditions_->getCurrentAltitude() ;
+        double currentAirspeed = FlightConditions_->getCurrentAirspeed() ;
+        // std::cout << "2 " << std::endl;
+        double E_hat =  ( 9.80665 * currentHeight + 0.5 * currentAirspeed * currentAirspeed ) / E_max_;
+        //double currentMass = bodyMap_.at( vehicleName_ )->getBodyMass( );
 
         //interpolator_alpha_deg_ = interpolator_alpha_deg;
         //interpolator_eps_T_deg_ = interpolator_eps_T_deg;
@@ -90,16 +103,24 @@ void MyGuidance::updateGuidance( const double currentTime )
         //! to what TUDAT generates, then this should be replaced.
         //Eigen::VectorXd gravs ( 2 );
         //
-        const double g0 = 9.80665;//bislip::getGravs ( mu, J2, J3, J4, R_E, r_norm, delta_rad ).norm();
+        //const double g0 = 9.80665;//bislip::getGravs ( mu, J2, J3, J4, R_E, r_norm, delta_rad ).norm();
 
         //const double g_n = gravs(0);
         //const double g_d = gravs(1);
         //const double g0 = g0_vector.norm();
 
-        E_hat_ = ( g0 * current_height + 0.5 * current_V * current_V ) / E_max_;
-        //std::cout << "E_hat_" << E_hat_ << std::endl;
+        //std::cout << "E_hat" << E_hat << std::endl;
 
-        double AoA = interpolator_alpha_deg_->interpolate( E_hat_ );
+        double AoA = interpolator_alpha_deg_->interpolate( E_hat );
+        double throttle = interpolator_throttle_->interpolate( E_hat );
+        double eps_T = interpolator_eps_T_deg_->interpolate( E_hat );
+        currentEngineStatus_ = 1;
+
+        std::cout << "E_hat: " << E_hat << std::endl;
+        //std::cout << "AoA: " << AoA  << std::endl;
+        //std::cout << "throttle: " << throttle << std::endl;
+        //std::cout << "eps_T: " << eps_T << std::endl;
+
         if ( AoA < parameterBounds_[ 2 ] )
         {
             AoA = parameterBounds_[ 2 ];
@@ -109,10 +130,48 @@ void MyGuidance::updateGuidance( const double currentTime )
             AoA = parameterBounds_[ 3 ];
         }
 
+        if ( eps_T < parameterBounds_[ 4 ] )
+        {
+            eps_T = parameterBounds_[ 4 ];
+        }
+        if ( eps_T > parameterBounds_[ 5 ] )
+        {
+            eps_T = parameterBounds_[ 5 ];
+        }
+
+        if ( throttle < 0.0 )
+        {
+            throttle = 0.0;
+        }
+        if ( throttle > 1.0 )
+        {
+            throttle = 1.0;
+        }
+
+        if ( currentMass <= finalMass_ )
+        {
+          currentEngineStatus_ = 0;
+        }
+
         //double throttle = interpolator_throttle_->interpolate( E_hat );
         currentAngleOfAttack_ = tudat::unit_conversions::convertDegreesToRadians( AoA );
         currentBankAngle_ = 0;
         currentAngleOfSideslip_ = 0;
+        currentSpecificImpulse_ = Isp_;
+
+        //! Simplified expressions becuase thrust azimuth is known to be zero. I.e. phi_T = 0
+        bodyFixedThrustDirection_( 0 ) = std::cos( tudat::unit_conversions::convertDegreesToRadians( eps_T ) );
+        bodyFixedThrustDirection_( 1 ) = 0.0;
+        bodyFixedThrustDirection_( 2 ) = std::sin( tudat::unit_conversions::convertDegreesToRadians( eps_T ) );
+
+        currentThrustMagnitude_ = throttle * maxThrust_;
+
+        std::cout << "currentMass: " << currentMass << std::endl;
+        std::cout << "bodyFixedThrustDirection_: " << bodyFixedThrustDirection_ << std::endl;
+        std::cout << "currentThrustMagnitude_: " << currentThrustMagnitude_ << std::endl;
+        std::cout << "currentEngineStatus_: " << currentEngineStatus_ << std::endl;
+        std::cout << "currentSpecificImpulse_: " << currentSpecificImpulse_ << std::endl;
+        std::cout << "----------------------------"<< std::endl;
 
         // double alpha_deg = interpolator_alpha_deg_->interpolate( E );
         // Define input to aerodynamic coefficients: take care of order of input (this depends on how the coefficients are created)!
@@ -126,9 +185,9 @@ void MyGuidance::updateGuidance( const double currentTime )
         /*
         std::cout << std::fixed << std::setprecision(10) <<
                      std::setw(15) << "  E_hat:  " <<
-                     std::setw(16) << E_hat_ <<
+                     std::setw(16) << E_hat <<
                      std::setw(15) << "  alpha_deg:  " <<
-                     std::setw(16) << interpolator_alpha_deg_->interpolate( E_hat_ ) <<
+                     std::setw(16) << interpolator_alpha_deg_->interpolate( E_hat ) <<
                      //std::setw(15) << "  eps_T_deg: " <<
                      //std::setw(16) << eps_T_deg <<
                      //std::setw(15) << "  eps_T_deg: " <<
@@ -190,7 +249,7 @@ void MyThrustGuidance::updateGuidance( const double currentTime )
 
     double E_hat = ( g0 * current_h + 0.5 * current_V * current_V ) / E_max_;
 
-    currentEpsilon_ = tudat::unit_conversions::convertDegreesToRadians( interpolator_eps_T_deg_->interpolate( E_hat ) );
+    currentEpsilon = tudat::unit_conversions::convertDegreesToRadians( interpolator_eps_T_deg_->interpolate( E_hat ) );
     double throttle = interpolator_throttle_->interpolate( E_hat );
     std::cout << "throttle:  " << throttle << std::endl;
 
@@ -201,9 +260,9 @@ void MyThrustGuidance::updateGuidance( const double currentTime )
     currentSpecificImpulse_ = 472;
 
     //! Simplified expressions becuase thrust azimuth is known to be zero. I.e. phi_T = 0
-    bodyFixedThrustDirection_( 0 ) = std::cos( currentEpsilon_ );
+    bodyFixedThrustDirection_( 0 ) = std::cos( currentEpsilon );
     bodyFixedThrustDirection_( 1 ) = 0.0;
-    bodyFixedThrustDirection_( 2 ) = std::sin( currentEpsilon_ );
+    bodyFixedThrustDirection_( 2 ) = std::sin( currentEpsilon );
 
     std::cout << std::fixed << std::setprecision(10) <<
                  std::setw(15) << "  E_hat:  " <<

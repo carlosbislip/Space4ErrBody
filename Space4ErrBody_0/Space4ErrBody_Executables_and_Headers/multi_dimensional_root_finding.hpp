@@ -143,7 +143,7 @@ public:
         compute_jacobian( init );
     }
 
-    string to_string( )
+   /* string to_string( )
     {
         stringstream ss;
 
@@ -155,7 +155,7 @@ public:
         ss << endl;
         return ss.str();
     }
-
+*/
 
     /**
      * @brief Find roots using Newton-Raphson method.

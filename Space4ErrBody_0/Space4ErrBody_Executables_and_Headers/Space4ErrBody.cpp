@@ -213,16 +213,16 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     const Eigen::Vector3d R_cot( vehicleParameterValues_[10], vehicleParameterValues_[11], vehicleParameterValues_[12] ); //m^2
 
     //! Assign initial mass
-    const double M_i = vehicleParameterValues_[13]; // kg
+    const double M_i = vehicleParameterValues_[12]; // kg
 
     //! Assign propellant mass
-    const double M_p = vehicleParameterValues_[14]; // kg
+    const double finalMass = vehicleParameterValues_[13]; // kg
 
     //! Assign specific impulse
-    const double Isp = vehicleParameterValues_[15]; // kg
+    const double Isp = vehicleParameterValues_[14]; // kg
 
     //! Assign maximum engine thrust
-    const double maxThrust = vehicleParameterValues_[16]; // kg
+    const double maxThrust = vehicleParameterValues_[15]; // kg
 
     //! Assign initial height
     const double h_i = initialConditionsValues_[2]; // kg
@@ -264,76 +264,6 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //std::cout << d_f_deg_calc << std::endl;
     double h_UP_calc       = h_i;
     double tof = simulation_settingsValues_[ 1 ];
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ///////////////////////            CREATE NODAL STRUCTURE             /////////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    //! Declare and allocate vectors of interest.
-    Eigen::VectorXd xn_interval( nodes - 1 );
-    Eigen::VectorXd xn( nodes );
-    Eigen::VectorXd alpha_deg( nodes );
-    Eigen::VectorXd eps_T_deg( nodes );
-    Eigen::VectorXd throttle( nodes );
-    Eigen::VectorXd alpha_rad( nodes );
-    Eigen::VectorXd eps_T_rad( nodes );
-    Eigen::VectorXd E( nodes );
-    Eigen::VectorXd E_hat( nodes );
-
-    //! Various parameters
-    const double R_E = 6.378137e6;
-    //const double mu = 3.986004418e14;
-    const double omega_E = 7.292115*1E-5;
-    const double J2 = 1082.626523e-6;
-    const double J3 = 2.532153e-7;
-    const double J4 = 1.6109876e-7;
-
-    //Eigen::Vector2d gravs = getGravs ( mu, J2, J3, J4, R_E, R_E, 0.0000001 );
-    double rho, a, g0;
-    g0 = 9.80665;
-
-    //! Re-allocate desicion vector values into workable vectors.
-    for( int i = 0; i < nodes; i++ )
-    {
-        if ( i < nodes )
-        {
-            xn_interval( i ) = x[ i ];
-        }
-        alpha_deg( i )   = x[ i + nodes-1 ];
-        eps_T_deg( i )   = x[ i + 2*nodes-1 ];
-        throttle( i )    = x[ i + 3*nodes-1 ];
-
-        alpha_rad( i ) = unit_conversions::convertDegreesToRadians( alpha_deg( i ) );
-        eps_T_rad( i ) = unit_conversions::convertDegreesToRadians( eps_T_deg( i ) );
-    }
-
-    //! Create vector of node locations
-    xn( 0 ) = 0;
-    for( int i = 1; i < nodes + 1; i++ )
-    {
-        xn( i )        = xn( i - 1 ) + xn_interval( i - 1 );
-    }
-
-    /*
-    std::cout << "x =  " << std::endl;
-    for( int i = 0; i < int(x.size()); i++ )
-    {
-        std::cout << i << "   " << x[i] << std::endl;
-    }
-    std::cout << "-------" << std::endl;
-    std::cout << "xn_interval =  " << xn_interval << std::endl;
-    std::cout << "-------" << std::endl;
-    std::cout << "xn =  " << xn << std::endl;
-    std::cout << "-------" << std::endl;
-
-    std::cout << "alpha_deg =  " << alpha_deg << std::endl;
-    std::cout << "-------" << std::endl;
-    std::cout << "eps_T_deg =  " << eps_T_deg << std::endl;
-    std::cout << "-------" << std::endl;
-    std::cout << "throttle =  " << throttle << std::endl;
-    std::cout << "-------" << std::endl;
-*/
 
 
 
@@ -428,10 +358,10 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //! Assign coefficient file names.
     //const std::string dragCoefficients = aeroCoeffFileList_[0];
     //const std::string liftCoefficients = aeroCoeffFileList_[1];
-    // const std::string dragControlSurfaceForceCoefficients = "HORUS_CD_CS.txt";
-    // const std::string liftControlSurfaceForceCoefficients = "HORUS_CL_CS.txt";
+    const std::string dragControlSurfaceForceCoefficients = "HORUS_CD_CS.txt";
+    const std::string liftControlSurfaceForceCoefficients = "HORUS_CL_CS.txt";
     //const std::string momentCoefficients = aeroCoeffFileList_[2];
-    // const std::string controlSurfaceMomentCoefficients = "HORUS_CM_CS.txt";
+    const std::string controlSurfaceMomentCoefficients = "HORUS_CM_CS.txt";
 
 
     ///////// Start: Vehicle Aerodynamics Section
@@ -443,21 +373,33 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     independentVariableNames.push_back( aerodynamics::angle_of_attack_dependent );
     independentVariableNames.push_back( aerodynamics::mach_number_dependent );
 
+    // Define physical meaning of independent variables for control surface increments, in this case Mach number, angle of attack and control surface deflection
+    std::vector< aerodynamics::AerodynamicCoefficientsIndependentVariables > controlSurfaceIndependentVariableNames;
+    controlSurfaceIndependentVariableNames.push_back( aerodynamics::angle_of_attack_dependent );
+    controlSurfaceIndependentVariableNames.push_back( aerodynamics::mach_number_dependent );
+    controlSurfaceIndependentVariableNames.push_back( aerodynamics::control_surface_deflection_dependent );
+
+
     //! Define list of files for force coefficients. Entry denotes direction.
     //!     0 : x-direction (C ~D~/C ~X~)
     //!     1 : y-direction (C ~S~/C ~Y~)
     //!     2 : z-direction (C ~L~/C ~Z~)
     std::map< int, std::string > forceCoefficientFiles;
-    // std::map< int, std::string > controlSurfaceForceCoefficientFiles;
+    std::map< int, std::string > controlSurfaceForceCoefficientFiles;
     std::map< int, std::string > momentCoefficientFiles;
-    // std::map< int, std::string > controlSurfaceMomentCoefficientFiles;
+    std::map< int, std::string > controlSurfaceMomentCoefficientFiles;
+
+    std::string ELEVON_L = "ElevonLeft";
+    std::string ELEVON_R = "ElevonRight";
+    std::string BODYFLAP = "BodyFlap";
+
 
     forceCoefficientFiles[ 0 ] = aeroCoeffFileList_[0]; // Set drag coefficient file
     forceCoefficientFiles[ 2 ] = aeroCoeffFileList_[1]; // Set lift coefficient file
-    // controlSurfaceForceCoefficientFiles[ 0 ] = dragControlSurfaceForceCoefficients; // Set drag coefficient increment file
-    // controlSurfaceForceCoefficientFiles[ 2 ] = liftControlSurfaceForceCoefficients; // Set lift coefficient increment file
     momentCoefficientFiles[ 1 ] = aeroCoeffFileList_[2]; // Set pitch moment coefficient file
-    // controlSurfaceMomentCoefficientFiles[ 1 ] = controlSurfaceMomentCoefficients; // Set pitch moment coefficient increment file
+    controlSurfaceForceCoefficientFiles[ 0 ] = dragControlSurfaceForceCoefficients; // Set drag coefficient increment file
+    controlSurfaceForceCoefficientFiles[ 2 ] = liftControlSurfaceForceCoefficients; // Set lift coefficient increment file
+    controlSurfaceMomentCoefficientFiles[ 1 ] = controlSurfaceMomentCoefficients; // Set pitch moment coefficient increment file
 
     //       std::shared_ptr< ControlSurfaceIncrementAerodynamicInterface > controlSurfaceInterface =
     //              std::make_shared< CustomControlSurfaceIncrementAerodynamicInterface >(
@@ -485,8 +427,19 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                 areCoefficientsInAerodynamicFrame,
                 areCoefficientsInNegativeAxisDirection );
 
+    // Add settings for control surface increments to main aerodynamic coefficients
+    // aerodynamicCoefficientSettings->setControlSurfaceSettings(
+    //             readTabulatedControlIncrementAerodynamicCoefficientsFromFiles(
+    //                 controlSurfaceForceCoefficientFiles,
+    //                 controlSurfaceMomentCoefficientFiles,
+    //                 controlSurfaceIndependentVariableNames, ELEVON_L ) );
+
+
+
     //! Create shared pointer for aerodynamic coefficient increments.
-    // std::shared_ptr< system_models::VehicleSystems > systemsModels = std::make_shared< system_models::VehicleSystems >( );
+    std::shared_ptr< system_models::VehicleSystems > systemsModels = std::make_shared< system_models::VehicleSystems >( );
+
+
 
     //bodyMap.at( vehicle_name_ )->getFlightConditions( )->getAerodynamicAngleCalculator( )->setOrientationAngleFunctions(
     //            boost::lambda::constant( constantAngleOfAttack ) );
@@ -505,14 +458,109 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                     aerodynamicCoefficientSettings,
                     vehicle_name_ ) );
 
+    std::map< std::string, std::shared_ptr< ControlSurfaceIncrementAerodynamicInterface >  > controlSurfaceList;
+    //controlSurfaceList[ ELEVON_L ] = controlSurfaceInterface;
+
     //! Set vehicle system models for aerodynamic coefficient increments.
     //bodyMap[ vehicle_name_ ]->setVehicleSystems( systemsModels );
     //bodyMap[ vehicle_name_ ]->getAerodynamicCoefficientInterface( )->setControlSurfaceIncrements( controlSurfaceList );
+
+
 
     //! Finalize body creation. Not entirely sure what this does. I believe it
     //! may place the body (Earth) at the barycenter. Probably another hack to
     //! facilitate bringing in everything into the inertial frame.
     setGlobalFrameBodyEphemerides( bodyMap, "SSB", "J2000" );
+
+    bodyMap[ vehicle_name_ ]->setEphemeris(
+                std::make_shared< ephemerides::TabulatedCartesianEphemeris< > >(
+                    std::shared_ptr< interpolators::OneDimensionalInterpolator< double, Eigen::Vector6d  > >( ), centralBodyName ) );
+    /*
+     *Thr problem with the mass propagation can be solved (-ish), by turning the throw.... of this error into a std::cerr (printing the error, but not terminating the program). Alternatively, it should also work if you use:
+     *
+     *   bodyMap[ "Spaceplane" ]->setEphemeris(
+     *               std::make_shared< ephemerides::TabulatedCartesianEphemeris< > >(
+     *                   std::shared_ptr< interpolators::OneDimensionalInterpolator< double, Eigen::Vector6d  > >( ),   "Earth" ) );
+     *
+     *What I think is going on is the following:
+     * - When setting up the propagation, the code checks if all required environment models are available.
+     * - The mass propagation requires the current state of the spacecraft
+     * - The current state of the spacecraft requires that either the spacecraft has an ephemeris, or this state is propagated.
+     * - When propagating the mass and state, the state is propagated. However, when making this check for the mass propagation, the code does not know this, resulting in this error.
+     *
+     *Either one of the fixes I give above should work. Let me know if it works out,
+     */
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////            CREATE NODAL STRUCTURE             /////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    //! Declare and allocate vectors of interest.
+    Eigen::VectorXd xn_interval( nodes - 1 );
+    Eigen::VectorXd xn( nodes );
+    Eigen::VectorXd alpha_deg( nodes );
+    Eigen::VectorXd eps_T_deg( nodes );
+    Eigen::VectorXd throttle( nodes );
+    Eigen::VectorXd alpha_rad( nodes );
+    Eigen::VectorXd eps_T_rad( nodes );
+    Eigen::VectorXd E( nodes );
+    Eigen::VectorXd E_hat( nodes );
+
+    //! Various parameters
+    const double R_E = radius_Earth;
+    const double omega_E = 7.292115*1E-5;
+    const double J2 = 1082.626523e-6;
+    const double J3 = 2.532153e-7;
+    const double J4 = 1.6109876e-7;
+
+    //Eigen::Vector2d gravs = getGravs ( mu, J2, J3, J4, R_E, R_E, 0.0000001 );
+    double a, g0;
+    g0 = 9.80665;
+
+    //! Re-allocate decision vector values into workable vectors.
+    for( int i = 0; i < nodes; i++ )
+    {
+        if ( i < nodes )
+        {
+            xn_interval( i ) = x[ i ];
+        }
+        alpha_deg( i )   = x[ i + nodes-1 ];
+        eps_T_deg( i )   = x[ i + 2*nodes-1 ];
+        throttle( i )    = x[ i + 3*nodes-1 ];
+
+        alpha_rad( i ) = unit_conversions::convertDegreesToRadians( alpha_deg( i ) );
+        eps_T_rad( i ) = unit_conversions::convertDegreesToRadians( eps_T_deg( i ) );
+    }
+    const double V_i = x.back();
+
+    //! Create vector of node locations
+    xn( 0 ) = 0;
+    for( int i = 1; i < nodes + 1; i++ )
+    {
+        xn( i )        = xn( i - 1 ) + xn_interval( i - 1 );
+    }
+
+    /*
+    std::cout << "x =  " << std::endl;
+    for( int i = 0; i < int(x.size()); i++ )
+    {
+        std::cout << i << "   " << x[i] << std::endl;
+    }
+    std::cout << "-------" << std::endl;
+    std::cout << "xn_interval =  " << xn_interval << std::endl;
+    std::cout << "-------" << std::endl;
+    std::cout << "xn =  " << xn << std::endl;
+    std::cout << "-------" << std::endl;
+
+    std::cout << "alpha_deg =  " << alpha_deg << std::endl;
+    std::cout << "-------" << std::endl;
+    std::cout << "eps_T_deg =  " << eps_T_deg << std::endl;
+    std::cout << "-------" << std::endl;
+    std::cout << "throttle =  " << throttle << std::endl;
+    std::cout << "-------" << std::endl;
+*/
+
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            CREATE KNOWN STATES              ///////////////////////////////////////////////////
@@ -521,7 +569,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //! Impose constraints on first and last energy nodes
     const double mu = spice_interface::getBodyGravitationalParameter( centralBodyName );
     a = 301.7;//NRLMSISE00Atmosphere::getSpeedOfSound( R_E + height( 0 ), 0, 0, simulationStartEpoch );
-    double V_i = a * Mach_i;
+    //double V_i = a * Mach_i;
     double V_f = 0.99 * sqrt( mu / ( R_E + h_UP ) );
 
     //! Set spherical elements for vehicle's initial state.
@@ -646,7 +694,6 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
     //! Declare acceleration data map.
     //   std::map< std::string, std::vector< std::shared_ptr< AccelerationSettings > > > accelerationSettingsMap;
     //std::map< std::string, std::map< std::string, std::vector< std::shared_ptr< AccelerationSettings > > > >accelerationSettingsMap;
@@ -667,17 +714,22 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                 bodyMap,
                 vehicle_name_,
                 parameterBounds_,
-                Isp,maxThrust,E_max,
+                finalMass,
+                E_max,
+                Isp,
+                maxThrust,
                 interpolator_alpha_deg,
                 interpolator_eps_T_deg,
                 interpolator_throttle );
+
+
 
     //double thrustMagnitude = 250000.0;
     //double specificImpulse = 500.0;
 
     std::shared_ptr< ThrustDirectionGuidanceSettings > thrustDirectionGuidanceSettings =
             std::make_shared< ThrustDirectionGuidanceSettings >(thrust_direction_from_existing_body_orientation, "Earth" );
-    
+
     std::function< double( const double ) > thrustMagnitudeFunction =
             std::bind( &MyGuidance::getCurrentThrustMagnitude, ThrustGuidance );
 
@@ -687,7 +739,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     std::function< bool( const double ) > isEngineOnFunction =
             std::bind( &MyGuidance::getCurrentEngineStatus, ThrustGuidance );
 
-    std::function< Eigen::Vector3d( ) > BodyFixedThrustDirection =
+    std::function< Eigen::Vector3d( ) > bodyFixedThrustDirection =
             std::bind( &MyGuidance::getCurrentBodyFixedThrustDirection, ThrustGuidance );
 
     std::function< void( const double ) > customThrustResetFunction =
@@ -698,7 +750,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                 thrustMagnitudeFunction,
                 specificImpulseFunction,
                 isEngineOnFunction,
-                BodyFixedThrustDirection,
+                bodyFixedThrustDirection,
                 customThrustResetFunction );
     // std::make_shared< ConstantThrustMagnitudeSettings >( thrustMagnitude, specificImpulse );
 
@@ -730,7 +782,10 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                 bodyMap,
                 vehicle_name_,
                 parameterBounds_,
-                Isp,maxThrust,E_max,
+                finalMass,
+                E_max,
+                Isp,
+                maxThrust,
                 interpolator_alpha_deg,
                 interpolator_eps_T_deg,
                 interpolator_throttle);
@@ -776,51 +831,6 @@ i = i + 1;
     // std::string currentCentralBodyName = centralBodies.at( bodyUndergoingAcceleration );
 
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ///////////////////////             CREATE TERMINATION SETTINGS            ////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    /* std::shared_ptr< SingleDependentVariableSaveSettings > terminationDependentVariable =
-             std::make_shared< SingleDependentVariableSaveSettings >(
-                 altitude_dependent_variable,
-                 vehicle_name_,
-                 centralBodyName );
-
-    std::shared_ptr< PropagationTerminationSettings > terminationSettings =
-            std::make_shared< PropagationDependentVariableTerminationSettings >(
-                terminationDependentVariable,
-                h_UP,
-                true );
-*/
-
-    //In case your custom function requires more inputs (e.g., it may depend on the position of the spacecraft or other variables that are not the current time), you can use boost::bind to add more inputs.
-    //As an example, the case where the state of the spacecraft is added as an input is shown below:
-    // std::function< Eigen::Vector6d( ) > HORUS_StateFunction =
-    //       std::bind( &Body::getState, bodyMap.at( vehicle_name_ ) );
-
-    //! Define vector with termination conditions.
-    std::vector< double > term_cond;
-    term_cond.push_back( d_f_deg );
-    term_cond.push_back( h_UP );
-    term_cond.push_back( h_DN );
-
-    std::vector< double > additional_data;
-    //! Set initial coordinates. Earth-Fixed.
-    additional_data.push_back( lat_i_rad );
-    additional_data.push_back( lon_i_rad );
-
-    //! Set target coordinates. Earth-Fixed.
-    //additional_data.push_back( lat_f_rad );
-    //additional_data.push_back( lon_f_rad );
-
-    //! Set initial distance to target.
-    //additional_data.push_back( getAngularDistance( lat_i_rad,lon_i_rad,lat_f_rad,lon_f_rad) );
-
-    //! Define termination settings.
-    std::shared_ptr< PropagationTerminationSettings > terminationSettings =
-            std::make_shared< PropagationCustomTerminationSettings >(
-                boost::bind( &bislip::StopOrNot, bodyMap, vehicle_name_, parameterBounds_, terminationConditionsValues_, additional_data, E_max, interpolator_throttle, interpolator_eps_T_deg ) );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////          CREATE LIST OF DEPENDENT VARIABLES        ////////////////////////////////////////////
@@ -931,13 +941,96 @@ i = i + 1;
                     stagnation_point_heat_flux_dependent_variable,
                     vehicle_name_,
                     centralBodyName) );*/
-    //dep_varList.push_back(
-    //            std::make_shared< SingleDependentVariableSaveSettings >(
-    //                total_mass_rate_dependent_variables,
-    //                vehicle_name_ ) );
+    dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    total_mass_rate_dependent_variables,
+                    vehicle_name_ ) );
     // Create object with list of dependent variables
     std::shared_ptr< DependentVariableSaveSettings > dep_varToSave =
             std::make_shared< DependentVariableSaveSettings >( dep_varList );
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////             CREATE TERMINATION SETTINGS            ////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /* std::shared_ptr< SingleDependentVariableSaveSettings > terminationDependentVariable =
+             std::make_shared< SingleDependentVariableSaveSettings >(
+                 altitude_dependent_variable,
+                 vehicle_name_,
+                 centralBodyName );
+
+    std::shared_ptr< PropagationTerminationSettings > terminationSettings =
+            std::make_shared< PropagationDependentVariableTerminationSettings >(
+                terminationDependentVariable,
+                h_UP,
+                true );
+*/
+
+    //In case your custom function requires more inputs (e.g., it may depend on the position of the spacecraft or other variables that are not the current time), you can use boost::bind to add more inputs.
+    //As an example, the case where the state of the spacecraft is added as an input is shown below:
+    // std::function< Eigen::Vector6d( ) > HORUS_StateFunction =
+    //       std::bind( &Body::getState, bodyMap.at( vehicle_name_ ) );
+
+    //! Define vector with termination conditions.
+    std::vector< double > term_cond;
+    term_cond.push_back( d_f_deg );
+    term_cond.push_back( h_UP );
+    term_cond.push_back( h_DN );
+
+    std::vector< double > additional_data;
+    //! Set initial coordinates. Earth-Fixed.
+    additional_data.push_back( lat_i_rad );
+    additional_data.push_back( lon_i_rad );
+    additional_data.push_back( simulationStartEpoch );
+    additional_data.push_back( maxThrust );
+
+    // std::shared_ptr< SingleAccelerationDependentVariableSaveSettings > currentThrust_acc_pointer =
+    //     std::make_shared< SingleAccelerationDependentVariableSaveSettings >(
+    //               thrust_acceleration,
+    //               vehicle_name_,
+    //               vehicle_name_,
+    //               true); // false prints vector components. -1 prints all elements
+
+    //std::function< double > currentThrust_acc = std::make_shared< SingleAccelerationDependentVariableSaveSettings >(
+    //            thrust_acceleration,
+    //            vehicle_name_,
+    //            vehicle_name_,
+    //            true); // false prints vector components. -1 prints all elements
+
+
+    //! Set target coordinates. Earth-Fixed.
+    //additional_data.push_back( lat_f_rad );
+    //additional_data.push_back( lon_f_rad );
+
+    //! Set initial distance to target.
+    //additional_data.push_back( getAngularDistance( lat_i_rad,lon_i_rad,lat_f_rad,lon_f_rad) );
+
+    //! Define CUSTOM termination settings.
+    std::shared_ptr< PropagationTerminationSettings > customTermination =
+            std::make_shared< PropagationCustomTerminationSettings >(
+                boost::bind( &bislip::StopOrNot, bodyMap, vehicle_name_, vehicleParameterValues_, parameterBounds_, terminationConditionsValues_, additional_data, E_max, interpolator_throttle ) );
+
+    //! Define dependent variable termination settings.
+    std::shared_ptr< PropagationTerminationSettings > thrustTerminationSettings =
+            std::make_shared< tudat::propagators::PropagationDependentVariableTerminationSettings >(
+                std::make_shared< tudat::propagators::SingleAccelerationDependentVariableSaveSettings >(
+                    thrust_acceleration,
+                    vehicle_name_,
+                    vehicle_name_,
+                    true ), maxThrust, false );
+
+    std::vector< std::shared_ptr< propagators::PropagationTerminationSettings > > terminationSettingsList;
+    terminationSettingsList.push_back( customTermination );
+    //terminationSettingsList.push_back( thrustTerminationSettings );
+
+   // PropagationHybridTerminationSettings( terminationSettingsList,
+   //                                       true,
+   //                                       false );
+
+    std::shared_ptr< PropagationTerminationSettings > terminationSettings = std::make_shared<
+            propagators::PropagationHybridTerminationSettings >( terminationSettingsList, false );
+
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////           CREATE PROPAGATION SETTINGS              ////////////////////////////////////////////
@@ -991,14 +1084,14 @@ i = i + 1;
     //std::cout << "Create propagation settings for both mass and translational dynamics." << std::endl;
 
     //! Create propagation settings for both mass and translational dynamics.
-    //std::shared_ptr< PropagatorSettings< double > > propagatorSettings =
-    //      std::make_shared< MultiTypePropagatorSettings< double > >( propagatorSettingsVector, terminationSettings, dep_varToSave );
+    std::shared_ptr< PropagatorSettings< double > > propagatorSettings =
+            std::make_shared< MultiTypePropagatorSettings< double > >( propagatorSettingsVector, terminationSettings, dep_varToSave );
 
     //std::cout << "Create propagation settings for ONLY translational dynamics." << std::endl;
 
     //! Create propagation settings for ONLY translational dynamics.
-    std::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
-            translationalPropagatorSettings;
+    //std::shared_ptr< TranslationalStatePropagatorSettings< double > > propagatorSettings =
+    //        translationalPropagatorSettings;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////           CREATE INTEGRATION SETTINGS              ////////////////////////////////////////////
@@ -1083,7 +1176,7 @@ i = i + 1;
     //const double altitude_f_calc = dep_var_FINAL_STATE[3];
     const double lat_f_rad_calc  = dep_var_FINAL_STATE[ 4 ];
     const double lon_f_rad_calc  = dep_var_FINAL_STATE[ 5 ];
-    h_UP_calc                    = dep_var_FINAL_STATE[ 7 ];
+    h_UP_calc                    = dep_var_FINAL_STATE[ 12 ];
     //const double altitude_f_calc = std::sqrt( pow(systemFinalState_EARTh_UPIXED[0],2) +
     //       pow(systemFinalState_EARTh_UPIXED[1],2) + pow(systemFinalState_EARTh_UPIXED[2],2) ) ;
     //const double lon_f_rad_calc = std::atan2(systemFinalState_EARTh_UPIXED[1] , systemFinalState_EARTh_UPIXED[0]);
@@ -1114,11 +1207,21 @@ i = i + 1;
 
     //! Calculate offset of final angular distance to termination condition distance.
     const double dif_d_deg = d_deg - terminationConditionsValues_[ 2 ];
+
     //! Calculate offset from goal elevation.
     const double dif_h_UP = h_UP - h_UP_calc;
 
     const double dif_xn = xn( nodes - 1 ) - 1;
     const double dif_E_mapped = E_mapped( nodes - 1 ) - 1;
+
+    //! Exract current mass
+    double finalMass_calc = bodyMap.at( vehicle_name_ )->getBodyMass( );
+    if ( isnan( finalMass_calc ) == 1 )
+    {
+        finalMass_calc = M_i;
+    }
+    //! Calculate offset from goal mass.
+    const double dif_mass = abs( finalMass - finalMass_calc );
 
     //! Assign values to Fitness vector! At the moment these are all 'objective
     //! functions'. No constraints have been implemented. To modify this I have
@@ -1134,6 +1237,7 @@ i = i + 1;
     delta.push_back( tof );  // Not sure yet how this one affects the optimization. Included for completion.
     delta.push_back( dif_xn );
     delta.push_back( dif_E_mapped );
+    delta.push_back( dif_mass );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////        PRINT SIMULATION OUTPUT TO FILE               //////////////////////////////////////////
@@ -1213,10 +1317,14 @@ i = i + 1;
 
     //! Print results to terminal. Used to gauge progress.
     std::cout << std::fixed << std::setprecision(10) <<
+                 std::setw(15) << "V_i = " <<
+                 std::setw(14) << V_i <<
                  std::setw(15) << "dif_xn = " <<
                  std::setw(14) << dif_xn <<
                  std::setw(15) << " dif_E_mapped = " <<
                  std::setw(16) <<  dif_E_mapped <<
+                 std::setw(15) << " dif_mass = " <<
+                 std::setw(16) <<  dif_mass <<
                  std::setw(15) << " dif_norm = " <<
                  std::setw(16) << dif_norm <<
                  std::setw(15) << " dif_lat_deg = " <<

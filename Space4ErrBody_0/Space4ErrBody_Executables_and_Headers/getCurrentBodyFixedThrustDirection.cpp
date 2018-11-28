@@ -1,4 +1,6 @@
+#include "Space4ErrBody.h"
 #include "updateGuidance.h"
+#include "getStuff.h"
 
 #include <Tudat/Astrodynamics/Aerodynamics/aerodynamicGuidance.h>
 
@@ -6,7 +8,14 @@ namespace bislip {
 
 Eigen::Vector3d MyGuidance::getCurrentBodyFixedThrustDirection(  )
 {
-    double eps_T = interpolator_eps_T_deg_->interpolate( E_hat_ );
+
+    //E_hat_ = getE_hat( currentHeight_ ,  currentAirspeed_ , E_max_ );
+
+    std::cout << "getCurrentBodyFixedThrustDirection"  << std::endl;
+    // E_hat_ = bislip::getE_hat( FlightConditions_->getCurrentAltitude() ,  FlightConditions_->getCurrentAirspeed() , E_max_);
+    std::cout << "E_hat_: " << E_hat_  << std::endl;
+
+    std::cout << "eps_T: " << eps_T  << std::endl;
 
     if ( eps_T < parameterBounds_[ 4 ] )
     {
@@ -26,6 +35,7 @@ Eigen::Vector3d MyGuidance::getCurrentBodyFixedThrustDirection(  )
 
 
     return bodyFixedThrustDirection_;
+
 }
 } // namespace aerodynamics
 //} // namespace tudat

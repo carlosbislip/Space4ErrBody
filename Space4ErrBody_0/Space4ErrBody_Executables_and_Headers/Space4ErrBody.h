@@ -48,7 +48,7 @@ struct Space4ErrBody {
 
 
     //! Calculate the fitness as a function of the parameter vector input_data
-    std::vector<double>  fitness( const std::vector< double >  &x ) const;
+    std::vector< double > fitness( const std::vector< double >  &x ) const;
 
     //! Retrieve the allowable limits of the parameters to vary: pair
     //! containing minima and maxima of parameter values
@@ -59,7 +59,7 @@ struct Space4ErrBody {
 
     std::vector< double >::size_type get_nobj() const
     {
-        return 8u;
+        return 9u;
     }
     std::vector< double >::size_type get_nec() const
     {

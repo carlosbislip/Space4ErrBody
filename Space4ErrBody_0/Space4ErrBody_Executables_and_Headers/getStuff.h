@@ -59,6 +59,11 @@ double getRoot_Schroder (
         const double &f2p);
 
 bool getSorting(const std::tuple<double, double> &a, const std::tuple<double, double> &b);
+
+//double getE_hat(
+ //       const double &height,
+ //       const double &airspeed,
+ //       const double &E_max);
 }
 
 

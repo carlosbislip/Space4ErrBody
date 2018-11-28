@@ -160,14 +160,14 @@ void MyGuidance::updateGuidance( const double currentTime )
         currentSpecificImpulse_ = Isp_;
 
         //! Simplified expressions becuase thrust azimuth is known to be zero. I.e. phi_T = 0
-        bodyFixedThrustDirection_( 0 ) = std::cos( tudat::unit_conversions::convertDegreesToRadians( eps_T ) );
-        bodyFixedThrustDirection_( 1 ) = 0.0;
-        bodyFixedThrustDirection_( 2 ) = std::sin( tudat::unit_conversions::convertDegreesToRadians( eps_T ) );
+        currentbodyFixedThrustDirection_( 0 ) = std::cos( tudat::unit_conversions::convertDegreesToRadians( eps_T ) );
+        currentbodyFixedThrustDirection_( 1 ) = 0.0;
+        currentbodyFixedThrustDirection_( 2 ) = std::sin( tudat::unit_conversions::convertDegreesToRadians( eps_T ) );
 
         currentThrustMagnitude_ = throttle * maxThrust_;
 
         std::cout << "currentMass: " << currentMass << std::endl;
-        std::cout << "bodyFixedThrustDirection_: " << bodyFixedThrustDirection_ << std::endl;
+        std::cout << "currentbodyFixedThrustDirection_: " << currentbodyFixedThrustDirection_ << std::endl;
         std::cout << "currentThrustMagnitude_: " << currentThrustMagnitude_ << std::endl;
         std::cout << "currentEngineStatus_: " << currentEngineStatus_ << std::endl;
         std::cout << "currentSpecificImpulse_: " << currentSpecificImpulse_ << std::endl;

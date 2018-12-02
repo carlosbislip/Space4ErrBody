@@ -1,6 +1,7 @@
 #include "Space4ErrBody.h"
 #include "StopOrNot.h"
 #include "getStuff.h"
+#include "bislipVariables.h"
 //##include "updateGuidance.h"
 
 #include <Tudat/SimulationSetup/tudatSimulationHeader.h>
@@ -16,9 +17,7 @@ bool StopOrNot( const tudat::simulation_setup::NamedBodyMap& bodyMap,
                 const std::vector< double > &vehicleParameterValues,
                 const std::vector< double > &parameterBounds,
                 const std::vector< double > &terminationConditionsValues,
-                const std::vector< double > &additional_data,
-                const double &E_max,
-                const std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > &interpolator_throttle) {
+                const std::vector< double > &additional_data) {
 
     std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > FlightConditions = std::dynamic_pointer_cast< tudat::aerodynamics::AtmosphericFlightConditions >(
                 bodyMap.at( vehicleName )->getFlightConditions( ) );
@@ -45,9 +44,6 @@ bool StopOrNot( const tudat::simulation_setup::NamedBodyMap& bodyMap,
     const double q_dot_max = terminationConditionsValues[ 7 ];
     const double q_dyn_max = terminationConditionsValues[ 8 ];
 
-
-
-
     //! Extract target coordinates
     const double lat_f_rad = tudat::unit_conversions::convertDegreesToRadians( lat_f_deg );;
     const double lon_f_rad = tudat::unit_conversions::convertDegreesToRadians( lon_f_deg );
@@ -57,17 +53,17 @@ bool StopOrNot( const tudat::simulation_setup::NamedBodyMap& bodyMap,
     //! Maybe consider Vicenty's formulation: https://www.movable-type.co.uk/scripts/latlong-vincenty.html
     //const double a = std::sin( (lat_f_rad_ - lat_c_rad) / 2) * std::sin( (lat_f_rad_ - lat_c_rad) / 2) + std::cos( lat_c_rad ) * std::cos( lon_c_rad ) * std::sin( (lon_f_rad_ - lon_c_rad) / 2) * std::sin( (lon_f_rad_ - lon_c_rad) / 2);
     //const double d_rad = 2 * std::atan2( std::sqrt(a) , std::sqrt(1 - a) );
-    const double d_togo_rad = bislip::getAngularDistance( lat_c_rad , lon_c_rad , lat_f_rad , lon_f_rad );
+    const double d_togo_rad = bislip::variables::computeAngularDistance( lat_c_rad , lon_c_rad , lat_f_rad , lon_f_rad );
     //std::acos( std::sin(lat_c_rad) * std::sin(lat_f_rad) + std::cos(lat_c_rad) * std::cos(lat_f_rad) * std::cos(lon_f_rad-lon_c_rad) );
     //const double d_togo_deg = unit_conversions::convertRadiansToDegrees( d_togo_rad );
 
     //! Calculate total distance traveled
-    const double d_traveled_rad = bislip::getAngularDistance( lat_i_rad , lon_i_rad , lat_c_rad , lon_c_rad );
+    const double d_traveled_rad = bislip::variables::computeAngularDistance( lat_i_rad , lon_i_rad , lat_c_rad , lon_c_rad );
     //std::acos( std::sin(lat_c_rad) * std::sin(lat_f_rad) + std::cos(lat_c_rad) * std::cos(lat_f_rad) * std::cos(lon_f_rad-lon_c_rad) );
     //const double d_traveled_deg = unit_conversions::convertRadiansToDegrees( d_traveled_rad );
 
     //! Extract Initial distance to target
-    const double initial_d_to_target = bislip::getAngularDistance( lat_i_rad,lon_i_rad,lat_f_rad,lon_f_rad);
+    const double initial_d_to_target = bislip::variables::computeAngularDistance( lat_i_rad, lon_i_rad, lat_f_rad, lon_f_rad );
 
     //! Extract current altitude
     const double current_height = FlightConditions->getCurrentAltitude();
@@ -84,12 +80,12 @@ bool StopOrNot( const tudat::simulation_setup::NamedBodyMap& bodyMap,
     //! Exract current data
     const double currentMass = bodyMap.at( vehicleName )->getBodyMass( );
 
-    //! Calculate current normalized mass-normalized energy.
-    const double g0 = 9.80665;
-    const double E_hat = ( g0 * current_height + 0.5 * current_V * current_V ) / E_max;
+    //! Calculate current normalized specific energy.
+    const double E_hat = bislip::variables::computeNormalizedSpecificEnergy( current_height, current_V, bodyMap.at( vehicleName )->getE_max() );
 
     //! Evaluate current throttle setting and thrust elevation angle.
-    const double throttle = interpolator_throttle->interpolate( E_hat );
+    const double throttle = bislip::variables::computeThrottleSetting( bodyMap.at( vehicleName )->getThrottleInterpolator() , current_height, current_V, bodyMap.at( vehicleName )->getE_max() );
+
    // const double eps_T_deg = interpolator_eps_T_deg->interpolate( E_hat );
 
     //const double AoA_LB = tudat::unit_conversions::convertDegreesToRadians( parameterBounds[ 2 ] );
@@ -97,7 +93,7 @@ bool StopOrNot( const tudat::simulation_setup::NamedBodyMap& bodyMap,
    // const double eps_T_deg_LB = parameterBounds[ 4 ];
    // const double eps_T_deg_UB = parameterBounds[ 5 ];
 
-    const double finalMass = vehicleParameterValues[ 13 ];
+    const double finalMass =  bodyMap.at( vehicleName )->getLandingMass();
 
     const double current_rho = FlightConditions->getCurrentDensity( );
     const double current_q_dot = FlightConditions->getCurrentAerodynamicHeatRate( );
@@ -122,6 +118,7 @@ bool StopOrNot( const tudat::simulation_setup::NamedBodyMap& bodyMap,
     if ( ( d_togo_rad <= tudat::unit_conversions::convertDegreesToRadians( d_f_deg )  ) || ( current_height <= h_DN ) || ( current_height >= h_UP ) || ( d_traveled_rad >= initial_d_to_target ) )
     {
         done = true;
+        std::cout << " first " << std::endl;
         std::cout << "d_togo_rad:  " << d_togo_rad << std::endl;
         std::cout << "d_f_deg :  " << d_f_deg  << std::endl;
         std::cout << "current_height:  " << current_height << std::endl;
@@ -130,18 +127,11 @@ bool StopOrNot( const tudat::simulation_setup::NamedBodyMap& bodyMap,
         std::cout << "d_traveled_rad:  " << d_traveled_rad << std::endl;
         std::cout << "initial_d_to_target:  " << initial_d_to_target << std::endl;
         std::cout << "Stopping propagation" << std::endl;
-
     }
-    /*else if  ( current_height <= terminationConditionsValues_[ 2 ] )
-    {
-        done = true;
-        std::cout << "current_height:  " << current_height << std::endl;
-        std::cout << "terminationConditionsValues_[ 2 ] :  " << terminationConditionsValues_[ 2 ]  << std::endl;
-        std::cout << "Stopping propagation" << std::endl;
-    }*/
     else if ( current_q_dot > q_dot_max*1 )
     {
         done = true;
+        std::cout << " second " << std::endl;
         std::cout << "elapsed time:  " << FlightConditions->getCurrentTime() - additional_data[ 2 ]<< std::endl;
         std::cout << "throttle:  " << throttle << std::endl;
         std::cout << "Expected thrust:  " << throttle * additional_data[ 3 ]<< std::endl;
@@ -159,11 +149,11 @@ bool StopOrNot( const tudat::simulation_setup::NamedBodyMap& bodyMap,
     else if ( current_q_dyn > q_dyn_max*1 )
     {
         done = true;
+        std::cout << " third " << std::endl;
         std::cout << "elapsed time:  " << FlightConditions->getCurrentTime() - additional_data[ 2 ]<< std::endl;
         std::cout << "throttle:  " << throttle << std::endl;
         std::cout << "E_hat:  " << E_hat << std::endl;
         std::cout << "Expected thrust:  " << throttle * additional_data[ 3 ]<< std::endl;
-
         std::cout << "current_V:  " << current_V << std::endl;
         std::cout << "current_rho:  " << current_rho << std::endl;
         std::cout << "current_q_dyn:  " << current_q_dyn << std::endl;
@@ -176,7 +166,8 @@ bool StopOrNot( const tudat::simulation_setup::NamedBodyMap& bodyMap,
     else if ( currentMass < finalMass )
     {
         done = true;
-        std::cout << "elapsed time:  " << FlightConditions->getCurrentTime() - additional_data[ 2 ]<< std::endl;
+        std::cout << " fourth " << std::endl;
+                std::cout << "elapsed time:  " << FlightConditions->getCurrentTime() - additional_data[ 2 ]<< std::endl;
         std::cout << "throttle:  " << throttle << std::endl;
         std::cout << "Expected thrust:  " << throttle * additional_data[ 3 ]<< std::endl;
         std::cout << "E_hat:  " << E_hat << std::endl;
@@ -184,45 +175,33 @@ bool StopOrNot( const tudat::simulation_setup::NamedBodyMap& bodyMap,
         std::cout << "finalMass:  " << finalMass << std::endl;
         std::cout << "Stopping propagation" << std::endl;
     }
-    else if ( current_V * std::sin( current_gamma ) < 0 )
+    else if ( current_gamma < 0 )
     {
         done = true;
+        std::cout << " fifth " << std::endl;
         std::cout << "elapsed time:  " << FlightConditions->getCurrentTime() - additional_data[ 2 ]<< std::endl;
         std::cout << "throttle:  " << throttle << std::endl;
         std::cout << "Expected thrust:  " << throttle * additional_data[ 3 ]<< std::endl;
         std::cout << "E_hat:  " << E_hat << std::endl;
-        std::cout << "current_V * std::sin( current_gamma ):  " << current_V * std::sin( current_gamma ) << std::endl;
+        std::cout << "current_gamma:  " << current_gamma << std::endl;
         std::cout << "currentMass:  " << currentMass << std::endl;
         std::cout << "finalMass:  " << finalMass << std::endl;
         std::cout << "Stopping propagation" << std::endl;
     }
-    /*else if ( ( throttle < 0 ) || ( throttle < parameterBounds[ 6 ] ) || ( throttle > parameterBounds[ 7 ] ) )
-    {
-        //! This condition terminates the simulation if thrust goes negative or beyond engine capabilities.
-
-        done = true;
-        std::cout << "throttle:  " << throttle << std::endl;
-        std::cout << "Stopping propagation" << std::endl;
-    }
-    else if ( ( ( throttle >= 0 ) && ( throttle <= 1.0 ) )
-              && ( ( ( current_gamma < 0 ) || ( current_gamma > tudat::unit_conversions::convertDegreesToRadians( 90 ) ) )
-                   || ( ( current_AoA < AoA_LB ) || ( current_AoA > AoA_UB ) )
-                   ||  ( ( eps_T_deg < eps_T_deg_LB ) || ( eps_T_deg > eps_T_deg_UB ) ) ) )
-    */
     else if ( ( ( throttle >= 0 ) && ( throttle <= 1.0 ) )
               &&  ( ( current_gamma < 0 ) || ( current_gamma > tudat::mathematical_constants::PI / 2.0 ) ) )
     {
-        //! This condition terminates the simulation if flight-path angle is negative  or beyond 90 deg while the engine is on.
-        //if ( ( current_gamma < 0 ) || ( current_gamma > tudat::unit_conversions::convertDegreesToRadians( 90 ) ) )
-        // {
+        //! This condition terminates the simulation if flight-path angle is negative or beyond 90 deg while the engine is on.
         done = true;
-        std::cout << "throttle:  " << throttle << std::endl;
+        std::cout << " sixth " << std::endl;
+       std::cout << "throttle:  " << throttle << std::endl;
         std::cout << "current_gamma:  " << tudat::unit_conversions::convertRadiansToDegrees( current_gamma ) << std::endl;
         std::cout << "Stopping propagation" << std::endl;
     }
     else if ( E_hat > 1.0 )
     {
         done = true;
+        std::cout << " seventh " << std::endl;
         std::cout << "throttle:  " << throttle << std::endl;
         std::cout << "E_hat:  " << E_hat << std::endl;
         std::cout << "Stopping propagation" << std::endl;

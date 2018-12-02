@@ -3,3 +3,5 @@ Angle of Attack
 Thrust Elevation Angle
 Throttle Setting
 Initial Velocity
+Maximum Velocity
+Maximum Height

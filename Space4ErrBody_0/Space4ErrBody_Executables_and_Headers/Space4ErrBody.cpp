@@ -73,29 +73,14 @@
 #include "Tudat/Mathematics/Interpolators/oneDimensionalInterpolator.h"
 #include "Tudat/Mathematics/Interpolators/cubicSplineInterpolator.h"
 
-
-
-//! Do I need a costumized one for HORUS? Probably.... Maybe not. I believe it
-//! would be sufficient with the aerodynamic coefficient tables.
-//#include <Tudat/Astrodynamics/Aerodynamics/UnitTests/testApolloCapsuleCoefficients.h>
-
 //! Mine
 #include "Space4ErrBody.h"
 #include "applicationOutput_tudat.h"
 #include "getStuff.h"
 #include "updateGuidance.h"
+#include "bislipVariables.h"
 //#include "updateGuidance_val.h"
 #include "StopOrNot.h"
-//#include "getAngularDistance.h"
-
-//#include <Tudat/Astrodynamics/BasicAstrodynamics/stateVectorIndices.h>
-//#include <Tudat/Astrodynamics/BasicAstrodynamics/sphericalStateConversions.h>
-//#include <Tudat/Astrodynamics/Ephemerides/ephemeris.h>
-//#include <Tudat/JsonInterface/Propagation/variable.h>
-//#include <Tudat/Astrodynamics/BasicAstrodynamics/unitConversions.h>
-//#include <Tudat/Astrodynamics/Gravitation/centralGravityModel.h>
-//#include <Tudat/Mathematics/NumericalIntegrators/rungeKutta4Integrator.h>
-//#include <Tudat/Astrodynamics/Ephemerides/frameManager.h>
 
 Space4ErrBody::Space4ErrBody(
         const std::vector< std::vector< double > > &bounds,
@@ -213,10 +198,10 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     const Eigen::Vector3d R_cot( vehicleParameterValues_[10], vehicleParameterValues_[11], vehicleParameterValues_[12] ); //m^2
 
     //! Assign initial mass
-    const double M_i = vehicleParameterValues_[12]; // kg
+    const double initialMass = vehicleParameterValues_[12]; // kg
 
-    //! Assign propellant mass
-    const double finalMass = vehicleParameterValues_[13]; // kg
+    //! Assign landing mass
+    const double landingMass = vehicleParameterValues_[13]; // kg
 
     //! Assign specific impulse
     const double Isp = vehicleParameterValues_[14]; // kg
@@ -241,9 +226,9 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     const double lat_f_deg = terminationConditionsValues_[ 0 ];
     const double lon_f_deg = terminationConditionsValues_[ 1 ];
     const double d_f_deg = terminationConditionsValues_[ 2 ];
-    const double h_UP = terminationConditionsValues_[ 3 ];
+    //const double h_UP = terminationConditionsValues_[ 3 ];
     const double h_DN = terminationConditionsValues_[ 4 ];
-    const double V_max = terminationConditionsValues_[ 5 ];
+    //const double V_max = terminationConditionsValues_[ 5 ];
     const double n_max = terminationConditionsValues_[ 6 ];
     const double q_dot_max = terminationConditionsValues_[ 7 ];
     const double q_dyn_max = terminationConditionsValues_[ 8 ];
@@ -259,7 +244,11 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //! Pre-define various variables used to determine fitness.
     double lat_f_deg_calc = lat_i_deg;
     double lon_f_deg_calc = lon_i_deg;
-    double d_i_deg        = unit_conversions::convertRadiansToDegrees( getAngularDistance(lat_i_rad,lon_i_rad,lat_f_rad,lon_f_rad) );
+    double d_i_deg        = unit_conversions::convertRadiansToDegrees( bislip::variables::computeAngularDistance(
+                                                                           lat_i_rad,
+                                                                           lon_i_rad,
+                                                                           lat_f_rad,
+                                                                           lon_f_rad) );
     double d_f_deg_calc   = d_i_deg;
     //std::cout << d_f_deg_calc << std::endl;
     double h_UP_calc       = h_i;
@@ -450,7 +439,10 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     bodyMap[ vehicle_name_ ] = std::make_shared< simulation_setup::Body >( );
 
     //! Set body Mass.
-    bodyMap[ vehicle_name_ ]->setConstantBodyMass( M_i );
+    bodyMap[ vehicle_name_ ]->setConstantBodyMass( initialMass );
+
+    //! Set landing Mass.
+    bodyMap[ vehicle_name_ ]->setLandingMass( landingMass );
 
     //! Set vehicle aerodynamic coefficients.
     bodyMap[ vehicle_name_ ]->setAerodynamicCoefficientInterface(
@@ -503,8 +495,8 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     Eigen::VectorXd throttle( nodes );
     Eigen::VectorXd alpha_rad( nodes );
     Eigen::VectorXd eps_T_rad( nodes );
-    Eigen::VectorXd E( nodes );
-    Eigen::VectorXd E_hat( nodes );
+    //Eigen::VectorXd E( nodes );
+    //Eigen::VectorXd E_hat( nodes );
 
     //! Various parameters
     const double R_E = radius_Earth;
@@ -531,7 +523,9 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
         alpha_rad( i ) = unit_conversions::convertDegreesToRadians( alpha_deg( i ) );
         eps_T_rad( i ) = unit_conversions::convertDegreesToRadians( eps_T_deg( i ) );
     }
-    const double V_i = x.back();
+    const double V_i = x[ ( x.size() - 1 ) - 2 ];
+    const double h_UP = x[ ( x.size() - 1 ) - 1 ];
+    const double V_max = x[ ( x.size() - 1 ) - 0 ];
 
     //! Create vector of node locations
     xn( 0 ) = 0;
@@ -567,10 +561,10 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //! Impose constraints on first and last energy nodes
-    const double mu = spice_interface::getBodyGravitationalParameter( centralBodyName );
-    a = 301.7;//NRLMSISE00Atmosphere::getSpeedOfSound( R_E + height( 0 ), 0, 0, simulationStartEpoch );
+    //const double mu = spice_interface::getBodyGravitationalParameter( centralBodyName );
+    //a = 301.7;//NRLMSISE00Atmosphere::getSpeedOfSound( R_E + height( 0 ), 0, 0, simulationStartEpoch );
     //double V_i = a * Mach_i;
-    double V_f = 0.99 * sqrt( mu / ( R_E + h_UP ) );
+    //double V_f = 0.99 * sqrt( mu / ( R_E + h_UP ) );
 
     //! Set spherical elements for vehicle's initial state.
     //! ARTBITRARILY CHOSEN to be in Earth-Fixed frame.
@@ -580,7 +574,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     EntryState_spherical( SphericalOrbitalStateElementIndices::longitudeIndex )    = lon_i_rad;
     EntryState_spherical( SphericalOrbitalStateElementIndices::speedIndex )        = V_i;
     EntryState_spherical( SphericalOrbitalStateElementIndices::flightPathIndex )   = gamma_i_rad;
-    EntryState_spherical( SphericalOrbitalStateElementIndices::headingAngleIndex ) = getHeadingToTarget( lat_i_rad,lon_i_rad,lat_f_rad,lon_f_rad );
+    EntryState_spherical( SphericalOrbitalStateElementIndices::headingAngleIndex ) = bislip::variables::computeHeadingToTarget( lat_i_rad,lon_i_rad,lat_f_rad,lon_f_rad );
 
     //std::cout << "radius_Earth_i + h_i:  " << radius_Earth_i + h_i << std::endl;
     //std::cout << "V_i:  " << V_i << std::endl;
@@ -594,17 +588,27 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                 simulationStartEpoch,
                 earthRotationalEphemeris );
 
+    //! Set Initial & Target coordinates.
+    bodyMap[ vehicle_name_ ]->setInitialLat( lat_i_rad );
+    bodyMap[ vehicle_name_ ]->setInitialLon( lon_i_rad );
+    bodyMap[ vehicle_name_ ]->setTargetLat( lat_f_rad );
+    bodyMap[ vehicle_name_ ]->setTargetLon( lon_f_rad );
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            CREATE INTERPOLATORS             ///////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    //! Set initial and final energy levels
-    double E_min = g0 * h_i + 0.5 * V_i * V_i;
-    double E_max = g0 * h_UP + 0.5 * V_f * V_f;
+    //! Calculate initial and final energy levels
+    const double E_min = bislip::variables::computeSpecificEnergy( h_i, V_i );
+    const double E_max = bislip::variables::computeSpecificEnergy( h_UP, V_max );
+
+    //! Set maximum Energy level.
+    bodyMap[ vehicle_name_ ]->setE_max( E_max );
 
     //! Normalize fist and last Energy nodes
-    double E_hat_min = E_min/E_max;
-    double E_hat_max = E_max/E_max;
+    double E_hat_min = bislip::variables::computeNormalizedSpecificEnergy( h_i, V_i, E_max );
+    double E_hat_max = bislip::variables::computeNormalizedSpecificEnergy( h_UP, V_max, E_max );
 
     //! Map energy levels to control node locations
     Eigen::VectorXd E_mapped( nodes );
@@ -636,6 +640,10 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     interpolator_throttle  = createOneDimensionalInterpolator< double, double >( map_throttle,  interpolatorSettings );
     interpolator_alpha_rad = createOneDimensionalInterpolator< double, double >( map_alpha_rad, interpolatorSettings );
     interpolator_eps_T_rad = createOneDimensionalInterpolator< double, double >( map_eps_T_rad, interpolatorSettings );
+
+    bodyMap[ vehicle_name_ ]->setAoAInterpolator( interpolator_alpha_deg );
+    bodyMap[ vehicle_name_ ]->setThrottleInterpolator( interpolator_throttle );
+    bodyMap[ vehicle_name_ ]->setThrustElevationAngleInterpolator( interpolator_eps_T_deg );
 
 
     //! Create vector containing interpolated values.
@@ -714,18 +722,12 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                 bodyMap,
                 vehicle_name_,
                 parameterBounds_,
-                finalMass,
-                E_max,
+                landingMass,
                 Isp,
                 maxThrust,
                 interpolator_alpha_deg,
                 interpolator_eps_T_deg,
                 interpolator_throttle );
-
-
-
-    //double thrustMagnitude = 250000.0;
-    //double specificImpulse = 500.0;
 
     std::shared_ptr< ThrustDirectionGuidanceSettings > thrustDirectionGuidanceSettings =
             std::make_shared< ThrustDirectionGuidanceSettings >(thrust_direction_from_existing_body_orientation, "Earth" );
@@ -782,8 +784,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                 bodyMap,
                 vehicle_name_,
                 parameterBounds_,
-                finalMass,
-                E_max,
+                landingMass,
                 Isp,
                 maxThrust,
                 interpolator_alpha_deg,
@@ -945,6 +946,46 @@ i = i + 1;
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     total_mass_rate_dependent_variables,
                     vehicle_name_ ) );
+    dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    current_mass,
+                    vehicle_name_ ) );
+    dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    specific_energy,
+                    vehicle_name_ ) );
+    dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    normalized_specific_energy,
+                    vehicle_name_ ) );
+    dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    throttle_setting,
+                    vehicle_name_ ) );
+    dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    thrust_elevation_angle,
+                    vehicle_name_ ) );
+    dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    engine_status,
+                    vehicle_name_ ) );
+    dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    angular_distance_traveled,
+                    vehicle_name_ ) );
+    dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    angular_distance_to_go,
+                    vehicle_name_ ) );
+    dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    heading_to_target,
+                    vehicle_name_ ) );
+    dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    heading_error,
+                    vehicle_name_ ) );
     // Create object with list of dependent variables
     std::shared_ptr< DependentVariableSaveSettings > dep_varToSave =
             std::make_shared< DependentVariableSaveSettings >( dep_varList );
@@ -1008,7 +1049,7 @@ i = i + 1;
     //! Define CUSTOM termination settings.
     std::shared_ptr< PropagationTerminationSettings > customTermination =
             std::make_shared< PropagationCustomTerminationSettings >(
-                boost::bind( &bislip::StopOrNot, bodyMap, vehicle_name_, vehicleParameterValues_, parameterBounds_, terminationConditionsValues_, additional_data, E_max, interpolator_throttle ) );
+                boost::bind( &bislip::StopOrNot, bodyMap, vehicle_name_, vehicleParameterValues_, parameterBounds_, terminationConditionsValues_, additional_data ) );
 
     //! Define dependent variable termination settings.
     std::shared_ptr< PropagationTerminationSettings > thrustTerminationSettings =
@@ -1065,7 +1106,7 @@ i = i + 1;
 
     //! Set initial mass of vehicle.
     Eigen::VectorXd initialBodyMasses( 1 );
-    initialBodyMasses( 0 ) = M_i;
+    initialBodyMasses( 0 ) = initialMass;
 
     //std::cout << "Create mass propagation settings." << std::endl;
 
@@ -1108,13 +1149,14 @@ i = i + 1;
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             PROPAGATE ORBIT            ////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // std::cout << "Starting propagation" << std::endl;
+    std::cout << "Starting propagation" << std::endl;
 
     //! Create simulation object and propagate dynamics.
     SingleArcDynamicsSimulator< double > dynamicsSimulator(
                 bodyMap,
                 integratorSettings,
                 propagatorSettings );
+    std::cout << "Done propagating" << std::endl;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////        CLEAN UP AND CALCULATE FITNESS                //////////////////////////////////////////
@@ -1187,7 +1229,7 @@ i = i + 1;
     lon_f_deg_calc = unit_conversions::convertRadiansToDegrees( lon_f_rad_calc );
 
     //! Calculate angular distance of final state from target coordinates.
-    const double d_rad = getAngularDistance( lat_f_rad_calc, lon_f_rad_calc, lat_f_rad, lon_f_rad );
+    const double d_rad = bislip::variables::computeAngularDistance( lat_f_rad_calc, lon_f_rad_calc, lat_f_rad, lon_f_rad );
     const double d_deg = unit_conversions::convertRadiansToDegrees( d_rad );
 
     //! Calculate offset of final state from GOAL state: Earth-Fixed Frame
@@ -1215,13 +1257,13 @@ i = i + 1;
     const double dif_E_mapped = E_mapped( nodes - 1 ) - 1;
 
     //! Exract current mass
-    double finalMass_calc = bodyMap.at( vehicle_name_ )->getBodyMass( );
-    if ( isnan( finalMass_calc ) == 1 )
+    double landingMass_calc = bodyMap.at( vehicle_name_ )->getBodyMass( );
+    if ( isnan( landingMass_calc ) == 1 )
     {
-        finalMass_calc = M_i;
+        landingMass_calc = initialMass;
     }
     //! Calculate offset from goal mass.
-    const double dif_mass = abs( finalMass - finalMass_calc );
+    const double dif_mass = abs( landingMass - landingMass_calc );
 
     //! Assign values to Fitness vector! At the moment these are all 'objective
     //! functions'. No constraints have been implemented. To modify this I have
@@ -1246,7 +1288,7 @@ i = i + 1;
     //! Get time stamp for this specific simulation. This avoids overwriting the
     //! file if another individual with the same properties shows up in other
     //! evolutions.
-    std::string simulation_save_time = getCurrentDateTime( false );
+    std::string simulation_save_time = bislip::variables::getCurrentDateTime( false );
 
     //! Create unique filename that cannot be overwritten due to the timestamp.
     std::string simulation_file_name_suffix =
@@ -1340,9 +1382,6 @@ i = i + 1;
                  std::setw(60) << simulation_file_name_suffix << std::endl;
 
     // std::cout <<dynamicsSimulator.getPropagationTerminationReason( )->getPropagationTerminationReason( ) << std::endl;
-
-
-
 
     return delta;
 

@@ -9,14 +9,12 @@
 
 namespace bislip {
 
-bool StopOrNot ( const tudat::simulation_setup::NamedBodyMap& bodyMap,
+bool StopOrNot (const tudat::simulation_setup::NamedBodyMap& bodyMap,
                  const std::string &vehicleName,
                  const std::vector< double > &vehicleParameterValues,
                  const std::vector< double > &parameterBounds,
                  const std::vector< double > &terminationConditionsValues,
-                 const std::vector< double > &additional_data,
-                 const double &E_max,
-                 const std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > &interpolator_throttle);
+                 const std::vector< double > &additional_data);
 
 }
 

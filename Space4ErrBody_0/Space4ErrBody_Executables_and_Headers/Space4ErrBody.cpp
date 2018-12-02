@@ -363,10 +363,10 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     independentVariableNames.push_back( aerodynamics::mach_number_dependent );
 
     // Define physical meaning of independent variables for control surface increments, in this case Mach number, angle of attack and control surface deflection
-    std::vector< aerodynamics::AerodynamicCoefficientsIndependentVariables > controlSurfaceIndependentVariableNames;
-    controlSurfaceIndependentVariableNames.push_back( aerodynamics::angle_of_attack_dependent );
-    controlSurfaceIndependentVariableNames.push_back( aerodynamics::mach_number_dependent );
-    controlSurfaceIndependentVariableNames.push_back( aerodynamics::control_surface_deflection_dependent );
+    //std::vector< aerodynamics::AerodynamicCoefficientsIndependentVariables > controlSurfaceIndependentVariableNames;
+    //controlSurfaceIndependentVariableNames.push_back( aerodynamics::angle_of_attack_dependent );
+    //controlSurfaceIndependentVariableNames.push_back( aerodynamics::mach_number_dependent );
+    //controlSurfaceIndependentVariableNames.push_back( aerodynamics::control_surface_deflection_dependent );
 
 
     //! Define list of files for force coefficients. Entry denotes direction.
@@ -374,9 +374,9 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //!     1 : y-direction (C ~S~/C ~Y~)
     //!     2 : z-direction (C ~L~/C ~Z~)
     std::map< int, std::string > forceCoefficientFiles;
-    std::map< int, std::string > controlSurfaceForceCoefficientFiles;
+    //std::map< int, std::string > controlSurfaceForceCoefficientFiles;
     std::map< int, std::string > momentCoefficientFiles;
-    std::map< int, std::string > controlSurfaceMomentCoefficientFiles;
+    //std::map< int, std::string > controlSurfaceMomentCoefficientFiles;
 
     std::string ELEVON_L = "ElevonLeft";
     std::string ELEVON_R = "ElevonRight";
@@ -386,9 +386,9 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     forceCoefficientFiles[ 0 ] = aeroCoeffFileList_[0]; // Set drag coefficient file
     forceCoefficientFiles[ 2 ] = aeroCoeffFileList_[1]; // Set lift coefficient file
     momentCoefficientFiles[ 1 ] = aeroCoeffFileList_[2]; // Set pitch moment coefficient file
-    controlSurfaceForceCoefficientFiles[ 0 ] = dragControlSurfaceForceCoefficients; // Set drag coefficient increment file
-    controlSurfaceForceCoefficientFiles[ 2 ] = liftControlSurfaceForceCoefficients; // Set lift coefficient increment file
-    controlSurfaceMomentCoefficientFiles[ 1 ] = controlSurfaceMomentCoefficients; // Set pitch moment coefficient increment file
+   // controlSurfaceForceCoefficientFiles[ 0 ] = dragControlSurfaceForceCoefficients; // Set drag coefficient increment file
+    //controlSurfaceForceCoefficientFiles[ 2 ] = liftControlSurfaceForceCoefficients; // Set lift coefficient increment file
+    //controlSurfaceMomentCoefficientFiles[ 1 ] = controlSurfaceMomentCoefficients; // Set pitch moment coefficient increment file
 
     //       std::shared_ptr< ControlSurfaceIncrementAerodynamicInterface > controlSurfaceInterface =
     //              std::make_shared< CustomControlSurfaceIncrementAerodynamicInterface >(
@@ -426,7 +426,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
 
     //! Create shared pointer for aerodynamic coefficient increments.
-    std::shared_ptr< system_models::VehicleSystems > systemsModels = std::make_shared< system_models::VehicleSystems >( );
+   // std::shared_ptr< system_models::VehicleSystems > systemsModels = std::make_shared< system_models::VehicleSystems >( );
 
 
 
@@ -450,7 +450,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                     aerodynamicCoefficientSettings,
                     vehicle_name_ ) );
 
-    std::map< std::string, std::shared_ptr< ControlSurfaceIncrementAerodynamicInterface >  > controlSurfaceList;
+    //std::map< std::string, std::shared_ptr< ControlSurfaceIncrementAerodynamicInterface >  > controlSurfaceList;
     //controlSurfaceList[ ELEVON_L ] = controlSurfaceInterface;
 
     //! Set vehicle system models for aerodynamic coefficient increments.
@@ -524,8 +524,8 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
         eps_T_rad( i ) = unit_conversions::convertDegreesToRadians( eps_T_deg( i ) );
     }
     const double V_i = x[ ( x.size() - 1 ) - 2 ];
-    const double h_UP = x[ ( x.size() - 1 ) - 1 ];
-    const double V_max = x[ ( x.size() - 1 ) - 0 ];
+    const double V_max = x[ ( x.size() - 1 ) - 1 ];
+    const double h_UP = x[ ( x.size() - 1 ) - 0 ];
 
     //! Create vector of node locations
     xn( 0 ) = 0;
@@ -614,8 +614,6 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     Eigen::VectorXd E_mapped( nodes );
     E_mapped =  ( E_hat_max - E_hat_min ) * xn.array() + E_hat_min;
 
-    // const double E_hat = ( g0 * current_height + 0.5 * current_V * current_V ) / E_max;
-
     //! Associate decision vector values to mapped energy levels within data maps
     std::map< double, double > map_alpha_deg, map_eps_T_deg, map_throttle, map_alpha_rad, map_eps_T_rad;
     std::map< double, Eigen::VectorXd > map_DV_mapped;
@@ -652,6 +650,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     std::map< double, Eigen::VectorXd > interpolators;
     Eigen::VectorXd  interpolated_values( 5 );
     double eval;
+
     //! Loop to populate vector of interpolated values.
     for ( unsigned int i = 0; i < 1001; ++i )
     {
@@ -733,19 +732,19 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
             std::make_shared< ThrustDirectionGuidanceSettings >(thrust_direction_from_existing_body_orientation, "Earth" );
 
     std::function< double( const double ) > thrustMagnitudeFunction =
-            std::bind( &MyGuidance::getCurrentThrustMagnitude, ThrustGuidance );
+            std::bind( &bislip::MyGuidance::getCurrentThrustMagnitude, ThrustGuidance );
 
     std::function< double( const double ) > specificImpulseFunction =
-            std::bind( &MyGuidance::getCurrentSpecificImpulse, ThrustGuidance );
+            std::bind( &bislip::MyGuidance::getCurrentSpecificImpulse, ThrustGuidance );
 
     std::function< bool( const double ) > isEngineOnFunction =
-            std::bind( &MyGuidance::getCurrentEngineStatus, ThrustGuidance );
+            std::bind( &bislip::MyGuidance::getCurrentEngineStatus, ThrustGuidance );
 
     std::function< Eigen::Vector3d( ) > bodyFixedThrustDirection =
-            std::bind( &MyGuidance::getCurrentBodyFixedThrustDirection, ThrustGuidance );
+            std::bind( &bislip::MyGuidance::getCurrentBodyFixedThrustDirection, ThrustGuidance );
 
     std::function< void( const double ) > customThrustResetFunction =
-            std::bind( &MyGuidance::updateGuidance, ThrustGuidance, std::placeholders::_1 );
+            std::bind( &bislip::MyGuidance::updateGuidance, ThrustGuidance, std::placeholders::_1 );
 
     std::shared_ptr< ThrustMagnitudeSettings > thrustMagnitudeSettings =
             std::make_shared< FromFunctionThrustMagnitudeSettings >(

@@ -10,8 +10,10 @@ using namespace std;
  * @return current datetime in the format of "YYYYMMDD HHMMSS"
 */
 namespace bislip{
+
 std::string getCurrentDateTime( bool useLocalTime ) {
     std::stringstream currentDateTime;
+
     // current date/time based on current system
     time_t ttNow = time(0);
     tm * ptmNow;
@@ -54,6 +56,7 @@ std::string getCurrentDateTime( bool useLocalTime ) {
     else
         currentDateTime << ptmNow->tm_sec;
 
+    //std::cout << "Got time: " << currentDateTime.str() << std::endl;
 
     return currentDateTime.str();
 }

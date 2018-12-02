@@ -7,7 +7,7 @@
 #include <Tudat/Astrodynamics/Aerodynamics/aerodynamicGuidance.h>
 #include <Tudat/SimulationSetup/tudatSimulationHeader.h>
 
-namespace bislip  { // namespace aerodynamics {
+namespace bislip  {
 
 Eigen::Vector6d MyGuidance::getCoefficients( const std::vector< double > &coefficient_input )
 {
@@ -20,5 +20,4 @@ Eigen::Vector6d MyGuidance::getCoefficients( const std::vector< double > &coeffi
     return newCoefficients = coefficientInterface_->getCurrentAerodynamicCoefficients( );
 }
 
-} // namespace aerodynamics
-//} // namespace tudat
+} // namespace bislip

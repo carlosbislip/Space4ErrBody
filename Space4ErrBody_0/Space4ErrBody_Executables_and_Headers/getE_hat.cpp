@@ -1,9 +1,8 @@
-#include "updateGuidance.h"
 #include "getStuff.h"
 
 namespace bislip  {
 
-double MyGuidance::setE_hat(
+double getE_hat(
         const double &height,
         const double &airspeed,
         const double &E_max )

@@ -5,32 +5,15 @@
 #include <ctime>
 #include <sstream>
 #include <utility>
+#include <Eigen/Core>
+//#include <Tudat/Basics/basicTypedefs.h>
 #include <Tudat/SimulationSetup/tudatSimulationHeader.h>
 
 namespace bislip {
 
-std::vector< std::string > getDataString ( const std::string &filename );
-
-std::vector< double > getDataNumeri ( const std::string &filename );
-
-std::string getCurrentDateTime ( const bool useLocalTime = false );
-
-double getAngularDistance (
-        const double &lat_i,
-        const double &lon_i,
-        const double &lat_f,
-        const double &lon_f );
-
-double getHeadingToTarget (
-        const double &lat_i,
-        const double &lon_i,
-        const double &lat_f,
-        const double &lon_f );
-
-
 double getGamma ( const double A, const double B, const double phi );
-double getEps_T ( const double &AoA, const Eigen::VectorXd &p, const Eigen::Vector6d &newCoefficients );
 
+double getEps_T ( const double &AoA, const Eigen::VectorXd &p, const Eigen::Vector6d &newCoefficients );
 
 Eigen::Vector2d getGravs (
         const double mu,
@@ -60,13 +43,6 @@ double getRoot_Schroder (
 
 bool getSorting(const std::tuple<double, double> &a, const std::tuple<double, double> &b);
 
-//double getE_hat(
- //       const double &height,
- //       const double &airspeed,
- //       const double &E_max);
 }
-
-
-
 
 #endif // GET_STUFF_H

@@ -39,7 +39,7 @@ for k = 1:(numel(pop_i) + 1)
         interp = dlmread(interp_source{p,:},',');
         fclose(fid);
         
-               fid = fopen(DV_mapped_source{p,:});
+        fid = fopen(DV_mapped_source{p,:});
         DV_mapped = dlmread(DV_mapped_source{p,:},',');
         fclose(fid);
         
@@ -204,6 +204,19 @@ for k = 1:(numel(pop_i) + 1)
         evolutions(k).trajectories(p).individual.heating_rate          = depvar(1:end,27);
         %evolutions(k).trajectories(p).individual.stagnation_flux       = depvar(1:end,27);
         evolutions(k).trajectories(p).individual.mass_rate             = depvar(1:end,28);
+        evolutions(k).trajectories(p).individual.mass                  = depvar(1:end,29);
+        evolutions(k).trajectories(p).individual.E                     = depvar(1:end,30);
+        evolutions(k).trajectories(p).individual.E_hat                 = depvar(1:end,31);
+        evolutions(k).trajectories(p).individual.throttle              = depvar(1:end,32);
+        evolutions(k).trajectories(p).individual.thrust_angle          = depvar(1:end,33);
+        evolutions(k).trajectories(p).individual.engine_status         = depvar(1:end,34);
+        evolutions(k).trajectories(p).individual.distance_traveled     = rad2deg(depvar(1:end,35));
+        evolutions(k).trajectories(p).individual.distance_to_go        = rad2deg(depvar(1:end,36));
+        evolutions(k).trajectories(p).individual.heading_to_target     = rad2deg(depvar(1:end,37));
+        evolutions(k).trajectories(p).individual.heading_error         = rad2deg(depvar(1:end,38));
+        
+        
+        
         evolutions(k).trajectories(p).individual.interp_E_mapped         = interp(1:end,1);
         evolutions(k).trajectories(p).individual.interp_angle_of_attack  = interp(1:end,2);
         evolutions(k).trajectories(p).individual.interp_thrust_angle     = interp(1:end,3);
@@ -218,16 +231,16 @@ for k = 1:(numel(pop_i) + 1)
         lat_c_rad = depvar(1:end,6); lon_c_rad = depvar(1:end,7);
         lat_f_rad = deg2rad(lat_f_deg); lon_f_rad =  deg2rad(lon_f_deg);
         lat_dif = lat_f_rad - lat_c_rad; lon_dif = lon_f_rad - lon_c_rad;
-        d_deg = rad2deg(acos(sin(lat_c_rad).*sin(lat_f_rad) + cos(lat_c_rad).*cos(lat_f_rad).*cos(lon_dif)));
+        distance_to_go = rad2deg(acos(sin(lat_c_rad).*sin(lat_f_rad) + cos(lat_c_rad).*cos(lat_f_rad).*cos(lon_dif)));
         chi_req_rad_Y = sin(lon_dif).*cos(lat_f_rad);
         chi_req_rad_X = cos(lat_c_rad)*sin(lat_f_rad) - sin(lat_c_rad).*cos(lat_f_rad).*cos(lon_dif);
         chi_req_deg = rad2deg(atan2(chi_req_rad_Y,chi_req_rad_X));
         chi_err_deg = rad2deg(depvar(1:end,8)) - chi_req_deg;
-    
-        evolutions(k).trajectories(p).individual.E                = 9.80665*depvar(1:end,13) + 0.5*(depvar(1:end,15)).^2;
-        evolutions(k).trajectories(p).individual.d_deg            = d_deg;
-        evolutions(k).trajectories(p).individual.heading_error    = chi_err_deg;
-        evolutions(k).trajectories(p).individual.heading_required = chi_req_deg;
+        
+        %evolutions(k).trajectories(p).individual.E                = 9.80665*depvar(1:end,13) + 0.5*(depvar(1:end,15)).^2;
+        %evolutions(k).trajectories(p).individual.d_deg            = d_deg;
+        %evolutions(k).trajectories(p).individual.heading_error    = chi_err_deg;
+        %evolutions(k).trajectories(p).individual.heading_required = chi_req_deg;
         
         evolutions(k).individuals.gamma_i(p)   = evolutions(k).trajectories(p).individual.flight_path_angle(1);
         evolutions(k).individuals.chi_i(p)     = evolutions(k).trajectories(p).individual.heading_angle(1);
@@ -238,7 +251,7 @@ for k = 1:(numel(pop_i) + 1)
         
         evolutions(k).fitness.dif_lat(p)   = evolutions(k).trajectories(p).individual.latitude_angle(end) - lat_f_deg;
         evolutions(k).fitness.dif_lon(p)   = evolutions(k).trajectories(p).individual.longitude_angle(end) - lon_f_deg;
-        evolutions(k).fitness.dif_d_deg(p) = evolutions(k).trajectories(p).individual.d_deg(end) - 0.75;
+        evolutions(k).fitness.dif_d_deg(p) = evolutions(k).trajectories(p).individual.distance_to_go(end) - 0.75;
         evolutions(k).fitness.dif_h(p)     = evolutions(k).trajectories(p).individual.height(end) - 25000;
         evolutions(k).fitness.tof(p)       = evolutions(k).trajectories(p).individual.time_vector(end);
         
@@ -253,9 +266,9 @@ for k = 1:(numel(pop_i) + 1)
     %  I_12 = intersect(idx1,idx2);
     %  I_123 = intersect(I_12,idx3);
     %  I_123 = idx1;
-            evolutions(k).max_tof       = max(evolutions(k).individuals.tof);
-            evolutions(k).max_interp_E_mapped  = max(evolutions(k).individuals.interp_E_mapped);
-
+    evolutions(k).max_tof       = max(evolutions(k).individuals.tof);
+    evolutions(k).max_interp_E_mapped  = max(evolutions(k).individuals.interp_E_mapped);
+    
     for i = 1:3
         evolutions(k).best(i).criteria  = criteria(i);
         evolutions(k).best(i).index     = I(i);

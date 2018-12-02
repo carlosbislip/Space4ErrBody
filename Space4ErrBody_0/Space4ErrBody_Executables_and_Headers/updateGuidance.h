@@ -105,7 +105,7 @@ public:
         return throttle * maxThrust_;
     }
     double getCurrentSpecificImpulse( )
-    {
+   {
         //currentSpecificImpulse_ = Isp_;
 
         return Isp_;

@@ -1,4 +1,4 @@
-function [ evolutions ] = Get_Trajectories(evolutions,prop_path,depvar_path,interp_path,DV_mapped_path,v_i,gamma_i,pop_i,lon_i_rad,lat_f_deg,lon_f_deg, startEpoch)
+function [ evolutions ] = Get_Trajectories(evolutions,prop_path,depvar_path,interp_Ascent_path,interp_Descent_path,DV_mapped_path,v_i,gamma_i,pop_i,lon_i_rad,lat_f_deg,lon_f_deg, startEpoch)
 %UNTITLED7 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -23,7 +23,8 @@ for k = 1:(numel(pop_i) + 1)
     pp = 1;
     %     prop_source = prop_path(start(k):finish(k),:);
     depvar_source = depvar_path(start(k):finish(k),:);
-    interp_source = interp_path(start(k):finish(k),:);
+    interp_Ascent_source = interp_Ascent_path(start(k):finish(k),:);
+    interp_Descent_source = interp_Descent_path(start(k):finish(k),:);
     DV_mapped_source = DV_mapped_path(start(k):finish(k),:);
     for p = 1:population
         
@@ -35,8 +36,12 @@ for k = 1:(numel(pop_i) + 1)
         depvar = dlmread(depvar_source{p,:},',');
         fclose(fid);
         
-        fid = fopen(interp_source{p,:});
-        interp = dlmread(interp_source{p,:},',');
+        fid = fopen(interp_Ascent_source{p,:});
+        interp_Ascent = dlmread(interp_Ascent_source{p,:},',');
+        fclose(fid);
+        
+               fid = fopen(interp_Descent_source{p,:});
+        interp_Descent = dlmread(interp_Descent_source{p,:},',');
         fclose(fid);
         
         fid = fopen(DV_mapped_source{p,:});
@@ -214,16 +219,21 @@ for k = 1:(numel(pop_i) + 1)
         evolutions(k).trajectories(p).individual.distance_to_go        = rad2deg(depvar(1:end,36));
         evolutions(k).trajectories(p).individual.heading_to_target     = rad2deg(depvar(1:end,37));
         evolutions(k).trajectories(p).individual.heading_error         = rad2deg(depvar(1:end,38));
+        evolutions(k).trajectories(p).individual.q_dot_LE              = rad2deg(depvar(1:end,39));
         
         
         
-        evolutions(k).trajectories(p).individual.interp_E_mapped         = interp(1:end,1);
-        evolutions(k).trajectories(p).individual.interp_angle_of_attack  = interp(1:end,2);
-        evolutions(k).trajectories(p).individual.interp_thrust_angle     = interp(1:end,3);
-        evolutions(k).trajectories(p).individual.interp_throttle_setting = interp(1:end,4);
+        evolutions(k).trajectories(p).individual.interp_E_mapped_Ascent         = interp_Ascent(1:end,1);
+        evolutions(k).trajectories(p).individual.interp_angle_of_attack_Ascent  = interp_Ascent(1:end,2);
+        evolutions(k).trajectories(p).individual.interp_thrust_angle     = interp_Ascent(1:end,3);
+        evolutions(k).trajectories(p).individual.interp_throttle_setting = interp_Ascent(1:end,4);
         
-        evolutions(k).trajectories(p).individual.DV_E_mapped         = DV_mapped(1:end,1);
-        evolutions(k).trajectories(p).individual.DV_angle_of_attack  = DV_mapped(1:end,2);
+        evolutions(k).trajectories(p).individual.interp_E_mapped_Descent         = interp_Descent(1:end,1);
+        evolutions(k).trajectories(p).individual.interp_angle_of_attack_Descent  = interp_Descent(1:end,2);
+        evolutions(k).trajectories(p).individual.interp_bank_angle     = interp_Descent(1:end,3);
+        
+        evolutions(k).trajectories(p).individual.DV_E_mapped_Ascent         = DV_mapped(1:end,1);
+        evolutions(k).trajectories(p).individual.DV_angle_of_attack_Ascent  = DV_mapped(1:end,2);
         evolutions(k).trajectories(p).individual.DV_thrust_angle     = DV_mapped(1:end,3);
         evolutions(k).trajectories(p).individual.DV_throttle_setting = DV_mapped(1:end,4);
         
@@ -247,7 +257,8 @@ for k = 1:(numel(pop_i) + 1)
         evolutions(k).individuals.lat_f_deg(p) = evolutions(k).trajectories(p).individual.latitude_angle(end);
         evolutions(k).individuals.lon_f_deg(p) = evolutions(k).trajectories(p).individual.longitude_angle(end);
         evolutions(k).individuals.tof(p)       = evolutions(k).trajectories(p).individual.time_vector(end);
-        evolutions(k).individuals.interp_E_mapped(p)  = evolutions(k).trajectories(p).individual.interp_E_mapped(end);
+        evolutions(k).individuals.interp_E_mapped_Ascent(p)  = evolutions(k).trajectories(p).individual.interp_E_mapped_Ascent(end);
+        evolutions(k).individuals.interp_E_mapped_Descent(p)  = evolutions(k).trajectories(p).individual.interp_E_mapped_Descent(end);
         
         evolutions(k).fitness.dif_lat(p)   = evolutions(k).trajectories(p).individual.latitude_angle(end) - lat_f_deg;
         evolutions(k).fitness.dif_lon(p)   = evolutions(k).trajectories(p).individual.longitude_angle(end) - lon_f_deg;
@@ -267,7 +278,8 @@ for k = 1:(numel(pop_i) + 1)
     %  I_123 = intersect(I_12,idx3);
     %  I_123 = idx1;
     evolutions(k).max_tof       = max(evolutions(k).individuals.tof);
-    evolutions(k).max_interp_E_mapped  = max(evolutions(k).individuals.interp_E_mapped);
+    evolutions(k).max_interp_E_mapped_Ascent  = max(evolutions(k).individuals.interp_E_mapped_Ascent);
+    evolutions(k).max_interp_E_mapped_Descent  = max(evolutions(k).individuals.interp_E_mapped_Descent);
     
     for i = 1:3
         evolutions(k).best(i).criteria  = criteria(i);

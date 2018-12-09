@@ -1,11 +1,12 @@
-function [prop_path,depvar_path,interp_path,DV_mapped_path,tof,v_i,gamma_i,chi_i,lat_f,lon_f,pop_path,pop_i,fit_path,fit_i] = Contruct_File_Paths(prop_Output_files,n_prop_Output_files,depvar_Output_files,n_depvar_Output_files,interp_Output_files,DV_mapped_Output_files,pop_files,npop_files,fit_files,nfit_files)
+function [prop_path,depvar_path,interp_Ascent_path,interp_Descent_path,DV_mapped_path,tof,v_i,gamma_i,chi_i,lat_f,lon_f,pop_path,pop_i,fit_path,fit_i] = Contruct_File_Paths(prop_Output_files,n_prop_Output_files,depvar_Output_files,n_depvar_Output_files,interp_Ascent_Output_files,interp_Descent_Output_files,DV_mapped_Output_files,pop_files,npop_files,fit_files,nfit_files)
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 
 
 prop_path{n_prop_Output_files,1} = [];
 depvar_path{n_prop_Output_files,1} = [];
-interp_path{n_prop_Output_files,1} = [];
+interp_Ascent_path{n_prop_Output_files,1} = [];
+interp_Descent_path{n_prop_Output_files,1} = [];
 DV_mapped_path{n_prop_Output_files,1} = [];
 v_i = nan(n_prop_Output_files,1);
 gamma_i = nan(n_prop_Output_files,1);
@@ -13,6 +14,7 @@ chi_i = nan(n_prop_Output_files,1);
 lat_f = nan(n_prop_Output_files,1);
 lon_f = nan(n_prop_Output_files,1);
 pop_path{npop_files,1} = [];
+
 
 
 [datenum_sorted,I] = sort([prop_Output_files.datenum],'ascend');
@@ -28,9 +30,12 @@ for i = 1:n_prop_Output_files
     depvar_Output_files(i).datenum_sorted = datenum_sorted(i);
     depvar_Output_files(i).name_sorted = depvar_Output_files(I(i)).name;
     
-    interp_Output_files(i).datenum_sorted = datenum_sorted(i);
-    interp_Output_files(i).name_sorted = interp_Output_files(I(i)).name;
+    interp_Ascent_Output_files(i).datenum_sorted = datenum_sorted(i);
+    interp_Ascent_Output_files(i).name_sorted = interp_Ascent_Output_files(I(i)).name;
     
+    interp_Descent_Output_files(i).datenum_sorted = datenum_sorted(i);
+    interp_Descent_Output_files(i).name_sorted = interp_Descent_Output_files(I(i)).name;
+ 
     DV_mapped_Output_files(i).datenum_sorted = datenum_sorted(i);
     DV_mapped_Output_files(i).name_sorted = DV_mapped_Output_files(I(i)).name;
     
@@ -43,7 +48,8 @@ for i = 1:n_prop_Output_files
     % Create file path string from known data
     prop_path(i,:) = {strcat(prop_Output_files(i).folder,'/',prop_Output_files(i).name_sorted)};
     depvar_path(i,:) = {strcat(depvar_Output_files(i).folder,'/',depvar_Output_files(i).name_sorted)};
-    interp_path(i,:) = {strcat(interp_Output_files(i).folder,'/',interp_Output_files(i).name_sorted)};
+    interp_Ascent_path(i,:) = {strcat(interp_Ascent_Output_files(i).folder,'/',interp_Ascent_Output_files(i).name_sorted)};
+    interp_Descent_path(i,:) = {strcat(interp_Descent_Output_files(i).folder,'/',interp_Descent_Output_files(i).name_sorted)};
     DV_mapped_path(i,:) = {strcat(DV_mapped_Output_files(i).folder,'/',DV_mapped_Output_files(i).name_sorted)};
     
 % check this on out to not have to do it with a loop    

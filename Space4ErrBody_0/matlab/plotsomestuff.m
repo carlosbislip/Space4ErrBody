@@ -21,7 +21,7 @@ if compilation(1).validation == 1
 end
 
 
-%% Interpolators: Angle of Attack
+%% Interpolators: Angle of Attack - Ascent
 for p = 1:numel(compilation)
     
     for k = 1:numel(compilation(p).evolutions)
@@ -29,21 +29,21 @@ for p = 1:numel(compilation)
         figure(fig_num)
         set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
         set (gca,'Fontsize',15)
-        title(strcat('Interpolated AoA - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
-        %ylim([0 10])
-         max_interp_E_mapped = max([compilation(p).evolutions.max_interp_E_mapped]);
-        xlim([0 max_interp_E_mapped])
+        title(strcat('Interpolated AoA for Ascent - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+        ylim([0 30])
+         max_interp_E_mapped_Ascent = max([compilation(p).evolutions.max_interp_E_mapped_Ascent]);
+        xlim([0 max_interp_E_mapped_Ascent])
         xlabel('Mapped Energy: E_{mapped}') % x-axis label
         ylabel('Angle of attack (deg)') % y-axis label
-        %set(gca,'YTick', 0:1:10);
-        set(gca,'XTick', 0:.2:max_interp_E_mapped);
+        set(gca,'YTick', 0:1:30);
+        set(gca,'XTick', 0:.2:max_interp_E_mapped_Ascent);
         hold on
         
         for ii = 1:numel(compilation(p).evolutions(k).trajectories)
-            plot(compilation(p).evolutions(k).trajectories(ii).individual.interp_E_mapped,...
-                compilation(p).evolutions(k).trajectories(ii).individual.interp_angle_of_attack);
-            scatter(compilation(p).evolutions(k).trajectories(ii).individual.DV_E_mapped,...
-                compilation(p).evolutions(k).trajectories(ii).individual.DV_angle_of_attack);
+            plot(compilation(p).evolutions(k).trajectories(ii).individual.interp_E_mapped_Ascent,...
+                compilation(p).evolutions(k).trajectories(ii).individual.interp_angle_of_attack_Ascent);
+            scatter(compilation(p).evolutions(k).trajectories(ii).individual.DV_E_mapped_Ascent,...
+                compilation(p).evolutions(k).trajectories(ii).individual.DV_angle_of_attack_Ascent);
         end
        
         %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
@@ -52,7 +52,49 @@ for p = 1:numel(compilation)
             figure(fig_num),...
             strcat(...
             mainpath,...
-            '/figures/interp_AoA_Evolution_',...
+            '/figures/interp_AoA_Ascent_Evolution_',...
+            num2str(k - 1),...
+            '_Set',...
+            convertCharsToStrings(compilation(p).set),...
+            '.png'),...
+            'png');
+        close(fig_num);
+    end
+end
+
+
+%% Interpolators: Angle of Attack - Descent
+for p = 1:numel(compilation)
+    
+    for k = 1:numel(compilation(p).evolutions)
+        fig_num = p*100 + 3459100 + k*1;
+        figure(fig_num)
+        set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
+        set (gca,'Fontsize',15)
+        title(strcat('Interpolated AoA for Descent - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+        ylim([0 300])
+         max_interp_E_mapped_Descent = max([compilation(p).evolutions.max_interp_E_mapped_Descent]);
+       % xlim([0 max_interp_E_mapped_Descent])
+        xlabel('Mapped Energy: E_{mapped}') % x-axis label
+        ylabel('Angle of attack (deg)') % y-axis label
+        set(gca,'YTick', 0:30:300);
+      %  set(gca,'XTick', 0:.2:max_interp_E_mapped_Descent);
+        hold on
+        
+        for ii = 1:numel(compilation(p).evolutions(k).trajectories)
+            plot(compilation(p).evolutions(k).trajectories(ii).individual.interp_E_mapped_Descent,...
+                compilation(p).evolutions(k).trajectories(ii).individual.interp_angle_of_attack_Descent);
+          %  scatter(compilation(p).evolutions(k).trajectories(ii).individual.DV_E_mapped_Ascent,...
+           %     compilation(p).evolutions(k).trajectories(ii).individual.DV_angle_of_attack_Ascent);
+        end
+       
+        %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
+        hold off
+        saveas(...
+            figure(fig_num),...
+            strcat(...
+            mainpath,...
+            '/figures/interp_AoA_Descent_Evolution_',...
             num2str(k - 1),...
             '_Set',...
             convertCharsToStrings(compilation(p).set),...
@@ -73,12 +115,12 @@ for p = 1:numel(compilation)
         title(strcat('Interpolated eps_T - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
         %ylim([0 10])
         % max_tof = max([compilation(p).evolutions.max_tof]);
-         max_interp_E_mapped = max([compilation(p).evolutions.max_interp_E_mapped]);
-        xlim([0 max_interp_E_mapped])
+         max_interp_E_mapped_Ascent = max([compilation(p).evolutions.max_interp_E_mapped]);
+        xlim([0 max_interp_E_mapped_Ascent])
         xlabel('Mapped Energy: E_{mapped}') % x-axis label
         ylabel('Thrust Elevation Angle (deg)') % y-axis label
         % set(gca,'YTick', 0:1:10);
-        set(gca,'XTick', 0:.2:max_interp_E_mapped);
+        set(gca,'XTick', 0:.2:max_interp_E_mapped_Ascent);
         hold on
         
         for ii = 1:numel(compilation(p).evolutions(k).trajectories)
@@ -115,12 +157,12 @@ for p = 1:numel(compilation)
         title(strcat('Throttle Setting - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
         %ylim([0 1])
         % max_tof = max([compilation(p).evolutions.max_tof]);
-         max_interp_E_mapped = max([compilation(p).evolutions.max_interp_E_mapped]);
-        xlim([0 max_interp_E_mapped])
+         max_interp_E_mapped_Ascent = max([compilation(p).evolutions.max_interp_E_mapped]);
+        xlim([0 max_interp_E_mapped_Ascent])
         xlabel('Mapped Energy: E_{mapped}') % x-axis label
         ylabel('Throttle Setting (-)') % y-axis label
         % set(gca,'YTick', 0:1:10);
-        set(gca,'XTick', 0:.2:max_interp_E_mapped);
+        set(gca,'XTick', 0:.2:max_interp_E_mapped_Ascent);
         hold on
         
         for ii = 1:numel(compilation(p).evolutions(k).trajectories)
@@ -1066,6 +1108,44 @@ for p = 1:numel(compilation)
     end
 end
 
+%% Time History: Heating Rate at Leading Edge - per Evolution
+for p = 1:numel(compilation)
+    
+    for k = 1:numel(compilation(p).evolutions)
+        fig_num = p*100 + 655430 + k*1;
+        figure(fig_num)
+        set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
+        set (gca,'Fontsize',15)
+        title(strcat('Heating Rate at Leading Edge through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+       % ylim([0 100])
+        max_tof = max([compilation(p).evolutions.max_tof]);
+        xlim([0 max_tof])
+        xlabel('Propagation Time (s)') % x-axis label
+        ylabel('Heating Rate at Leading Edge (W/m)') % y-axis label
+       % set(gca,'YTick', 0:10:100);
+        set(gca,'XTick', 0:200:max_tof);
+        hold on
+        
+        for ii = 1:numel(compilation(p).evolutions(k).trajectories)
+            plot(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
+                compilation(p).evolutions(k).trajectories(ii).individual.q_dot_LE);
+        end
+        
+        %plot([0 max_tof],(6371 + 25)*[1 1],'k','LineWidth',2)
+        hold off
+        saveas(...
+            figure(fig_num),...
+            strcat(...
+            mainpath,...
+            '/figures/q_dot_LE_v_T_Evolution_',...
+            num2str(k - 1),...
+            '_Set',...
+            convertCharsToStrings(compilation(p).set),...
+            '.png'),...
+            'png');
+        close(fig_num);
+    end
+end
 
 %% Time History: Dynamic Pressure - per Evolution
 for p = 1:numel(compilation)
@@ -1154,12 +1234,12 @@ for p = 1:numel(compilation)
         set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
         set (gca,'Fontsize',15)
         title(strcat('Engine Status through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
-        ylim([0 1])
+        ylim([0 2])
         max_tof = max([compilation(p).evolutions.max_tof]);
         xlim([0 max_tof])
         xlabel('Propagation Time (s)') % x-axis label
         ylabel('Engine Status (-)') % y-axis label
-        set(gca,'YTick', 0:.1:1);
+        set(gca,'YTick', 0:1:2);
         set(gca,'XTick', 0:200:max_tof);
         hold on
         
@@ -1490,6 +1570,85 @@ for p = 1:numel(compilation)
             strcat(...
             mainpath,...
             '/figures/height_v_V_Evolution_',...
+            num2str(k - 1),...
+            '_Set',...
+            convertCharsToStrings(compilation(p).set),...
+            '.png'),...
+            'png');
+       % close(fig_num);
+    end
+end
+
+
+%% Height vs. Heating Rate at Leading Edge - per Evolution
+for p = 1:numel(compilation)
+    
+    for k = 1:numel(compilation(p).evolutions)
+        fig_num = p*100 + 724100 + k*1;
+        figure(fig_num)
+        set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
+        set (gca,'Fontsize',15)
+        title(strcat('Height vs. Heating Rate at Leading Edge - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+        ylim([0 150])
+       % max_tof = max([compilation(p).evolutions.max_tof]);
+       % xlim([0 8000])
+        xlabel('Heating Rate at Leading Edge (W/m^2)') % x-axis label
+        ylabel('Height (km)') % y-axis label
+        set(gca,'YTick', 0:10:150);
+       % set(gca,'XTick', 0:500:8000);
+        hold on
+        
+        for ii = 1:numel(compilation(p).evolutions(k).trajectories)
+            plot(compilation(p).evolutions(k).trajectories(ii).individual.q_dot_LE,...
+                compilation(p).evolutions(k).trajectories(ii).individual.height/1e3);
+        end
+        
+       plot([0 8000],(25)*[1 1],'k','LineWidth',2)
+        hold off
+        saveas(...
+            figure(fig_num),...
+            strcat(...
+            mainpath,...
+            '/figures/height_v_q_dot_LE_Evolution_',...
+            num2str(k - 1),...
+            '_Set',...
+            convertCharsToStrings(compilation(p).set),...
+            '.png'),...
+            'png');
+       % close(fig_num);
+    end
+end
+
+%% Heating Rate at Leading Edge vs. Velocity - per Evolution
+for p = 1:numel(compilation)
+    
+    for k = 1:numel(compilation(p).evolutions)
+        fig_num = p*100 + 724200 + k*1;
+        figure(fig_num)
+        set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
+        set (gca,'Fontsize',15)
+        title(strcat('Heating Rate at Leading Edge vs. Velocity - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+        %ylim([0 150])
+       % max_tof = max([compilation(p).evolutions.max_tof]);
+        xlim([0 8000])
+        xlabel('Velocity (m/s)') % x-axis label
+        ylabel('Heating Rate at Leading Edge (W/m^2)') % y-axis label
+        %set(gca,'YTick', 0:10:150);
+        set(gca,'XTick', 0:500:8000);
+        hold on
+        
+        for ii = 1:numel(compilation(p).evolutions(k).trajectories)
+            plot(compilation(p).evolutions(k).trajectories(ii).individual.airspeed,...
+                compilation(p).evolutions(k).trajectories(ii).individual.q_dot_LE);
+        end
+        
+        plot([0 8000],(25)*[1 1],'k','LineWidth',2)
+        hold off
+        saveas(...
+            figure(fig_num),...
+            strcat(...
+            mainpath,...
+            '/figures/q_dot_LE_v_V_Evolution_',...
             num2str(k - 1),...
             '_Set',...
             convertCharsToStrings(compilation(p).set),...

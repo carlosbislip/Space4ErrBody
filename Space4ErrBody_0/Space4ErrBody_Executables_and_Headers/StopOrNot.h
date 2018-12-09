@@ -10,11 +10,9 @@
 namespace bislip {
 
 bool StopOrNot (const tudat::simulation_setup::NamedBodyMap& bodyMap,
-                 const std::string &vehicleName,
-                 const std::vector< double > &vehicleParameterValues,
-                 const std::vector< double > &parameterBounds,
-                 const std::vector< double > &terminationConditionsValues,
-                 const std::vector< double > &additional_data);
+                const std::string &vehicleName,
+                const std::vector< double > &vehicleParameterValues,
+                const std::vector< double > &terminationConditionsValues);
 
 }
 

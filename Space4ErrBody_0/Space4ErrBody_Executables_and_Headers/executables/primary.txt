@@ -1,5 +1,7 @@
-parameterList.txt
-parameterBounds.txt
+parameterList_Ascent.txt
+parameterBounds_Ascent.txt
+parameterList_Descent.txt
+parameterBounds_Descent.txt
 vehicleParameterList.txt
 vehicleParameterValues.txt
 aeroCoeffFileList.txt

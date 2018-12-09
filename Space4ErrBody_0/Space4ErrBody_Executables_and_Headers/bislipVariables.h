@@ -7,11 +7,22 @@
 #include <iomanip>
 #include <utility>
 
-#include "Tudat/Mathematics/Interpolators/oneDimensionalInterpolator.h"
+#include <Tudat/Mathematics/Interpolators/oneDimensionalInterpolator.h>
+#include <Tudat/Astrodynamics/Aerodynamics/flightConditions.h>
+#include <Tudat/Astrodynamics/SystemModels/vehicleSystems.h>
 
 namespace bislip {
 
 namespace variables {
+
+enum GuidanceParameter
+{
+    AngleOfAttack,
+    BankAngle,
+    ThrustElevationAngle,
+    ThrustAzimuthAngle,
+    ThrottleSetting
+};
 
 std::string getCurrentDateTime ( const bool useLocalTime = false );
 
@@ -47,27 +58,79 @@ double computeNormalizedSpecificEnergy(
         const double &airspeed,
         const double &E_max);
 
-double computeAngleofAttack (
-        const std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > &interpolator_AoA,
+std::string passGuidanceParameter (
+        const std::string &parameter);
+
+std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > chooseGuidanceInterpolator(
+        const double &flight_path_angle,
+        const std::string &parameter,
+        const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems);
+
+std::pair < double, double > chooseGuidanceBounds (
+        const double &flight_path_angle,
+        const std::string &parameter,
+        const std::shared_ptr<tudat::system_models::VehicleSystems> &vehicleSystems);
+
+double evaluateGuidanceInterpolator (
+        const double &flightpathangle,
+        const std::string &parameter,
+        const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems,
         const double &height,
         const double &airspeed,
         const double &E_max);
 
-double computeThrottleSetting (
-        const std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > &interpolator_throttle,
-        const double &height,
-        const double &airspeed,
-        const double &E_max);
+Eigen::Vector3d computeBodyFixedThrustDirection (
+        const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions,
+        const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems);
 
-double computeThrustElevationAngle (
-        const std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > &interpolator_eps_T,
-        const double &height,
-        const double &airspeed,
-        const double &E_max);
+double computeThrustMagnitude (
+        const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions,
+        const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems);
+
+Eigen::Vector3d computeBodyFixedThrustVector (
+        const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions,
+        const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems);
 
 bool determineEngineStatus (
         const double &currentMass,
         const double &landingMass);
+
+double computeHeatingRate (
+        const double &airdensity,
+        const double &airspeed,
+        const double &C,
+        const double &N,
+        const double &M);
+
+double computeStagnationHeatFlux (
+        const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions,
+        const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems);
+
+double computeFlatPlateHeatFlux (
+        const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions,
+        const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems);
+
+double computeStagnationHeat (
+        const double &airdensity,
+        const double &airspeed,
+        const double &C_s,
+        const double &N,
+        const double &M,
+        const double &adiabaticWallTemperature,
+        const double &WallTemperature);
+
+double computeFlatPlateHeat (
+        const double &airdensity,
+        const double &airspeed,
+        const double &C_FP_1,
+        const double &C_FP_2,
+        const double &adiabaticWallTemperature,
+        const double &WallTemperature);
+
+double computeHeatingRateTauber (
+        const double &q_dot_s,
+        const double &q_dot_FP,
+        const double &lambda);
 
 } // namespace variables
 } // namespace bislip

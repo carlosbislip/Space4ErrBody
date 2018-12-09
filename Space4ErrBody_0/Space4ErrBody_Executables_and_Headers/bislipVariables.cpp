@@ -1,5 +1,6 @@
 #include <iostream>
 #include <ctime>
+#include <cmath>
 #include <sstream>
 #include <utility>
 #include <string>
@@ -8,7 +9,14 @@
 #include <iomanip>
 #include <vector>
 
-#include "Tudat/Mathematics/Interpolators/oneDimensionalInterpolator.h"
+#include <Tudat/Mathematics/Interpolators/oneDimensionalInterpolator.h>
+#include <Tudat/Astrodynamics/Aerodynamics/aerodynamics.h>
+#include <Tudat/Astrodynamics/Aerodynamics/flightConditions.h>
+#include <Tudat/Astrodynamics/SystemModels/vehicleSystems.h>
+#include <Tudat/Astrodynamics/BasicAstrodynamics/physicalConstants.h>
+#include <Tudat/Astrodynamics/Aerodynamics/equilibriumWallTemperature.h>
+
+#include "updateGuidance.h"
 
 namespace bislip {
 
@@ -155,7 +163,7 @@ double computeSpecificEnergy (
         const double &height,
         const double &airspeed)
 {
-    return 9.80665 * height + 0.5 * airspeed * airspeed;
+    return tudat::physical_constants::SEA_LEVEL_GRAVITATIONAL_ACCELERATION * height + 0.5 * airspeed * airspeed;
 }
 
 double computeNormalizedSpecificEnergy (
@@ -166,31 +174,206 @@ double computeNormalizedSpecificEnergy (
     return computeSpecificEnergy( height, airspeed ) / E_max;
 }
 
-double computeAngleofAttack (
-        const std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > interpolator_AoA,
-        const double &height,
-        const double &airspeed,
-        const double &E_max)
+std::string passGuidanceParameter (
+        const std::string &parameter)
 {
-    return interpolator_AoA->interpolate( computeNormalizedSpecificEnergy( height, airspeed, E_max ) );
+    return parameter;
 }
 
-double computeThrottleSetting (
-        const std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > &interpolator_throttle,
-        const double &height,
-        const double &airspeed,
-        const double &E_max)
+std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > chooseGuidanceInterpolator(
+        const double &flight_path_angle,
+        const std::string &parameter,
+        const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems)
 {
-    return interpolator_throttle->interpolate( computeNormalizedSpecificEnergy( height, airspeed, E_max ) );
+    std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > interpolator;
+
+    if ( flight_path_angle >  0 )
+    {
+        if (parameter == "Angle of Attack")
+        {
+            interpolator = vehicleSystems->getThrustElevationAngleInterpolator_Ascent();
+        }
+        if (parameter == "Bank Angle")
+        {
+            interpolator = vehicleSystems->getBankAngleInterpolator_Ascent();
+        }
+        if (parameter == "Thrust Elevation Angle")
+        {
+            interpolator = vehicleSystems->getThrustElevationAngleInterpolator_Ascent();
+        }
+        if (parameter == "Thrust Azimuth Angle")
+        {
+            interpolator = vehicleSystems->getThrustAzimuthAngleInterpolator_Ascent();
+        }
+        if (parameter == "Throttle Setting")
+        {
+            interpolator = vehicleSystems->getThrottleInterpolator_Ascent();
+        }
+    }
+    else
+    {
+        if (parameter == "Angle of Attack")
+        {
+            interpolator = vehicleSystems->getThrustElevationAngleInterpolator_Descent();
+        }
+        if (parameter == "Bank Angle")
+        {
+            interpolator = vehicleSystems->getBankAngleInterpolator_Descent();
+        }
+        if (parameter == "Thrust Elevation Angle")
+        {
+            interpolator = vehicleSystems->getThrustElevationAngleInterpolator_Descent();
+        }
+        if (parameter == "Thrust Azimuth Angle")
+        {
+            interpolator = vehicleSystems->getThrustAzimuthAngleInterpolator_Descent();
+        }
+        if (parameter == "Throttle Setting")
+        {
+            interpolator = vehicleSystems->getThrottleInterpolator_Descent();
+        }
+    }
+    return interpolator;
 }
 
-double computeThrustElevationAngle (
-        const std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > &interpolator_eps_T,
+std::pair < double, double > chooseGuidanceBounds (
+        const double &flight_path_angle,
+        const std::string &parameter,
+        const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems)
+{
+    std::pair < double, double > bounds;
+
+    if ( flight_path_angle >  0 )
+    {
+        if (parameter == "Angle of Attack")
+        {
+            bounds = vehicleSystems->getParameterBounds( "ascent", parameter );
+        }
+        if (parameter == "Bank Angle")
+        {
+            bounds = vehicleSystems->getParameterBounds( "ascent", parameter );
+        }
+        if (parameter == "Thrust Elevation Angle")
+        {
+            bounds = vehicleSystems->getParameterBounds( "ascent", parameter );
+        }
+        if (parameter == "Thrust Azimuth Angle")
+        {
+            bounds = vehicleSystems->getParameterBounds( "ascent", parameter );
+        }
+        if (parameter == "Throttle Setting")
+        {
+            bounds = vehicleSystems->getParameterBounds( "ascent", parameter );
+        }
+    }
+    else
+    {
+        if (parameter == "Angle of Attack")
+        {
+            bounds = vehicleSystems->getParameterBounds( "descent", parameter );
+        }
+        if (parameter == "Bank Angle")
+        {
+            bounds = vehicleSystems->getParameterBounds( "descent", parameter );
+        }
+        if (parameter == "Thrust Elevation Angle")
+        {
+            bounds = vehicleSystems->getParameterBounds( "descent", parameter );
+        }
+        if (parameter == "Thrust Azimuth Angle")
+        {
+            bounds = vehicleSystems->getParameterBounds( "descent", parameter );
+        }
+        if (parameter == "Throttle Setting")
+        {
+            bounds = vehicleSystems->getParameterBounds( "descent", parameter );
+        }
+    }
+    return bounds;
+}
+
+double evaluateGuidanceInterpolator (
+        const double &flightpathangle,
+        const std::string &parameter,
+        const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems,
         const double &height,
         const double &airspeed,
         const double &E_max)
 {
-    return interpolator_eps_T->interpolate( computeNormalizedSpecificEnergy( height, airspeed, E_max )  );
+    //! Select parameter interpolator.
+    std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > interpolator = bislip::variables::chooseGuidanceInterpolator( flightpathangle, parameter, vehicleSystems );
+
+    //! Select parameter bounds.
+    std::pair < double, double > bounds =  bislip::variables::chooseGuidanceBounds( flightpathangle, parameter, vehicleSystems );
+
+    //! Evaluate interpolator.
+    double evaluation = interpolator->interpolate( bislip::variables::computeNormalizedSpecificEnergy( height, airspeed, E_max ) );
+
+    //! Impose bounds.
+    if ( evaluation < bounds.first ){ evaluation = bounds.first; }
+    if ( evaluation > bounds.second ){ evaluation = bounds.second; }
+
+    return evaluation;
+}
+
+Eigen::Vector3d computeBodyFixedThrustDirection (
+        const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions,
+        const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems)
+{
+    // std::cout << "Computing Body Fixed Thrust Direction" << std::endl;
+    const double eps_T =  evaluateGuidanceInterpolator (
+                flightConditions->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::flight_path_angle ),
+                "Thrust Elevation Angle",
+                vehicleSystems,
+                flightConditions->getCurrentAltitude(),
+                flightConditions->getCurrentAirspeed(),
+                vehicleSystems->getE_max() );
+
+    const double phi_T = evaluateGuidanceInterpolator (
+                flightConditions->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::flight_path_angle ),
+                "Thrust Azimuth Angle",
+                vehicleSystems,
+                flightConditions->getCurrentAltitude(),
+                flightConditions->getCurrentAirspeed(),
+                vehicleSystems->getE_max() );
+
+    Eigen::Vector3d bodyFixedThrustDirection;
+    bodyFixedThrustDirection( 0 ) = std::cos( tudat::unit_conversions::convertDegreesToRadians( eps_T ) ) * std::cos( tudat::unit_conversions::convertDegreesToRadians( phi_T ) );
+    bodyFixedThrustDirection( 1 ) = std::cos( tudat::unit_conversions::convertDegreesToRadians( eps_T ) ) * std::sin( tudat::unit_conversions::convertDegreesToRadians( phi_T ) );
+    bodyFixedThrustDirection( 2 ) = std::sin( tudat::unit_conversions::convertDegreesToRadians( eps_T ) );
+
+    return bodyFixedThrustDirection;
+}
+
+double computeThrustMagnitude (
+        const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions,
+        const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems)
+{
+    const double throttle = bislip::variables::evaluateGuidanceInterpolator (
+                flightConditions->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::flight_path_angle ),
+                "Throttle Setting",
+                vehicleSystems,
+                flightConditions->getCurrentAltitude(),
+                flightConditions->getCurrentAirspeed(),
+                vehicleSystems->getE_max() );
+
+    return throttle * vehicleSystems->getMaxThrust();
+}
+
+Eigen::Vector3d computeBodyFixedThrustVector (
+        const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions,
+        const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems)
+{
+    const Eigen::Vector3d BodyFixedThrustDirection = bislip::variables::computeBodyFixedThrustDirection( flightConditions, vehicleSystems );
+    const double thrustMagnitude = bislip::variables::computeThrustMagnitude( flightConditions, vehicleSystems );
+
+    Eigen::Vector3d BodyFixedThrustVector;
+
+    BodyFixedThrustVector( 0 ) = thrustMagnitude * BodyFixedThrustDirection( 0 );
+    BodyFixedThrustVector( 1 ) = thrustMagnitude * BodyFixedThrustDirection( 1 );
+    BodyFixedThrustVector( 2 ) = thrustMagnitude * BodyFixedThrustDirection( 2 );
+
+    return BodyFixedThrustVector;
 }
 
 bool determineEngineStatus (
@@ -198,13 +381,131 @@ bool determineEngineStatus (
         const double &landingMass)
 {
     bool currentEngineStatus = true;
-
-    if ( currentMass <= landingMass )
-    {
-        currentEngineStatus = false;
-    }
-
+    if ( currentMass <= landingMass ){ currentEngineStatus = false; }
     return currentEngineStatus;
 }
+
+double computeHeatingRate (
+        const double &airdensity,
+        const double &airspeed,
+        const double &C,
+        const double &N,
+        const double &M)
+{
+    return C * std::pow( airdensity, N ) * std::pow( airspeed, M );
+}
+
+double computeStagnationHeat (const double &airdensity,
+                              const double &airspeed,
+                              const double &C_s,
+                              const double &N,
+                              const double &M,
+                              const double &adiabaticWallTemperature,
+                              const double &WallTemperature)
+{
+    double C = C_s * ( 1 - ( WallTemperature / adiabaticWallTemperature ) ) ;
+    double q_dot_s = computeHeatingRate ( airdensity, airspeed, C, N, M) ;
+    //std::cout << "q_dot_s: " << q_dot_s << std::endl;
+
+    return q_dot_s;
+}
+
+double computeStagnationHeatFlux (
+        const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions,
+        const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems)
+{
+    const double airDensity = flightConditions->getCurrentDensity( );
+    const double airSpeed = flightConditions->getCurrentAirspeed( );
+    const double airTemperature = flightConditions->getCurrentFreestreamTemperature( );
+    const double machNumber = flightConditions->getCurrentMachNumber( );
+    const double noseRadius = vehicleSystems->getNoseRadius( );
+    const double wallEmissivity = vehicleSystems->getWallEmissivity( );
+
+    const double nose_term = std::pow( noseRadius, -0.5 );
+    const double C_s = ( 1.83 ) * nose_term * 1E-4;
+    const double M = 3.0;
+    const double N = 0.5;
+
+    // Compute adiabatic wall temperature.
+    double adiabaticWallTemperature
+            = tudat::aerodynamics::computeAdiabaticWallTemperature( airTemperature , machNumber );
+
+    std::function< double( const double ) > heatTransferFunction = std::bind(
+                &computeStagnationHeat, airDensity, airSpeed, C_s, N, M, adiabaticWallTemperature, std::placeholders::_1 );
+
+    return tudat::aerodynamics::computeEquilibriumHeatflux( heatTransferFunction, wallEmissivity, adiabaticWallTemperature );
+}
+
+double computeFlatPlateHeat (const double &airdensity,
+                             const double &airspeed,
+                             const double &C_FP_1,
+                             const double &C_FP_2,
+                             const double &adiabaticWallTemperature,
+                             const double &WallTemperature)
+{
+    double C;
+    double M;
+    double N;
+
+    if ( airspeed <= 3962.0 )
+    {
+        M = 3.37;
+        N = 0.8;
+        C = C_FP_1 * std::pow( 556 / WallTemperature, 1.0 / 4.0 ) * ( 1.0 - 1.11 * ( WallTemperature / adiabaticWallTemperature ) );
+    }
+    if ( airspeed > 3962.0 )
+    {
+        M = 3.7;
+        N = 0.8;
+        C = C_FP_2 * ( 1 - 1.11 * ( WallTemperature / adiabaticWallTemperature ) );
+    }
+
+    return computeHeatingRate ( airdensity, airspeed, C, N, M);;
+}
+
+double computeFlatPlateHeatFlux (
+        const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions,
+        const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems)
+{
+    const double airDensity = flightConditions->getCurrentDensity( );
+    const double airSpeed = flightConditions->getCurrentAirspeed( );
+    const double airTemperature = flightConditions->getCurrentFreestreamTemperature( );
+    const double machNumber = flightConditions->getCurrentMachNumber( );
+    const double wallEmissivity = vehicleSystems->getWallEmissivity( );
+    const double phi = vehicleSystems->getLocalBodyAngle( );
+    const double x_T = vehicleSystems->getTransitionDistance( );
+
+    const double sin_phi_term = std::pow( std::sin( phi ), 1.6 ) ;
+    const double cos_phi = std::cos( phi );
+    const double x_T_term = std::pow( x_T, -1.0 / 5.0 ) ;
+    const double C_FP_1 = ( 3.35 ) * sin_phi_term * std::pow( cos_phi, 1.78 ) * x_T_term * 1E-4;
+    const double C_FP_2 = ( 2.2 ) * sin_phi_term * std::pow( cos_phi, 2.08 ) * x_T_term * 1E-5;
+
+    // Compute adiabatic wall temperature.
+    double adiabaticWallTemperature
+            = tudat::aerodynamics::computeAdiabaticWallTemperature( airTemperature , machNumber );
+
+    std::function< double( const double ) > heatTransferFunction = std::bind(
+                &computeFlatPlateHeat, airDensity, airSpeed, C_FP_1, C_FP_2, adiabaticWallTemperature, std::placeholders::_1 );
+
+    return tudat::aerodynamics::computeEquilibriumHeatflux( heatTransferFunction, wallEmissivity, adiabaticWallTemperature );
+}
+
+double computeHeatingRateTauber (
+        const double &q_dot_s,
+        const double &q_dot_FP,
+        const double &lambda)
+{
+    const double sin_lambda = std::sin( lambda );
+    const double cos_lambda = std::cos( lambda );
+
+    double q_dot_LE = std::pow ( 0.5 * q_dot_s * q_dot_s * cos_lambda * cos_lambda + q_dot_FP * q_dot_FP * sin_lambda * sin_lambda, 0.5 );
+    //  std::cout << "q_dot_FP: " << q_dot_FP << std::endl;
+    // std::cout << "q_dot_LE: " << q_dot_LE << std::endl;
+
+    return q_dot_LE;
+}
+
+
 } // namespace variables
 } // namespace bislip

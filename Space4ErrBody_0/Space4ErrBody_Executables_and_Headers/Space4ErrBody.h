@@ -8,7 +8,6 @@
  *    http://tudat.tudelft.nl/LICENSE.
  */
 
-
 #ifndef SPACE4ERRBODY_OPTIMIZATION_HPP
 #define SPACE4ERRBODY_OPTIMIZATION_HPP
 
@@ -36,8 +35,10 @@ struct Space4ErrBody {
     Space4ErrBody( const std::vector< std::vector< double > > &bounds,
                    const std::string &problem_name,
                    const std::string &vehicle_name,
-                   const std::vector< std::string > &parameterList,
-                   const std::vector< double > &parameterBounds,
+                   const std::vector< std::string > &parameterList_Ascent,
+                   const std::vector< double > &parameterBounds_Ascent,
+                   const std::vector< std::string > &parameterList_Descent,
+                   const std::vector< double > &parameterBounds_Descent,
                    const std::vector< double > &vehicleParameterValues,
                    const std::vector< std::string > &aeroCoeffFileList,
                    const std::vector< double > &simulation_settingsValues,
@@ -45,7 +46,6 @@ struct Space4ErrBody {
                    const std::vector< double > &terminationConditionsValues,
                    const std::vector< double > &output_settingsValues,
                    const std::string &outputSubFolder );
-
 
     //! Calculate the fitness as a function of the parameter vector input_data
     std::vector< double > fitness( const std::vector< double >  &x ) const;
@@ -59,7 +59,7 @@ struct Space4ErrBody {
 
     std::vector< double >::size_type get_nobj() const
     {
-        return 9u;
+        return 11u;
     }
     std::vector< double >::size_type get_nec() const
     {
@@ -78,8 +78,10 @@ private:
     const std::vector< std::vector< double > > problemBounds_;
     const std::string problem_name_;
     const std::string vehicle_name_;
-    const std::vector< std::string > parameterList_;
-    const std::vector< double > parameterBounds_;
+    const std::vector< std::string > parameterList_Ascent_;
+    const std::vector< double > parameterBounds_Ascent_;
+    const std::vector< std::string > parameterList_Descent_;
+    const std::vector< double > parameterBounds_Descent_;
     const std::vector< double > vehicleParameterValues_;
     const std::vector< std::string > aeroCoeffFileList_;
     const std::vector< double > simulation_settingsValues_;
@@ -89,39 +91,6 @@ private:
     const std::string outputSubFolder_;
 
 };
-
-
-/*
-namespace bislip {
-
-struct parameters {
-
-    Eigen::VectorXd xn_;
-   std::string parameterName_;
-    Eigen::VectorXd parameterValue_;
-
-    //! Empty constructor
-    parameters( ) {}
-
-    //! Constructor
-    parameters(
-            Eigen::VectorXd xn,
-            std::string const &parameterName,
-            Eigen::VectorXd &parameterValue ):
-        xn_(xn),
-        parameterName_(parameterName),
-        parameterValue_(parameterValue) {}
-
-    bool operator < (const parameters &iData) const
-    {
-      return xn_ < iData.xn_;
-    }
-
-
-
-};
-
-}*/
 
 //PAGMO_REGISTER_PROBLEM(pagmo::Space4ErrBody)
 

@@ -53,15 +53,17 @@ double computeSpecificEnergy (
         const double &height,
         const double &airspeed);
 
-double computeNormalizedSpecificEnergy(
+double computeNormalizedSpecificEnergy (
         const double &height,
         const double &airspeed,
         const double &E_max);
 
+std::vector< double > HermiteDerivatives ( const Eigen::VectorXd &h, const Eigen::VectorXd &y, const int &nodes);
+
 std::string passGuidanceParameter (
         const std::string &parameter);
 
-std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > chooseGuidanceInterpolator(
+std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > chooseGuidanceInterpolator (
         const double &flight_path_angle,
         const std::string &parameter,
         const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems);

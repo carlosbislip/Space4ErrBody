@@ -344,7 +344,6 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //const std::string momentCoefficients = aeroCoeffFileList_[2];
     const std::string controlSurfaceMomentCoefficients = "HORUS_CM_CS.txt";
 
-
     ///////// Start: Vehicle Aerodynamics Section
 
     //! Define physical meaning of independent variables
@@ -700,25 +699,36 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
         map_DV_mapped_Descent[ E_mapped_Descent( i ) ] = DV_mapped_Descent;
     }
 
+    //! Calculate first derivatives for Hermite Spline Interpolation according to https://doi.org/10.1016/j.cam.2017.09.049.
+    std::vector< double > alpha_deg_Ascent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, alpha_deg_Ascent, nodes_Ascent );
+    std::vector< double > sigma_deg_Ascent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, sigma_deg_Ascent, nodes_Ascent );
+    std::vector< double > eps_T_deg_Ascent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, eps_T_deg_Ascent, nodes_Ascent );
+    std::vector< double > phi_T_deg_Ascent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, phi_T_deg_Ascent, nodes_Ascent );
+    std::vector< double > throttle_Ascent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, throttle_Ascent, nodes_Ascent );
+    std::vector< double > alpha_deg_Descent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Descent, alpha_deg_Descent, nodes_Descent );
+    std::vector< double > sigma_deg_Descent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, sigma_deg_Descent, nodes_Descent );
+    std::vector< double > eps_T_deg_Descent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, eps_T_deg_Descent, nodes_Descent );
+    std::vector< double > phi_T_deg_Descent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, phi_T_deg_Descent, nodes_Descent );
+    std::vector< double > throttle_Descent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, throttle_Descent, nodes_Descent );
+
     //! Declare and initialize interpolator settings.
-    std::shared_ptr< InterpolatorSettings > interpolatorSettings =
-            std::make_shared< tudat::interpolators::InterpolatorSettings >( cubic_spline_interpolator );
+    std::shared_ptr< interpolators::InterpolatorSettings > interpolatorSettings = std::make_shared< interpolators::InterpolatorSettings >( hermite_spline_interpolator );
 
     //! Declare and initialize interpolators for Ascent phase.
     std::shared_ptr< OneDimensionalInterpolator< double, double > > interpolator_alpha_deg_Ascent, interpolator_sigma_deg_Ascent, interpolator_eps_T_deg_Ascent, interpolator_phi_T_deg_Ascent, interpolator_throttle_Ascent;
-    interpolator_alpha_deg_Ascent = createOneDimensionalInterpolator< double, double >( map_alpha_deg_Ascent, interpolatorSettings );
-    interpolator_sigma_deg_Ascent = createOneDimensionalInterpolator< double, double >( map_sigma_deg_Ascent, interpolatorSettings );
-    interpolator_eps_T_deg_Ascent = createOneDimensionalInterpolator< double, double >( map_eps_T_deg_Ascent, interpolatorSettings );
-    interpolator_phi_T_deg_Ascent = createOneDimensionalInterpolator< double, double >( map_phi_T_deg_Ascent, interpolatorSettings );
-    interpolator_throttle_Ascent  = createOneDimensionalInterpolator< double, double >( map_throttle_Ascent,  interpolatorSettings );
+    interpolator_alpha_deg_Ascent = interpolators::createOneDimensionalInterpolator< double, double >( map_alpha_deg_Ascent, interpolatorSettings, std::make_pair( alpha_deg_Ascent( 0 ), alpha_deg_Ascent( nodes_Ascent - 1 ) ), alpha_deg_Ascent_derivatives );
+    interpolator_sigma_deg_Ascent = interpolators::createOneDimensionalInterpolator< double, double >( map_sigma_deg_Ascent, interpolatorSettings, std::make_pair( sigma_deg_Ascent( 0 ), sigma_deg_Ascent( nodes_Ascent - 1 ) ), sigma_deg_Ascent_derivatives );
+    interpolator_eps_T_deg_Ascent = interpolators::createOneDimensionalInterpolator< double, double >( map_eps_T_deg_Ascent, interpolatorSettings, std::make_pair( eps_T_deg_Ascent( 0 ), eps_T_deg_Ascent( nodes_Ascent - 1 ) ), eps_T_deg_Ascent_derivatives );
+    interpolator_phi_T_deg_Ascent = interpolators::createOneDimensionalInterpolator< double, double >( map_phi_T_deg_Ascent, interpolatorSettings, std::make_pair( phi_T_deg_Ascent( 0 ), phi_T_deg_Ascent( nodes_Ascent - 1 ) ), phi_T_deg_Ascent_derivatives );
+    interpolator_throttle_Ascent = interpolators::createOneDimensionalInterpolator< double, double >( map_throttle_Ascent, interpolatorSettings, std::make_pair( throttle_Ascent( 0 ), throttle_Ascent( nodes_Ascent - 1 ) ), throttle_Ascent_derivatives );
 
     //! Declare and initialize interpolators for Descent phase.
     std::shared_ptr< OneDimensionalInterpolator< double, double > > interpolator_alpha_deg_Descent, interpolator_sigma_deg_Descent, interpolator_eps_T_deg_Descent, interpolator_phi_T_deg_Descent, interpolator_throttle_Descent;
-    interpolator_alpha_deg_Descent = createOneDimensionalInterpolator< double, double >( map_alpha_deg_Descent, interpolatorSettings );
-    interpolator_sigma_deg_Descent = createOneDimensionalInterpolator< double, double >( map_sigma_deg_Descent, interpolatorSettings );
-    interpolator_eps_T_deg_Descent = createOneDimensionalInterpolator< double, double >( map_eps_T_deg_Descent, interpolatorSettings );
-    interpolator_phi_T_deg_Descent = createOneDimensionalInterpolator< double, double >( map_phi_T_deg_Descent, interpolatorSettings );
-    interpolator_throttle_Descent  = createOneDimensionalInterpolator< double, double >( map_throttle_Descent,  interpolatorSettings );
+    interpolator_alpha_deg_Descent = interpolators::createOneDimensionalInterpolator< double, double >( map_alpha_deg_Descent, interpolatorSettings, std::make_pair( alpha_deg_Descent( 0 ), alpha_deg_Descent( nodes_Descent - 1 ) ), alpha_deg_Descent_derivatives );
+    interpolator_sigma_deg_Descent = interpolators::createOneDimensionalInterpolator< double, double >( map_sigma_deg_Descent, interpolatorSettings, std::make_pair( sigma_deg_Descent( 0 ), sigma_deg_Descent( nodes_Descent - 1 ) ), sigma_deg_Descent_derivatives );
+    interpolator_eps_T_deg_Descent = interpolators::createOneDimensionalInterpolator< double, double >( map_eps_T_deg_Descent, interpolatorSettings, std::make_pair( eps_T_deg_Descent( 0 ), eps_T_deg_Descent( nodes_Descent - 1 ) ), eps_T_deg_Descent_derivatives );
+    interpolator_phi_T_deg_Descent = interpolators::createOneDimensionalInterpolator< double, double >( map_phi_T_deg_Descent, interpolatorSettings, std::make_pair( phi_T_deg_Descent( 0 ), phi_T_deg_Descent( nodes_Descent - 1 ) ), phi_T_deg_Descent_derivatives );
+    interpolator_throttle_Descent  = interpolators::createOneDimensionalInterpolator< double, double >( map_throttle_Descent,  interpolatorSettings, std::make_pair( throttle_Descent( 0 ), throttle_Descent( nodes_Descent - 1 ) ), throttle_Descent_derivatives );
 
     //! Pass Ascent phase interpolators to vehicle systems.
     vehicleSystems->setAoAInterpolator_Ascent( interpolator_alpha_deg_Ascent );
@@ -795,7 +805,96 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                             std::numeric_limits< double >::digits10,
                             std::numeric_limits< double >::digits10,
                             "," );
+/*
 
+    std::map< double, double > map_sin, map_sincos, map_x_squared, map_x_cubed, map_sin_x_squared, map_sin_of_x_squared, map_exp, map_exp_sin;
+    std::map< double, Eigen::VectorXd > map_interpolatorValidation;
+    Eigen::VectorXd interpolatorValidation ( 8 );
+
+    Eigen::VectorXd eval_vector(100), sin(100), sincos(100), x_squared(100), x_cubed(100), sin_x_squared(100), sin_of_x_squared(100), exp(100), exp_sin(100);
+
+    //! Associate decision vector values to mapped normalized specific energy levels within data maps.
+    for ( unsigned int i = 0; i < 100; ++i )
+    {
+        eval = (double)i / 10;
+        eval_vector(i) = eval;
+        map_sin[ eval ]                    = interpolatorValidation( 0 ) = sin(i) = std::sin( eval );
+        map_sincos[ eval ]                 = interpolatorValidation( 1 ) = sincos(i) = std::sin( eval ) * std::cos( eval );
+        map_x_squared[ eval ]              = interpolatorValidation( 2 ) = x_squared(i) = eval * eval;
+        map_x_cubed[ eval ]                = interpolatorValidation( 3 ) = x_cubed(i) = eval * eval * eval;
+        map_sin_x_squared[ eval ]          = interpolatorValidation( 4 ) = sin_x_squared(i) = std::sin( eval ) * eval * eval;
+        map_sin_of_x_squared[ eval ]       = interpolatorValidation( 5 ) = sin_of_x_squared(i) = std::sin( eval * eval );
+        map_exp[ eval ]                    = interpolatorValidation( 6 ) = exp(i) = std::exp( eval );
+        map_exp_sin[ eval ]                = interpolatorValidation( 7 ) = exp_sin(i) =  std::sin( eval ) * std::exp( eval );
+        map_interpolatorValidation[ eval ] = interpolatorValidation;
+    }
+
+    std::vector< double > sin_derivatives              = bislip::variables::HermiteDerivatives( eval_vector, sin, 100 );
+    std::vector< double > sincos_derivatives           = bislip::variables::HermiteDerivatives( eval_vector, sincos, 100 );
+    std::vector< double > x_squared_derivatives        = bislip::variables::HermiteDerivatives( eval_vector, x_squared, 100 );
+    std::vector< double > x_cubed_derivatives          = bislip::variables::HermiteDerivatives( eval_vector, x_cubed, 100 );
+    std::vector< double > sin_x_squared_derivatives    = bislip::variables::HermiteDerivatives( eval_vector, sin_x_squared, 100 );
+    std::vector< double > sin_of_x_squared_derivatives = bislip::variables::HermiteDerivatives( eval_vector, sin_of_x_squared, 100 );
+    std::vector< double > exp_derivatives              = bislip::variables::HermiteDerivatives( eval_vector, exp, 100 );
+    std::vector< double > exp_sin_derivatives          = bislip::variables::HermiteDerivatives( eval_vector, exp_sin, 100 );
+
+
+    std::shared_ptr< OneDimensionalInterpolator< double, double > > interpolator_sin, interpolator_sincos, interpolator_x_squared, interpolator_x_cubed, interpolator_sin_x_squared, interpolator_sin_of_x_squared, interpolator_exp, interpolator_exp_sin;
+
+    interpolator_sin              = interpolators::createOneDimensionalInterpolator< double, double >( map_sin, interpolatorSettings, std::make_pair( sin( 0 ), sin( 100 ) ), sin_derivatives);
+    interpolator_sincos           = interpolators::createOneDimensionalInterpolator< double, double >( map_sincos, interpolatorSettings, std::make_pair( sincos( 0 ), sincos( 100 ) ), sincos_derivatives);
+    interpolator_x_squared        = interpolators::createOneDimensionalInterpolator< double, double >( map_x_squared, interpolatorSettings, std::make_pair( x_squared( 0 ), x_squared( 100 ) ), x_squared_derivatives);
+    interpolator_x_cubed          = interpolators::createOneDimensionalInterpolator< double, double >( map_x_cubed, interpolatorSettings, std::make_pair( x_cubed( 0 ), x_cubed( 100 ) ), x_cubed_derivatives);
+    interpolator_sin_x_squared    = interpolators::createOneDimensionalInterpolator< double, double >( map_sin_x_squared, interpolatorSettings, std::make_pair( sin_x_squared( 0 ), sin_x_squared( 100 ) ), sin_x_squared_derivatives);
+    interpolator_sin_of_x_squared = interpolators::createOneDimensionalInterpolator< double, double >( map_sin_of_x_squared, interpolatorSettings, std::make_pair( sin_of_x_squared( 0 ), sin_of_x_squared( 100) ), sin_of_x_squared_derivatives);
+    interpolator_exp              = interpolators::createOneDimensionalInterpolator< double, double >( map_exp, interpolatorSettings, std::make_pair( exp( 0 ), exp( 100 ) ), exp_derivatives);
+    interpolator_exp_sin          = interpolators::createOneDimensionalInterpolator< double, double >( map_exp_sin, interpolatorSettings, std::make_pair( exp_sin( 0 ), exp_sin( 100 ) ), exp_sin_derivatives);
+
+
+
+    //! Declare vectors containing interpolated values.
+    Eigen::VectorXd interpolater_Validation( 8 );
+
+    //! Declare data map to contain vectors of interpolated values.
+    std::map< double, Eigen::VectorXd > interpolators_Validation;
+
+    for ( unsigned int i = 0; i < 100001; ++i )
+    {
+        eval = (double)i / 1000;
+        interpolater_Validation( 0 ) = interpolator_sin->interpolate( eval );
+        interpolater_Validation( 1 ) = interpolator_sincos->interpolate( eval );
+        interpolater_Validation( 2 ) = interpolator_x_squared->interpolate( eval );
+        interpolater_Validation( 3 ) = interpolator_x_cubed->interpolate( eval );
+        interpolater_Validation( 4 ) = interpolator_sin_x_squared->interpolate( eval );
+        interpolater_Validation( 5 ) = interpolator_sin_of_x_squared->interpolate( eval );
+        interpolater_Validation( 6 ) = interpolator_exp->interpolate( eval );
+        interpolater_Validation( 7 ) = interpolator_exp_sin->interpolate( eval );
+
+        interpolators_Validation[ eval ] = interpolater_Validation;
+
+
+    }
+
+    //! Print data maps containing vectors of evaluation of interpolators.
+    writeDataMapToTextFile( interpolators_Validation,
+                            "interpolators_Validation",
+                            tudat_applications::getOutputPath( ) + outputSubFolder_,
+                            "",
+                            std::numeric_limits< double >::digits10,
+                            std::numeric_limits< double >::digits10,
+                            "," );
+
+
+
+    writeDataMapToTextFile( map_interpolatorValidation,
+                            "map_interpolatorValidation",
+                            tudat_applications::getOutputPath( ) + outputSubFolder_,
+                            "",
+                            std::numeric_limits< double >::digits10,
+                            std::numeric_limits< double >::digits10,
+                            "," );
+
+*/
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            CREATE PARAMETER BOUNDS          ///////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -163,8 +163,8 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     const double fixedStepSize = simulation_settingsValues_[ 2 ];
 
     //! Declare and initialize number of control nodes.
-    const int nodes_Ascent = int( simulation_settingsValues_[ 3 ] );
-    const int nodes_Descent = int( simulation_settingsValues_[ 4 ] );
+    const unsigned long nodes_Ascent = simulation_settingsValues_[ 3 ];
+    const unsigned long nodes_Descent = simulation_settingsValues_[ 4 ];
 
     //! Declare and initialize Reference area
     const double S_ref = vehicleParameterValues_[ 0 ]; // m^2
@@ -289,7 +289,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //! https://en.wikipedia.org/wiki/Flattening#Numerical_values_for_planets
     //! https://www.vcalc.com/wiki/vCalc/WGS-84+Earth+flattening+factor
     double flattening_Earth = 1 / 1;//nput_data_.back();
-    if (flattening_Earth != 1)
+    if ( flattening_Earth != 1 )
     {
         bodySettings[ centralBodyName ]->shapeModelSettings = std::make_shared< OblateSphericalBodyShapeSettings >( radius_Earth, flattening_Earth );
 
@@ -335,6 +335,8 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             CREATE VEHICLE            /////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    //std::cout << "Creating vehicle" << std::endl;
 
     //! Assign coefficient file names.
     //const std::string dragCoefficients = aeroCoeffFileList_[0];
@@ -491,6 +493,8 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     ///////////////////////            CREATE NODAL STRUCTURE             /////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    // std::cout << "Creating nodal structure" << std::endl;
+
     //! Declare and allocate vectors of interest for Ascent phase.
     Eigen::VectorXd xn_interval_Ascent( nodes_Ascent - 1 );
     Eigen::VectorXd xn_Ascent( nodes_Ascent );
@@ -519,10 +523,11 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //Eigen::Vector2d gravs = getGravs ( mu, J2, J3, J4, R_E, R_E, 0.0000001 );
     double g0 = tudat::physical_constants::SEA_LEVEL_GRAVITATIONAL_ACCELERATION;
 
+    //std::cout << "Re-allocate Ascent DVs" << std::endl;
     //! Re-allocate decision vector values into workable vectors for Ascent phase.
-    for( int i = 0; i < nodes_Ascent; i++ )
+    for( unsigned int i = 0; i < nodes_Ascent; i++ )
     {
-        if ( i < nodes_Ascent ){ xn_interval_Ascent( i ) = x[ i ]; }
+        if ( i < ( nodes_Ascent - 1 ) ){ xn_interval_Ascent( i ) = x[ i ]; }
         alpha_deg_Ascent( i ) = x[ i + 1*nodes_Ascent - 1 ];
         sigma_deg_Ascent( i ) = x[ i + 2*nodes_Ascent - 1 ];
         eps_T_deg_Ascent( i ) = x[ i + 3*nodes_Ascent - 1 ];
@@ -531,7 +536,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     }
 
     //! Declare and initialize number of parameters exclusive to Ascent phase.
-    const int N = ( parameterList_Ascent_.size() - 3 ) * nodes_Ascent - 1;
+    const unsigned long  N = ( parameterList_Ascent_.size() - 3 ) * nodes_Ascent - 1;
 
     //! Declare and initialize various parameters common to the entire trajectory.
     const double V_i = x[ N ];
@@ -542,10 +547,11 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     // std::cout << "V_max =  " << V_max << std::endl;
     // std::cout << "h_UP =  " << h_UP << std::endl;
 
+    // std::cout << "Re-allocate Descent DVs" << std::endl;
     //! Re-allocate decision vector values into workable vectors for Descent phase.
-    for( int i = 0; i < nodes_Descent; i++ )
+    for( unsigned int i = 0; i < nodes_Descent; i++ )
     {
-        if ( i < nodes_Descent ){ xn_interval_Descent( i ) = x[ ( N + 3 ) + i ]; }
+        if ( i < ( nodes_Descent - 1) ){ xn_interval_Descent( i ) = x[ ( N + 3 ) + i ]; }
         alpha_deg_Descent( i ) = x[ ( N + 3 ) + i + 1*nodes_Descent - 1 ];
         sigma_deg_Descent( i ) = x[ ( N + 3 ) + i + 2*nodes_Descent - 1 ];
         eps_T_deg_Descent( i ) = x[ ( N + 3 ) + i + 3*nodes_Descent - 1 ];
@@ -554,24 +560,27 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     }
 
     //! Declare and initialize number of parameters exclusive to Descent phase.
-    const int NN = ( parameterList_Descent_.size() - 1 ) * nodes_Descent - 1;
+    const unsigned long NN = ( parameterList_Descent_.size() - 1 ) * nodes_Descent - 1;
 
     //! Declare and initialize last parameter common to the entire trajectory.
     const double V_f = x[ N + NN + 3 ];
 
+    //std::cout << "Create vector of node locations for ascent" << std::endl;
     //! Create vector of node locations for Ascent phase.
     xn_Ascent( 0 ) = 0;
-    for( int i = 1; i < nodes_Ascent + 1; i++ )
+    for( unsigned int i = 0; i < nodes_Ascent - 1; i++ )
     {
-        xn_Ascent( i )        = xn_Ascent( i - 1 ) + xn_interval_Ascent( i - 1 );
+        xn_Ascent( i + 1 )        = xn_Ascent( i ) + xn_interval_Ascent( i );
     }
 
+    // std::cout << "Create vector of node locations for descent" << std::endl;
     //! Create vector of node locations for Descent phase.
     xn_Descent( 0 ) = 0;//xn_interval_Descent.sum();
-    for( int i = 1; i < nodes_Descent + 1; i++ )
+    for( unsigned int i = 0; i < nodes_Descent - 1; i++ )
     {
-        xn_Descent( i )        = xn_Descent( i - 1 ) + xn_interval_Descent( i - 1 );
+        xn_Descent( i + 1 )        = xn_Descent( i ) + xn_interval_Descent( i );
     }
+
 
     // xn_Descent = xn_Descent.reverse().eval();
 
@@ -617,6 +626,8 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     ///////////////////////            CREATE KNOWN STATES              ///////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    //std::cout << "Creating known states" << std::endl;
+
     //! Impose constraints on first and last energy nodes_Ascent
     //const double mu = spice_interface::getBodyGravitationalParameter( centralBodyName );
     //a = 301.7;//NRLMSISE00Atmosphere::getSpeedOfSound( R_E + height( 0 ), 0, 0, simulationStartEpoch );
@@ -645,10 +656,12 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     ///////////////////////            CREATE INTERPOLATORS             ///////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    //std::cout << "Creating interpolators" << std::endl;
+
     //! Calculate initial, maximum, and final specific energy levels.
-    const double E_min = bislip::variables::computeSpecificEnergy( h_i, V_i );
+    //const double E_min = bislip::variables::computeSpecificEnergy( h_i, V_i );
     const double E_max = bislip::variables::computeSpecificEnergy( h_UP, V_max );
-    const double E_f = bislip::variables::computeSpecificEnergy( h_DN, V_f );
+    //const double E_f = bislip::variables::computeSpecificEnergy( h_DN, V_f );
 
     //! Set maximum Energy level.
     vehicleSystems->setE_max( E_max );
@@ -672,6 +685,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     std::map< double, Eigen::VectorXd > map_DV_mapped_Ascent;
     Eigen::VectorXd DV_mapped_Ascent ( 5 );
 
+    //std::cout << "Mapping Ascent DVs" << std::endl;
     //! Associate decision vector values to mapped normalized specific energy levels within data maps.
     for ( unsigned int i = 0; i < E_mapped_Ascent.size( ); ++i )
     {
@@ -688,6 +702,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     std::map< double, Eigen::VectorXd > map_DV_mapped_Descent;
     Eigen::VectorXd DV_mapped_Descent ( 5 );
 
+    //std::cout << "Mapping Descent DVs" << std::endl;
     //! Associate decision vector values to mapped normalized specific energy levels within data maps.
     for ( unsigned int i = 0; i < E_mapped_Descent.size( ); ++i )
     {
@@ -714,6 +729,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //! Declare and initialize interpolator settings.
     std::shared_ptr< interpolators::InterpolatorSettings > interpolatorSettings = std::make_shared< interpolators::InterpolatorSettings >( hermite_spline_interpolator );
 
+    //std::cout << "Creating Ascent Interpolators" << std::endl;
     //! Declare and initialize interpolators for Ascent phase.
     std::shared_ptr< OneDimensionalInterpolator< double, double > > interpolator_alpha_deg_Ascent, interpolator_sigma_deg_Ascent, interpolator_eps_T_deg_Ascent, interpolator_phi_T_deg_Ascent, interpolator_throttle_Ascent;
     interpolator_alpha_deg_Ascent = interpolators::createOneDimensionalInterpolator< double, double >( map_alpha_deg_Ascent, interpolatorSettings, std::make_pair( alpha_deg_Ascent( 0 ), alpha_deg_Ascent( nodes_Ascent - 1 ) ), alpha_deg_Ascent_derivatives );
@@ -722,6 +738,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     interpolator_phi_T_deg_Ascent = interpolators::createOneDimensionalInterpolator< double, double >( map_phi_T_deg_Ascent, interpolatorSettings, std::make_pair( phi_T_deg_Ascent( 0 ), phi_T_deg_Ascent( nodes_Ascent - 1 ) ), phi_T_deg_Ascent_derivatives );
     interpolator_throttle_Ascent = interpolators::createOneDimensionalInterpolator< double, double >( map_throttle_Ascent, interpolatorSettings, std::make_pair( throttle_Ascent( 0 ), throttle_Ascent( nodes_Ascent - 1 ) ), throttle_Ascent_derivatives );
 
+    //std::cout << "Creating Descent Interpolators" << std::endl;
     //! Declare and initialize interpolators for Descent phase.
     std::shared_ptr< OneDimensionalInterpolator< double, double > > interpolator_alpha_deg_Descent, interpolator_sigma_deg_Descent, interpolator_eps_T_deg_Descent, interpolator_phi_T_deg_Descent, interpolator_throttle_Descent;
     interpolator_alpha_deg_Descent = interpolators::createOneDimensionalInterpolator< double, double >( map_alpha_deg_Descent, interpolatorSettings, std::make_pair( alpha_deg_Descent( 0 ), alpha_deg_Descent( nodes_Descent - 1 ) ), alpha_deg_Descent_derivatives );
@@ -730,6 +747,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     interpolator_phi_T_deg_Descent = interpolators::createOneDimensionalInterpolator< double, double >( map_phi_T_deg_Descent, interpolatorSettings, std::make_pair( phi_T_deg_Descent( 0 ), phi_T_deg_Descent( nodes_Descent - 1 ) ), phi_T_deg_Descent_derivatives );
     interpolator_throttle_Descent  = interpolators::createOneDimensionalInterpolator< double, double >( map_throttle_Descent,  interpolatorSettings, std::make_pair( throttle_Descent( 0 ), throttle_Descent( nodes_Descent - 1 ) ), throttle_Descent_derivatives );
 
+   // std::cout << "Pass Ascent Interpolators to vehicle systems" << std::endl;
     //! Pass Ascent phase interpolators to vehicle systems.
     vehicleSystems->setAoAInterpolator_Ascent( interpolator_alpha_deg_Ascent );
     vehicleSystems->setBankAngleInterpolator_Ascent( interpolator_sigma_deg_Ascent );
@@ -737,6 +755,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     vehicleSystems->setThrustAzimuthAngleInterpolator_Ascent( interpolator_phi_T_deg_Ascent );
     vehicleSystems->setThrottleInterpolator_Ascent( interpolator_throttle_Ascent );
 
+    //std::cout << "Pass Descent Interpolators to vehicle systems" << std::endl;
     //! Pass Descent phase interpolators to vehicle systems.
     vehicleSystems->setAoAInterpolator_Descent( interpolator_alpha_deg_Descent );
     vehicleSystems->setBankAngleInterpolator_Descent( interpolator_sigma_deg_Descent );
@@ -753,11 +772,13 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //! Declare evaluation variable.
     double eval;
 
+    //std::cout << "Evaluate Interpolators and store to print out" << std::endl;
     //! Loop to populate vectors of interpolated values and then pass to data map.
     //!     Number of evaluations has been arbitrarily chosen.
+    double pp = 0;
     for ( unsigned int i = 0; i < 1001; ++i )
     {
-        eval = (double)i * E_mapped_Ascent( nodes_Ascent - 1 ) / 1000;
+        eval = pp * E_mapped_Ascent( nodes_Ascent - 1 ) / 1000;
         interpolated_values_Ascent( 0 ) = interpolator_alpha_deg_Ascent->interpolate( eval );
         interpolated_values_Ascent( 1 ) = interpolator_sigma_deg_Ascent->interpolate( eval );
         interpolated_values_Ascent( 2 ) = interpolator_eps_T_deg_Ascent->interpolate( eval );
@@ -766,7 +787,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
         interpolators_Ascent[ eval ] = interpolated_values_Ascent;
 
-        eval = (double)i * E_mapped_Descent( nodes_Descent - 1 ) / 1000;
+        eval = pp * E_mapped_Descent( nodes_Descent - 1 ) / 1000;
         interpolated_values_Descent( 0 ) = interpolator_alpha_deg_Descent->interpolate( eval );
         interpolated_values_Descent( 1 ) = interpolator_sigma_deg_Descent->interpolate( eval );
         interpolated_values_Descent( 2 ) = interpolator_eps_T_deg_Descent->interpolate( eval );
@@ -774,8 +795,11 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
         interpolated_values_Descent( 4 ) = interpolator_throttle_Descent->interpolate( eval );
 
         interpolators_Descent[ eval ] = interpolated_values_Descent;
+
+        pp += 1;
     }
 
+    //std::cout << "Print out Interpolators and DVs" << std::endl;
     //! Print data maps containing vectors of evaluation of interpolators.
     writeDataMapToTextFile( interpolators_Ascent,
                             "interpolators_pre_Ascent",
@@ -805,7 +829,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                             std::numeric_limits< double >::digits10,
                             std::numeric_limits< double >::digits10,
                             "," );
-/*
+    /*
 
     std::map< double, double > map_sin, map_sincos, map_x_squared, map_x_cubed, map_sin_x_squared, map_sin_of_x_squared, map_exp, map_exp_sin;
     std::map< double, Eigen::VectorXd > map_interpolatorValidation;
@@ -909,7 +933,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     int p = 0;
 
     //! Loop to populate the data map with pairs associated to string values related to Ascent phase.
-    for( int i = 0; i < int( parameterList_Ascent_.size() ) ; i++)
+    for( unsigned long i = 0; i < parameterList_Ascent_.size(); i++)
     {
         Bounds_Ascent[ parameterList_Ascent_[ i ] ] = std::make_pair( parameterBounds_Ascent_[ p ], parameterBounds_Ascent_[ p + 1 ] );
         p += 2;
@@ -919,7 +943,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     p = 0;
 
     //! Loop to populate the data map with pairs associated to string values related to Descent phase.
-    for( int i = 0; i < int( parameterList_Descent_.size() ) ; i++)
+    for( unsigned long i = 0; i < parameterList_Descent_.size(); i++)
     {
         Bounds_Descent[ parameterList_Descent_[ i ] ] = std::make_pair( parameterBounds_Descent_[ p ], parameterBounds_Descent_[ p + 1 ] );
         p += 2;
@@ -1037,7 +1061,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     ///////////////////////          CREATE LIST OF DEPENDENT VARIABLES        ////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    //  std::cout << "Creating propagation settings" << std::endl;
+    //std::cout << "Creating list of dependent variables" << std::endl;
 
     //! Create vector that will contian the list of dependent variables to save/output.
     //!     The file that prints out the text saying what is saved has been modified
@@ -1206,10 +1230,14 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     ///////////////////////             CREATE TERMINATION SETTINGS            ////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    vehicleSystems->setInitialCoordinates( std::make_pair( lat_i_rad, lon_i_rad) );
-    vehicleSystems->setInitialCoordinates( std::make_pair( lat_i_rad, lon_i_rad) );
-    vehicleSystems->setTargetCoordinates( std::make_pair( lat_f_rad, lon_f_rad) );
-    vehicleSystems->setInitialDistanceToTarget( bislip::variables::computeAngularDistance( lat_i_rad, lon_i_rad, lat_f_rad, lon_f_rad) );
+
+    vehicleSystems->setInitialLat( lat_i_rad );
+    vehicleSystems->setInitialLon( lon_i_rad );
+    vehicleSystems->setInitialCoordinates( std::make_pair( vehicleSystems->getInitialLat( ), vehicleSystems->getInitialLon( ) ) );
+    vehicleSystems->setTargetLat( lat_f_rad );
+    vehicleSystems->setTargetLon( lon_f_rad );
+    vehicleSystems->setTargetCoordinates( std::make_pair( vehicleSystems->getTargetLat( ), vehicleSystems->getTargetLon( ) ) );
+    vehicleSystems->setInitialDistanceToTarget( bislip::variables::computeAngularDistance( lat_i_rad, lon_i_rad, lat_f_rad, lon_f_rad ) );
     vehicleSystems->setStartingEpoch( simulationStartEpoch );
 
     //! Define CUSTOM termination settings.
@@ -1263,23 +1291,45 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                     local_aerodynamic_heat_rate_dependent_variable,
                     vehicle_name_,
                     centralBodyName), q_dot_max , false );
+    std::shared_ptr< PropagationTerminationSettings > height_UP_TerminationSettings =
+            std::make_shared< tudat::propagators::PropagationDependentVariableTerminationSettings >(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    altitude_dependent_variable,
+                    vehicle_name_,
+                    centralBodyName), h_UP , false );
+    std::shared_ptr< PropagationTerminationSettings > height_DN_TerminationSettings =
+            std::make_shared< tudat::propagators::PropagationDependentVariableTerminationSettings >(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    altitude_dependent_variable,
+                    vehicle_name_,
+                    centralBodyName), h_DN , true );
+    std::shared_ptr< PropagationTerminationSettings > flight_path_angle_TerminationSettings =
+            std::make_shared< tudat::propagators::PropagationDependentVariableTerminationSettings >(
+                std::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
+                    vehicle_name_,
+                    flight_path_angle,
+                    centralBodyName) , tudat::mathematical_constants::PI / 2.0 , false );
+
 
     std::vector< std::shared_ptr< propagators::PropagationTerminationSettings > > terminationSettingsList;
-    terminationSettingsList.push_back( customTermination );
-    //terminationSettingsList.push_back( thrustTerminationSettings );
-    //terminationSettingsList.push_back( d_to_go_TerminationSettings );
-    //terminationSettingsList.push_back( d_traveled_TerminationSettings );
-    //terminationSettingsList.push_back( mass_TerminationSettings );
-    //terminationSettingsList.push_back( E_hat_TerminationSettings );
-    //terminationSettingsList.push_back( q_dyn_TerminationSettings );
-    //terminationSettingsList.push_back( q_dot_TerminationSettings );
+    // terminationSettingsList.push_back( customTermination );
+    /* terminationSettingsList.push_back( thrustTerminationSettings );
+    terminationSettingsList.push_back( d_to_go_TerminationSettings );
+    terminationSettingsList.push_back( d_traveled_TerminationSettings );
+    terminationSettingsList.push_back( mass_TerminationSettings );
+    terminationSettingsList.push_back( E_hat_TerminationSettings );
+    terminationSettingsList.push_back( q_dyn_TerminationSettings );
+    terminationSettingsList.push_back( q_dot_TerminationSettings );*/
+    terminationSettingsList.push_back( height_UP_TerminationSettings );
+    terminationSettingsList.push_back( height_DN_TerminationSettings );
+    // terminationSettingsList.push_back( flight_path_angle_TerminationSettings );
 
     // PropagationHybridTerminationSettings( terminationSettingsList,
     //                                       true,
     //                                       false );
 
     std::shared_ptr< PropagationTerminationSettings > terminationSettings = std::make_shared<
-            propagators::PropagationHybridTerminationSettings >( terminationSettingsList, false );
+            propagators::PropagationHybridTerminationSettings >( terminationSettingsList, true );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////           CREATE PROPAGATION SETTINGS              ////////////////////////////////////////////
@@ -1355,14 +1405,18 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
               fixedStepSize, 1, false );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ///////////////////////             PROPAGATE ORBIT            ////////////////////////////////////////////////////////
+    ///////////////////////          PROPAGATE TRAJECTORY          ////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    std::cout << "Starting propagation" << std::endl;
 
     //! Propagate trajectory.
     SingleArcDynamicsSimulator< double > dynamicsSimulator(
                 bodyMap,
                 integratorSettings,
                 propagatorSettings );
+
+    std::cout << "Propagation done" << std::endl;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////        CLEAN UP AND CALCULATE FITNESS                //////////////////////////////////////////
@@ -1419,12 +1473,16 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //!
 
     const Eigen::VectorXd dep_var_FINAL_STATE = ( dynamicsSimulator.getDependentVariableHistory( ).rbegin() )->second;
-    //std::cout << "dep_var_FINAL_STATE: " << dep_var_FINAL_STATE << std::endl;
+   // std::cout << "dep_var_FINAL_STATE: " << dep_var_FINAL_STATE << std::endl;
 
     //const double altitude_f_calc = dep_var_FINAL_STATE[3];
     const double lat_f_rad_calc  = dep_var_FINAL_STATE[ 4 ];
     const double lon_f_rad_calc  = dep_var_FINAL_STATE[ 5 ];
-    h_UP_calc                    = dep_var_FINAL_STATE[ 12 ];
+    h_UP_calc                    = dep_var_FINAL_STATE[ 11 ];
+    std::cout << "lat_f_rad_calc: " << lat_f_rad_calc << std::endl;
+    std::cout << "lon_f_rad_calc: " << lon_f_rad_calc << std::endl;
+    std::cout << "h_UP_calc     : " << h_UP_calc << std::endl;
+
     //const double altitude_f_calc = std::sqrt( pow(systemFinalState_EARTh_UPIXED[0],2) +
     //       pow(systemFinalState_EARTh_UPIXED[1],2) + pow(systemFinalState_EARTh_UPIXED[2],2) ) ;
     //const double lon_f_rad_calc = std::atan2(systemFinalState_EARTh_UPIXED[1] , systemFinalState_EARTh_UPIXED[0]);
@@ -1511,78 +1569,6 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
             std::to_string( lon_f_deg_calc ) + "_" +
             simulation_save_time;
 
-    std::string complete_file_name_Prop = "HORUSPropHistory_" + simulation_file_name_suffix + ".dat";
-    std::string complete_file_name_DepVar = "HORUSDepVar_" + simulation_file_name_suffix + ".dat";
-    std::string complete_file_name_interpolators_Ascent = "interpolators_Ascent_" + simulation_file_name_suffix + ".dat";
-    std::string complete_file_name_map_DV_mapped_Ascent = "map_DV_mapped_Ascent_" + simulation_file_name_suffix + ".dat";
-    std::string complete_file_name_interpolators_Descent = "interpolators_Descent_" + simulation_file_name_suffix + ".dat";
-    std::string complete_file_name_map_DV_mapped_Descent = "map_DV_mapped_Descent_" + simulation_file_name_suffix + ".dat";
-
-    //! Will print out depending on some input values. Each entry corresponds to
-    //! a different type of output. Entries are binary, 0 or 1.
-    if ( output_settingsValues_[ 1 ] == 1 )//&& check == nodes_Ascent )
-    {
-
-        //! Write HORUS propagation history to file.
-        writeDataMapToTextFile( dynamicsSimulator.getEquationsOfMotionNumericalSolution( ),
-                                complete_file_name_Prop,
-                                tudat_applications::getOutputPath( ) + outputSubFolder_,
-                                "",
-                                std::numeric_limits< double >::digits10,
-                                std::numeric_limits< double >::digits10,
-                                "," );
-    }
-    if ( output_settingsValues_[ 2 ] == 1 )//&& check == nodes_Ascent )
-    {
-        //! Write HORUS dependent variables' history to file.
-        writeDataMapToTextFile( dynamicsSimulator.getDependentVariableHistory( ),
-                                complete_file_name_DepVar,
-                                tudat_applications::getOutputPath( ) + outputSubFolder_,
-                                "",
-                                std::numeric_limits< double >::digits10,
-                                std::numeric_limits< double >::digits10,
-                                "," );
-    }
-    if ( output_settingsValues_[ 3 ] == 1 )//&& check == nodes_Ascent )
-    {
-        writeDataMapToTextFile( interpolators_Ascent,
-                                complete_file_name_interpolators_Ascent,
-                                tudat_applications::getOutputPath( ) + outputSubFolder_,
-                                "",
-                                std::numeric_limits< double >::digits10,
-                                std::numeric_limits< double >::digits10,
-                                "," );
-        writeDataMapToTextFile( map_DV_mapped_Ascent,
-                                complete_file_name_map_DV_mapped_Ascent,
-                                tudat_applications::getOutputPath( ) + outputSubFolder_,
-                                "",
-                                std::numeric_limits< double >::digits10,
-                                std::numeric_limits< double >::digits10,
-                                "," );
-        writeDataMapToTextFile( interpolators_Descent,
-                                complete_file_name_interpolators_Descent,
-                                tudat_applications::getOutputPath( ) + outputSubFolder_,
-                                "",
-                                std::numeric_limits< double >::digits10,
-                                std::numeric_limits< double >::digits10,
-                                "," );
-        writeDataMapToTextFile( map_DV_mapped_Descent,
-                                complete_file_name_map_DV_mapped_Descent,
-                                tudat_applications::getOutputPath( ) + outputSubFolder_,
-                                "",
-                                std::numeric_limits< double >::digits10,
-                                std::numeric_limits< double >::digits10,
-                                "," );
-    }
-
-
-    //  }
-
-
-
-    //std::cout << "h_UP: " << h_UP << std::endl;
-    //std::cout << "h_UP_calc: " << h_UP_calc << std::endl;
-
     //! Print results to terminal. Used to gauge progress.
     std::cout << std::fixed << std::setprecision(10) <<
                  std::setw(15) << "V_i = " <<
@@ -1611,8 +1597,105 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                  std::setw(16) << tof <<
                  std::setw(60) << simulation_file_name_suffix << std::endl;
 
+    std::string complete_file_name_Prop = "HORUSPropHistory_" + simulation_file_name_suffix + ".dat";
+    std::string complete_file_name_DepVar = "HORUSDepVar_" + simulation_file_name_suffix + ".dat";
+    std::string complete_file_name_interpolators_Ascent = "interpolators_Ascent_" + simulation_file_name_suffix + ".dat";
+    std::string complete_file_name_map_DV_mapped_Ascent = "map_DV_mapped_Ascent_" + simulation_file_name_suffix + ".dat";
+    std::string complete_file_name_interpolators_Descent = "interpolators_Descent_" + simulation_file_name_suffix + ".dat";
+    std::string complete_file_name_map_DV_mapped_Descent = "map_DV_mapped_Descent_" + simulation_file_name_suffix + ".dat";
+
+    //! Will print out depending on some input values. Each entry corresponds to
+    //! a different type of output. Entries are binary, 0 or 1.
+    if ( int( output_settingsValues_[ 1 ] ) == 1 )
+    {
+     //   std::cout << "Saving EQM " << std::endl;
+
+        //! Write propagation history to file.
+        writeDataMapToTextFile( dynamicsSimulator.getEquationsOfMotionNumericalSolution( ),
+                                complete_file_name_Prop,
+                                tudat_applications::getOutputPath( ) + outputSubFolder_,
+                                "",
+                                std::numeric_limits< double >::digits10,
+                                std::numeric_limits< double >::digits10,
+                                "," );
+     //   std::cout << "EQM Saved" << std::endl;
+
+    }
+    if ( int( output_settingsValues_[ 2 ] ) == 1 )
+    {
+     //   std::cout << "Saving DepVar " << std::endl;
+
+        //! Write dependent variables' history to file.
+        writeDataMapToTextFile( dynamicsSimulator.getDependentVariableHistory( ),
+                                complete_file_name_DepVar,
+                                tudat_applications::getOutputPath( ) + outputSubFolder_,
+                                "",
+                                std::numeric_limits< double >::digits10,
+                                std::numeric_limits< double >::digits10,
+                                "," );
+    //    std::cout << "DepVar Saved" << std::endl;
+
+
+    }
+    if ( int( output_settingsValues_[ 3 ] ) == 1 )
+    {
+     //   std::cout << "Saving interpolators_Ascent " << std::endl;
+
+        writeDataMapToTextFile( interpolators_Ascent,
+                                complete_file_name_interpolators_Ascent,
+                                tudat_applications::getOutputPath( ) + outputSubFolder_,
+                                "",
+                                std::numeric_limits< double >::digits10,
+                                std::numeric_limits< double >::digits10,
+                                "," );
+     //   std::cout << "interpolators_Ascent Saved" << std::endl;
+     //   std::cout << "Saving map_DV_mapped_Ascent " << std::endl;
+
+        writeDataMapToTextFile( map_DV_mapped_Ascent,
+                                complete_file_name_map_DV_mapped_Ascent,
+                                tudat_applications::getOutputPath( ) + outputSubFolder_,
+                                "",
+                                std::numeric_limits< double >::digits10,
+                                std::numeric_limits< double >::digits10,
+                                "," );
+     //   std::cout << "map_DV_mapped_Ascent Saved" << std::endl;
+
+     //   std::cout << "Saving interpolators_Descent " << std::endl;
+
+        writeDataMapToTextFile( interpolators_Descent,
+                                complete_file_name_interpolators_Descent,
+                                tudat_applications::getOutputPath( ) + outputSubFolder_,
+                                "",
+                                std::numeric_limits< double >::digits10,
+                                std::numeric_limits< double >::digits10,
+                                "," );
+      //  std::cout << "interpolators_Descent Saved" << std::endl;
+     //   std::cout << "Saving map_DV_mapped_Descent " << std::endl;
+
+        writeDataMapToTextFile( map_DV_mapped_Descent,
+                                complete_file_name_map_DV_mapped_Descent,
+                                tudat_applications::getOutputPath( ) + outputSubFolder_,
+                                "",
+                                std::numeric_limits< double >::digits10,
+                                std::numeric_limits< double >::digits10,
+                                "," );
+        //std::cout << "map_DV_mapped_Descent Saved" << std::endl;
+
+
+    }
+
+
+    //  }
+
+
+
+    //std::cout << "h_UP: " << h_UP << std::endl;
+    //std::cout << "h_UP_calc: " << h_UP_calc << std::endl;
+
+
+
     // std::cout <<dynamicsSimulator.getPropagationTerminationReason( )->getPropagationTerminationReason( ) << std::endl;
-    std::this_thread::sleep_for( std::chrono::nanoseconds( 10 ) );
+    //std::this_thread::sleep_for( std::chrono::nanoseconds( 10 ) );
     //using namespace std::this_thread; // sleep_for, sleep_until
     //using namespace std::chrono; // nanoseconds, system_clock, seconds
 

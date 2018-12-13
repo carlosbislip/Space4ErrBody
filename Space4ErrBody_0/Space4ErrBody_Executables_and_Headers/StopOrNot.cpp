@@ -92,7 +92,7 @@ bool StopOrNot( const tudat::simulation_setup::NamedBodyMap& bodyMap,
     //!     When altitude is more than a specified number
     //!     When altitude is less than a specified number
     //!     When angular distance traveled is larger than angular distance among endpoints
-    if ( ( current_d_to_target_rad <= final_d_to_target_rad  ) || ( current_height <= h_DN ) || ( current_height >= h_UP ) || ( total_d_traveled_rad >= initial_d_to_target_rad ) )
+   /* if ( ( current_d_to_target_rad <= final_d_to_target_rad  ) || ( current_height <= h_DN ) || ( current_height >= h_UP ) || ( total_d_traveled_rad >= initial_d_to_target_rad ) )
     {
         done = true;
         std::cout << " first " << std::endl;
@@ -105,7 +105,7 @@ bool StopOrNot( const tudat::simulation_setup::NamedBodyMap& bodyMap,
         std::cout << "initial_d_to_target_rad:  " << initial_d_to_target_rad << std::endl;
         std::cout << "Stopping propagation" << std::endl;
     }
-    else if ( current_q_dot > q_dot_max*1 )
+   else if ( current_q_dot > q_dot_max*1 )
     {
         done = true;
         std::cout << " second " << std::endl;
@@ -152,7 +152,7 @@ bool StopOrNot( const tudat::simulation_setup::NamedBodyMap& bodyMap,
         std::cout << "finalMass:  " << finalMass << std::endl;
         std::cout << "Stopping propagation" << std::endl;
     }
-    /*else if ( current_gamma < 0 )
+    else if ( current_gamma < 0 )
     {
         done = true;
         std::cout << " fifth " << std::endl;
@@ -167,7 +167,7 @@ bool StopOrNot( const tudat::simulation_setup::NamedBodyMap& bodyMap,
         std::cout << "finalMass:  " << finalMass << std::endl;
         std::cout << "Stopping propagation" << std::endl;
     }*/
-    else if ( ( ( throttle >= 0 ) && ( throttle <= 1.0 ) )
+    if ( ( ( throttle >= 0 ) && ( throttle <= 1.0 ) )
               &&  ( ( current_gamma > tudat::mathematical_constants::PI / 2.0 ) ) )
     {
         //! This condition terminates the simulation if flight-path angle is negative or beyond 90 deg while the engine is on.
@@ -177,7 +177,7 @@ bool StopOrNot( const tudat::simulation_setup::NamedBodyMap& bodyMap,
         std::cout << "current_gamma:  " << tudat::unit_conversions::convertRadiansToDegrees( current_gamma ) << std::endl;
         std::cout << "Stopping propagation" << std::endl;
     }
-    else if ( E_hat > 1.0 )
+   /* else if ( E_hat > 1.0 )
     {
         done = true;
         std::cout << " seventh " << std::endl;
@@ -186,7 +186,7 @@ bool StopOrNot( const tudat::simulation_setup::NamedBodyMap& bodyMap,
         std::cout << "Stopping propagation" << std::endl;
     }
 
-    /*// else if ( ( current_AoA < tudat::unit_conversions::convertDegreesToRadians( parameterBounds_Ascent[ 2 ] ) ) || ( current_AoA > tudat::unit_conversions::convertDegreesToRadians( parameterBounds_Ascent[ 3 ] ) ) )
+    // else if ( ( current_AoA < tudat::unit_conversions::convertDegreesToRadians( parameterBounds_Ascent[ 2 ] ) ) || ( current_AoA > tudat::unit_conversions::convertDegreesToRadians( parameterBounds_Ascent[ 3 ] ) ) )
        // {
             //! This condition terminates the simulation if angle of attack is beyond the specified bounds while the engine is on.
        //     done = true;

@@ -72,7 +72,7 @@ int main()
     const std::string vehicle_name                             = primary.rbegin()[ 0 ];
 
     //! Set seed for reproducible results.
-    pagmo::random_device::set_seed( optimization_settingsValues[ 4 ] );
+    pagmo::random_device::set_seed( int( optimization_settingsValues[ 4 ] ) );
 
     //! Create partial output subfolder filename suffix based on optimization
     //! settings and fixed time step.
@@ -102,7 +102,7 @@ int main()
     //!---------------------------------------   ^ for lb/up  (rows)       ^ for # of parameters
 
     //! Loop to build the bounds matrix.
-    int p;
+    int p = 0;
 
     for( int i = 0; i < N; i++ )
     {
@@ -172,13 +172,7 @@ int main()
     //! Load spice kernels
     tudat::spice_interface::loadStandardSpiceKernels( );
 
-    //! Create object to compute the problem fitness; no perturbations
-    //! An example uses 'extended dynamics'. Some conditional in the original
-    //! example to include gravitational pertubations from additional celestial
-    //! bodies, such as the Moon, Sun, etc. Will have to change some things in
-    //! "space4Errbody.h" If I want to use it, maybe the "extended dynamics'
-    //! cases would then include aerodynamics and eventually thrust. Probably
-    //! not. might be a bit too messy.
+    //! Create object to compute the problem fitness.
     problem prob{ Space4ErrBody( bounds,
                                  problem_name,
                                  vehicle_name,
@@ -201,19 +195,19 @@ int main()
     //!               case 2 --> ihs
     //! Selection is currently arbitrary. moead.hpp has been modified such that
     //! the points are generated with a Halton sequence.
-    pagmo::algorithm algo{ getMultiObjectiveAlgorithm( optimization_settingsValues[ 0 ] ) };
+    pagmo::algorithm algo{ getMultiObjectiveAlgorithm( int( optimization_settingsValues[ 0 ] ) ) };
 
     //! Assign population size.
-    pagmo::population::size_type populationSize = optimization_settingsValues[ 1 ];
+    pagmo::population::size_type populationSize = int( optimization_settingsValues[ 1 ] );
 
     //! Assign archipelago size.
-    pagmo::archipelago::size_type archipelagoSize = optimization_settingsValues[ 2 ];
+    //pagmo::archipelago::size_type archipelagoSize = int( optimization_settingsValues[ 2 ] );
 
     //! Assign population per archipelago
-    const int pop_per_archi = populationSize/archipelagoSize;
+    //const int pop_per_archi = populationSize/archipelagoSize;
 
     //! Assign number of evolutions
-    const int evolutions = optimization_settingsValues[ 3 ];
+    const int evolutions =  int( optimization_settingsValues[ 3 ] );
 
     ////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////
@@ -240,7 +234,6 @@ int main()
     }
     }
 
-
     //! Convert angles from degrees to radians
     const double lat_i_rad = unit_conversions::convertDegreesToRadians( initialConditionsValues[ 0 ] );
     const double lon_i_rad = unit_conversions::convertDegreesToRadians( initialConditionsValues[ 1 ] );
@@ -248,9 +241,8 @@ int main()
     const double lon_f_rad = unit_conversions::convertDegreesToRadians( terminationConditionsValues[ 1 ] );
 
     //! Calculate initial heading angle: https://www.movable-type.co.uk/scripts/latlong.html
-    //const double chi_i_rad_calc = getHeadingToTarget( lat_i_rad , lon_i_rad , lat_f_rad , lon_f_rad );
-    //std::atan2( std::sin( lon_f_rad - lon_i_rad ) * std::cos( lat_f_rad ) , std::cos( lat_i_rad ) * std::sin( lat_f_rad ) - std::sin( lat_i_rad ) * std::cos( lat_f_rad ) * std::cos( lon_f_rad - lon_i_rad ) );
     double chi_i_deg_calc = unit_conversions::convertRadiansToDegrees( bislip::variables::computeHeadingToTarget( lat_i_rad , lon_i_rad , lat_f_rad , lon_f_rad ) );
+
     //! If heading angle is negative, this may help visualize it.
     if (chi_i_deg_calc < 0)
     {
@@ -381,7 +373,7 @@ int main()
     }
 */
     //! Write original (unevolved) population to file
-    if  ( output_settingsValues[ 0 ] == 1 )
+    if  ( int( output_settingsValues[ 0 ] ) == 1 )
     {
         //   printPopulationToFile( isl_pert.get_population( ).get_x( ), this_run_settings_1,
         //                          outputSubFolder, false );
@@ -399,7 +391,7 @@ int main()
         }
         isl.wait_check( ); // Raises errors
 
-        if  ( output_settingsValues[ 0 ] == 1 )
+        if  ( int( output_settingsValues[ 0 ] ) == 1 )
         {
 
             std::string this_run_settings_1 = std::to_string( i ) + "_" +

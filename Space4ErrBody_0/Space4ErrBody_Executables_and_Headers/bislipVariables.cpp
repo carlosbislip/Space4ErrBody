@@ -26,7 +26,7 @@ std::string getCurrentDateTime( bool useLocalTime ) {
     std::stringstream currentDateTime;
 
     // current date/time based on current system
-    time_t ttNow = time(0);
+    time_t ttNow = time(nullptr);
     tm * ptmNow;
 
     if (useLocalTime)
@@ -131,9 +131,9 @@ double computeAngularDistance (
         const double &lat_f,
         const double &lon_f)
 {
-    const double angular_distance = std::acos( std::sin( lat_c ) * std::sin( lat_f ) + std::cos( lat_c ) * std::cos( lat_f ) * std::cos( lon_f - lon_c ) );
+    //const double angular_distance = std::acos( std::sin( lat_c ) * std::sin( lat_f ) + std::cos( lat_c ) * std::cos( lat_f ) * std::cos( lon_f - lon_c ) );
 
-    return angular_distance;
+    return std::acos( std::sin( lat_c ) * std::sin( lat_f ) + std::cos( lat_c ) * std::cos( lat_f ) * std::cos( lon_f - lon_c ) );
 }
 
 double computeHeadingToTarget (
@@ -142,9 +142,10 @@ double computeHeadingToTarget (
         const double &lat_f,
         const double &lon_f)
 {
-    const double heading_to_target = std::atan2( std::sin( lon_f - lon_c ) * std::cos( lat_f ) , std::cos( lat_c ) * std::sin( lat_f ) - std::sin( lat_c ) * std::cos( lat_f ) * std::cos( lon_f - lon_c ) );
+    // const double heading_to_target = std::atan2( std::sin( lon_f - lon_c ) * std::cos( lat_f ) , std::cos( lat_c ) * std::sin( lat_f ) - std::sin( lat_c ) * std::cos( lat_f ) * std::cos( lon_f - lon_c ) );
 
-    return heading_to_target;
+    return std::atan2( std::sin( lon_f - lon_c ) * std::cos( lat_f ) , std::cos( lat_c ) * std::sin( lat_f ) - std::sin( lat_c ) * std::cos( lat_f ) * std::cos( lon_f - lon_c ) );
+
 }
 
 double computeHeadingError (
@@ -154,9 +155,9 @@ double computeHeadingError (
         const double &lon_f,
         const double &heading)
 {
-    const double heading_to_target = computeHeadingToTarget( lat_c, lon_c, lat_f, lon_f );
+    // const double heading_to_target = computeHeadingToTarget( lat_c, lon_c, lat_f, lon_f );
 
-    return heading_to_target -  heading;
+    return computeHeadingToTarget( lat_c, lon_c, lat_f, lon_f ) - heading;
 }
 
 double computeSpecificEnergy (
@@ -175,14 +176,14 @@ double computeNormalizedSpecificEnergy (
 }
 
 //! https://doi.org/10.1016/j.cam.2017.09.049
-std::vector< double > HermiteDerivatives( const Eigen::VectorXd &E_mapped, const Eigen::VectorXd &y, const int &nodes )
+std::vector< double > HermiteDerivatives( const Eigen::VectorXd &E_mapped, const Eigen::VectorXd &y, const long &nodes )
 {
     Eigen::VectorXd h( nodes - 1 ), dely( nodes - 1 ), b( nodes ), x( nodes );
     Eigen::MatrixXd A( nodes, nodes );
     std::vector< double > x_vect;
     double mu, lambda;
 
-    for ( int i = 0; i < nodes - 1; ++i ) { h( i ) = E_mapped( i + 1 ) - E_mapped( i ); dely( i ) = ( y( i + 1 ) - y( i ) ) / h( i ); }
+    for ( long i = 0; i < nodes - 1; ++i ) { h( i ) = E_mapped( i + 1 ) - E_mapped( i ); dely( i ) = ( y( i + 1 ) - y( i ) ) / h( i ); }
 
     A = Eigen::MatrixXd::Zero( nodes, nodes );
     A( 0, 0 ) = 4.0;
@@ -190,7 +191,7 @@ std::vector< double > HermiteDerivatives( const Eigen::VectorXd &E_mapped, const
     A( nodes - 1, nodes - 2 ) = -1.0;
     A( nodes - 1, nodes - 1 ) = 4.0;
 
-    for ( int i = 1; i < nodes - 1; ++i )
+    for ( long i = 1; i < nodes - 1; ++i )
     {
         lambda = h( i ) / ( h( i - 1 ) + h( i ) );
         mu = 1 - lambda;
@@ -202,11 +203,11 @@ std::vector< double > HermiteDerivatives( const Eigen::VectorXd &E_mapped, const
     b( 0 ) = dely( 0 );
     b( nodes - 1 ) = dely( nodes - 2 );
 
-    for ( int i = 1; i < nodes - 1; ++i ) { b( i ) = 3 * ( y( i + 1 ) - y( i - 1 ) ) / ( h( i - 1 ) + h( i ) ); }
+    for ( long i = 1; i < nodes - 1; ++i ) { b( i ) = 3 * ( y( i + 1 ) - y( i - 1 ) ) / ( h( i - 1 ) + h( i ) ); }
 
     x = A.fullPivHouseholderQr().solve( b );
 
-    for ( int i = 0; i < nodes; ++i ) { x_vect.push_back( x( i ) ); }
+    for ( long i = 0; i < nodes; ++i ) { x_vect.push_back( x( i ) ); }
 
     return x_vect;
 }

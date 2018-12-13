@@ -58,7 +58,7 @@ double computeNormalizedSpecificEnergy (
         const double &airspeed,
         const double &E_max);
 
-std::vector< double > HermiteDerivatives ( const Eigen::VectorXd &h, const Eigen::VectorXd &y, const int &nodes);
+std::vector< double > HermiteDerivatives (const Eigen::VectorXd &h, const Eigen::VectorXd &y, const long &nodes);
 
 std::string passGuidanceParameter (
         const std::string &parameter);

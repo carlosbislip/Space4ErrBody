@@ -15,6 +15,9 @@
 #include <Tudat/Astrodynamics/SystemModels/vehicleSystems.h>
 #include <Tudat/Astrodynamics/BasicAstrodynamics/physicalConstants.h>
 #include <Tudat/Astrodynamics/Aerodynamics/equilibriumWallTemperature.h>
+#include <Tudat/SimulationSetup/PropagationSetup/dynamicsSimulator.h>
+
+
 
 #include "updateGuidance.h"
 
@@ -543,6 +546,38 @@ double computeHeatingRateTauber (
 
     return q_dot_LE;
 }
+/*
+
+Eigen::MatrixXd getDependentVariableMatrix( const tudat::propagators::SingleArcDynamicsSimulator< double > simulatedDynamics, const double simulationStartEpoch, const double fixedStepSize )
+{
+
+    const std::shared_ptr< tudat::propagators::SingleArcDynamicsSimulator< double, double > >& singleArcDynamicsSimulator,
+
+
+    //! Extract map of dependent variables.
+    const std::map< double, Eigen::VectorXd > dependentVariableMap = simulatedDynamics.SingleArcDynamicsSimulator::getDependentVariableHistory( );
+
+    //! Declare number of rows (time) / columns (variables).
+    unsigned long rows = dependentVariableMap.size();
+    unsigned long columns = ( ( simulatedDynamics.getDependentVariableHistory( ).begin() )->second ).size();
+
+    //! Declare and initialize dependent variable matrix.
+    Eigen::MatrixXd dependentVariableMatrix( rows, columns );
+    dependentVariableMatrix = Eigen::MatrixXd::Zero( rows, columns );
+
+    //! Loop to populate the matrix with the extraction of the map.
+    for ( unsigned long i = 0; i < rows; i++ )
+    {
+        dependentVariableMatrix.row( i ) = dependentVariableMap.at( simulationStartEpoch + i * fixedStepSize );
+
+        std::cout << "dependentVariableMatrix.row( " << i << " ) : " << dependentVariableMatrix.row( i ) << std::endl;
+
+    }
+
+    return dependentVariableMatrix;
+}
+
+*/
 
 
 } // namespace variables

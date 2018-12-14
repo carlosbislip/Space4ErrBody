@@ -24,6 +24,25 @@ enum GuidanceParameter
     ThrottleSetting
 };
 
+/*
+typedef std::map< double, Eigen::VectorXd > MyMap;
+MyMap dependentVariableHistoryMap;
+
+struct getDependentVariableHistory : public std::unary_function< MyMap::value_type, Eigen::VectorXd >
+{
+    Eigen::VectorXd operator()(const MyMap::value_type& value) const
+    {
+        return value.second;
+    }
+};
+// get a vector of values
+   Eigen::MatrixXd dependentVariableHistory;
+
+transform(dependentVariableHistoryMap.begin(), dependentVariableHistoryMap.end(), std::back_inserter(dependentVariableHistory), getDependentVariableHistory() );
+
+transform(dependentVariableHistoryMap.begin(), dependentVariableHistoryMap.end(), back_inserter(my_vals), [](const MyMap::value_type& val){return val.second;} );
+*/
+
 std::string getCurrentDateTime ( const bool useLocalTime = false );
 
 std::vector< std::string > getDataString ( const std::string &filename );

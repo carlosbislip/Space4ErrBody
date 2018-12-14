@@ -206,18 +206,18 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     const double gamma_i_deg = initialConditionsValues_[ 4 ]; // deg
 
     //! Declare and initialize starting position coordinates.
-    const double lat_i_deg = initialConditionsValues_[ 0 ];
-    const double lon_i_deg = initialConditionsValues_[ 1 ];
+    const double initialLat_deg = initialConditionsValues_[ 0 ];
+    const double initialLon_deg = initialConditionsValues_[ 1 ];
 
     //! Declare and initialize final position coordinates and additional termination conditions
-    const double lat_f_deg = terminationConditionsValues_[ 0 ];
-    const double lon_f_deg = terminationConditionsValues_[ 1 ];
+    const double targetLat_deg = terminationConditionsValues_[ 0 ];
+    const double targetLon_deg = terminationConditionsValues_[ 1 ];
 
     //! Declare and initialize various termination conditions
     const double finalDistanceToTarget_deg = terminationConditionsValues_[ 2 ];
     //const double h_UP = terminationConditionsValues_[ 3 ];
     const double h_DN = terminationConditionsValues_[ 4 ];
-    //const double V_max = terminationConditionsValues_[ 5 ];
+    //const double V_UP = terminationConditionsValues_[ 5 ];
     const double n_max = terminationConditionsValues_[ 6 ];
     const double q_dot_max = terminationConditionsValues_[ 7 ];
     const double q_dyn_max = terminationConditionsValues_[ 8 ];
@@ -230,24 +230,17 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     const double phi = unit_conversions::convertDegreesToRadians( 3.0 );
 
     //! Convert angles from degrees to radians
-    const double lat_i_rad = unit_conversions::convertDegreesToRadians( lat_i_deg );
-    const double lon_i_rad = unit_conversions::convertDegreesToRadians( lon_i_deg );
-    const double lat_f_rad = unit_conversions::convertDegreesToRadians( lat_f_deg );
-    const double lon_f_rad = unit_conversions::convertDegreesToRadians( lon_f_deg );
-    const double gamma_i_rad = unit_conversions::convertDegreesToRadians( gamma_i_deg );
+    const double initialLat_rad = unit_conversions::convertDegreesToRadians( initialLat_deg );
+    const double initialLon_rad = unit_conversions::convertDegreesToRadians( initialLon_deg );
+    const double targetLat_rad = unit_conversions::convertDegreesToRadians( targetLat_deg );
+    const double targetLon_rad = unit_conversions::convertDegreesToRadians( targetLon_deg );
+    const double initialFlightPathAngle_rad= unit_conversions::convertDegreesToRadians( gamma_i_deg );
 
     //! Pre-define various variables used to determine fitness.
-    double lat_f_deg_calc = lat_i_deg;
-    double lon_f_deg_calc = lon_i_deg;
-    double d_i_deg        = unit_conversions::convertRadiansToDegrees( bislip::variables::computeAngularDistance(
-                                                                           lat_i_rad,
-                                                                           lon_i_rad,
-                                                                           lat_f_rad,
-                                                                           lon_f_rad) );
-    double d_f_deg_calc   = d_i_deg;
-    //std::cout << d_f_deg_calc << std::endl;
-    double h_UP_calc       = h_i;
-    double tof = simulation_settingsValues_[ 1 ];
+    double targetLat_deg_calc = initialLat_deg;
+    double targetLon_deg_calc = initialLon_deg;
+    double initialDistanceToTarget_rad = bislip::variables::computeAngularDistance( initialLat_rad, initialLon_rad, targetLat_rad, targetLon_rad );
+    double initialDistanceToTarget_deg = unit_conversions::convertRadiansToDegrees( initialDistanceToTarget_rad );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            CREATE ENVIRONMENT            //////////////////////////////////////////////////////
@@ -308,7 +301,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
         const double radius_Equator =  6378137.0;
         const double radius_pole = 6356752.3142;
-        const double polar_angle_i_deg = 90 - lat_i_deg;
+       /* const double polar_angle_i_deg = 90 - lat_i_deg;
         const double polar_angle_f_deg = 90 - lat_f_deg;
         const double polar_angle_i_rad = polar_angle_i_deg * mathematical_constants::PI / 180;
         const double polar_angle_f_rad = polar_angle_f_deg * mathematical_constants::PI / 180;
@@ -321,7 +314,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
         const double radius_Earth_UP_y = radii[ 1 ] * std::cos(polar_angle_f_rad) * std::sin(lon_f_rad);
         const double radius_Earth_UP_z = radii[ 2 ] * std::sin(polar_angle_f_rad);
         radius_Earth_UP = std::sqrt(pow(radius_Earth_UP_x,2) + pow(radius_Earth_UP_y,2) + pow(radius_Earth_UP_z,2));
-
+*/
     }
     //!--------------------------------------------------------------
 
@@ -540,11 +533,11 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
     //! Declare and initialize various parameters common to the entire trajectory.
     const double V_i = x[ N ];
-    const double V_max = x[ N + 1 ];
+    const double V_UP = x[ N + 1 ];
     const double h_UP = x[ N + 2 ];
 
     // std::cout << "V_i =  " << V_i << std::endl;
-    // std::cout << "V_max =  " << V_max << std::endl;
+    // std::cout << "V_UP =  " << V_UP << std::endl;
     // std::cout << "h_UP =  " << h_UP << std::endl;
 
     // std::cout << "Re-allocate Descent DVs" << std::endl;
@@ -563,7 +556,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     const unsigned long NN = ( parameterList_Descent_.size() - 1 ) * nodes_Descent - 1;
 
     //! Declare and initialize last parameter common to the entire trajectory.
-    const double V_f = x[ N + NN + 3 ];
+    const double V_DN = x[ N + NN + 3 ];
 
     //std::cout << "Create vector of node locations for ascent" << std::endl;
     //! Create vector of node locations for Ascent phase.
@@ -614,9 +607,9 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     std::cout << "-------" << std::endl;
     std::cout << "V_i =  " << V_i << std::endl;
     std::cout << "-------" << std::endl;
-    std::cout << "V_max =  " << V_max << std::endl;
+    std::cout << "V_UP =  " << V_UP << std::endl;
     std::cout << "-------" << std::endl;
-    std::cout << "V_f =  " << V_f << std::endl;
+    std::cout << "V_DN =  " << V_DN << std::endl;
     std::cout << "-------" << std::endl;
     std::cout << "h_UP =  " << h_UP << std::endl;
     std::cout << "-------" << std::endl;
@@ -632,17 +625,17 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //const double mu = spice_interface::getBodyGravitationalParameter( centralBodyName );
     //a = 301.7;//NRLMSISE00Atmosphere::getSpeedOfSound( R_E + height( 0 ), 0, 0, simulationStartEpoch );
     //double V_i = a * Mach_i;
-    //double V_f = 0.99 * sqrt( mu / ( R_E + h_UP ) );
+    //double V_DN = 0.99 * sqrt( mu / ( R_E + h_UP ) );
 
     //! Set spherical elements for vehicle's initial state.
     //! ARTBITRARILY CHOSEN to be in Earth-Fixed frame.
     Eigen::Vector6d EntryState_spherical;
     EntryState_spherical( SphericalOrbitalStateElementIndices::radiusIndex )       = radius_Earth_i + h_i;
-    EntryState_spherical( SphericalOrbitalStateElementIndices::latitudeIndex )     = lat_i_rad;
-    EntryState_spherical( SphericalOrbitalStateElementIndices::longitudeIndex )    = lon_i_rad;
+    EntryState_spherical( SphericalOrbitalStateElementIndices::latitudeIndex )     = initialLat_rad;
+    EntryState_spherical( SphericalOrbitalStateElementIndices::longitudeIndex )    = initialLon_rad;
     EntryState_spherical( SphericalOrbitalStateElementIndices::speedIndex )        = V_i;
-    EntryState_spherical( SphericalOrbitalStateElementIndices::flightPathIndex )   = gamma_i_rad;
-    EntryState_spherical( SphericalOrbitalStateElementIndices::headingAngleIndex ) = bislip::variables::computeHeadingToTarget( lat_i_rad,lon_i_rad,lat_f_rad,lon_f_rad );
+    EntryState_spherical( SphericalOrbitalStateElementIndices::flightPathIndex )   = initialFlightPathAngle_rad;
+    EntryState_spherical( SphericalOrbitalStateElementIndices::headingAngleIndex ) = bislip::variables::computeHeadingToTarget( initialLat_rad,initialLon_rad,targetLat_rad,targetLon_rad );
 
     //! Two things are being done here
     //!     Converting state vector from spherical to Cartesian elements
@@ -660,25 +653,31 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
     //! Calculate initial, maximum, and final specific energy levels.
     //const double E_min = bislip::variables::computeSpecificEnergy( h_i, V_i );
-    const double E_max = bislip::variables::computeSpecificEnergy( h_UP, V_max );
-    //const double E_f = bislip::variables::computeSpecificEnergy( h_DN, V_f );
+    const double E_max = bislip::variables::computeSpecificEnergy( h_UP, V_UP );
+    //const double E_f = bislip::variables::computeSpecificEnergy( h_DN, V_DN );
 
     //! Set maximum Energy level.
     vehicleSystems->setE_max( E_max );
 
     //! Normalize initial, maximum, and final specific energy levels.
-    double E_hat_min = bislip::variables::computeNormalizedSpecificEnergy( h_i, V_i, E_max );
-    double E_hat_max = bislip::variables::computeNormalizedSpecificEnergy( h_UP, V_max, E_max );
-    double E_hat_f = bislip::variables::computeNormalizedSpecificEnergy( h_DN, V_f, E_max );
+    double E_hat_i = bislip::variables::computeNormalizedSpecificEnergy( h_i, V_i, E_max );
+    double E_hat_max = bislip::variables::computeNormalizedSpecificEnergy( h_UP, V_UP, E_max );
+    double E_hat_f = bislip::variables::computeNormalizedSpecificEnergy( h_DN, V_DN, E_max );
 
     //! Map normalized specific energy levels to control node locations
     Eigen::VectorXd E_mapped_Ascent( nodes_Ascent );
     Eigen::VectorXd E_mapped_Descent( nodes_Descent );
-    E_mapped_Ascent = ( E_hat_max - E_hat_min ) * xn_Ascent.array() + E_hat_min;
+    E_mapped_Ascent = ( E_hat_max - E_hat_i ) * xn_Ascent.array() + E_hat_i;
     E_mapped_Descent = E_hat_max + ( E_hat_f - E_hat_max ) * xn_Descent.array();
 
     //std::cout << "xn_Descent=  " << xn_Descent<< std::endl;
+    //std::cout << "E_mapped_Ascent=  " << E_mapped_Ascent<< std::endl;
     //std::cout << "E_mapped_Descent=  " << E_mapped_Descent<< std::endl;
+
+
+    //std::this_thread::sleep_for( std::chrono::nanoseconds( 1000 ) );
+
+
 
     //! Declare data maps used for decision vector values related to Ascent phase.
     std::map< double, double > map_alpha_deg_Ascent, map_eps_T_deg_Ascent, map_phi_T_deg_Ascent, map_throttle_Ascent, map_sigma_deg_Ascent;
@@ -747,7 +746,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     interpolator_phi_T_deg_Descent = interpolators::createOneDimensionalInterpolator< double, double >( map_phi_T_deg_Descent, interpolatorSettings, std::make_pair( phi_T_deg_Descent( 0 ), phi_T_deg_Descent( nodes_Descent - 1 ) ), phi_T_deg_Descent_derivatives );
     interpolator_throttle_Descent  = interpolators::createOneDimensionalInterpolator< double, double >( map_throttle_Descent,  interpolatorSettings, std::make_pair( throttle_Descent( 0 ), throttle_Descent( nodes_Descent - 1 ) ), throttle_Descent_derivatives );
 
-   // std::cout << "Pass Ascent Interpolators to vehicle systems" << std::endl;
+    // std::cout << "Pass Ascent Interpolators to vehicle systems" << std::endl;
     //! Pass Ascent phase interpolators to vehicle systems.
     vehicleSystems->setAoAInterpolator_Ascent( interpolator_alpha_deg_Ascent );
     vehicleSystems->setBankAngleInterpolator_Ascent( interpolator_sigma_deg_Ascent );
@@ -1231,13 +1230,13 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-    vehicleSystems->setInitialLat( lat_i_rad );
-    vehicleSystems->setInitialLon( lon_i_rad );
+    vehicleSystems->setInitialLat( initialLat_rad );
+    vehicleSystems->setInitialLon( initialLon_rad );
     vehicleSystems->setInitialCoordinates( std::make_pair( vehicleSystems->getInitialLat( ), vehicleSystems->getInitialLon( ) ) );
-    vehicleSystems->setTargetLat( lat_f_rad );
-    vehicleSystems->setTargetLon( lon_f_rad );
+    vehicleSystems->setTargetLat( targetLat_rad );
+    vehicleSystems->setTargetLon( targetLon_rad );
     vehicleSystems->setTargetCoordinates( std::make_pair( vehicleSystems->getTargetLat( ), vehicleSystems->getTargetLon( ) ) );
-    vehicleSystems->setInitialDistanceToTarget( bislip::variables::computeAngularDistance( lat_i_rad, lon_i_rad, lat_f_rad, lon_f_rad ) );
+    vehicleSystems->setInitialDistanceToTarget( initialDistanceToTarget_rad );
     vehicleSystems->setStartingEpoch( simulationStartEpoch );
 
     //! Define CUSTOM termination settings.
@@ -1258,7 +1257,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
             std::make_shared< tudat::propagators::PropagationDependentVariableTerminationSettings >(
                 std::make_shared< tudat::propagators::SingleDependentVariableSaveSettings >(
                     angular_distance_to_go,
-                    vehicle_name_), vehicleSystems->getFinalDistanceToTarget() , false );
+                    vehicle_name_), vehicleSystems->getFinalDistanceToTarget() , true );
 
     std::shared_ptr< PropagationTerminationSettings > d_traveled_TerminationSettings =
             std::make_shared< tudat::propagators::PropagationDependentVariableTerminationSettings >(
@@ -1313,16 +1312,16 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
     std::vector< std::shared_ptr< propagators::PropagationTerminationSettings > > terminationSettingsList;
     // terminationSettingsList.push_back( customTermination );
-    /* terminationSettingsList.push_back( thrustTerminationSettings );
+    //terminationSettingsList.push_back( thrustTerminationSettings );
     terminationSettingsList.push_back( d_to_go_TerminationSettings );
     terminationSettingsList.push_back( d_traveled_TerminationSettings );
     terminationSettingsList.push_back( mass_TerminationSettings );
     terminationSettingsList.push_back( E_hat_TerminationSettings );
     terminationSettingsList.push_back( q_dyn_TerminationSettings );
-    terminationSettingsList.push_back( q_dot_TerminationSettings );*/
+    terminationSettingsList.push_back( q_dot_TerminationSettings );
     terminationSettingsList.push_back( height_UP_TerminationSettings );
     terminationSettingsList.push_back( height_DN_TerminationSettings );
-    // terminationSettingsList.push_back( flight_path_angle_TerminationSettings );
+    terminationSettingsList.push_back( flight_path_angle_TerminationSettings );
 
     // PropagationHybridTerminationSettings( terminationSettingsList,
     //                                       true,
@@ -1408,7 +1407,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     ///////////////////////          PROPAGATE TRAJECTORY          ////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    std::cout << "Starting propagation" << std::endl;
+   // std::cout << "Starting propagation" << std::endl;
 
     //! Propagate trajectory.
     SingleArcDynamicsSimulator< double > dynamicsSimulator(
@@ -1416,11 +1415,18 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                 integratorSettings,
                 propagatorSettings );
 
-    std::cout << "Propagation done" << std::endl;
+    //std::cout << "Propagation done" << std::endl;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////        CLEAN UP AND CALCULATE FITNESS                //////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    //! Initialize variables used objectives functions.
+    double finalDistanceToTarget_deg_calc = initialDistanceToTarget_deg;
+    //std::cout << d_f_deg_calc << std::endl;
+    double h_DN_calc = h_DN;
+    double h_UP_calc = h_UP;
+    double tof = simulation_settingsValues_[ 1 ];
 
     //! Retrieve results
     //! Maybe this command would allow the use of certain results to guide
@@ -1463,25 +1469,39 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //const double lon_f_deg_GOAL_calc = lon_f_rad_GOAL_calc * 180 / mathematical_constants::PI;
     //const double lat_f_deg_GOAL_calc = lat_f_rad_GOAL_calc * 180 / mathematical_constants::PI;
 
-    //! Calculate latitude and longitude of the final state: Earth-Fixed Frame.
-    //! Dominic brought up the possibility of using:
-    //!               body_fixed_relative_spherical_position
-    //! as a dependent variable. If possible, convert this calulation to the
-    //! extraction of the final entry. It generates radius, lat and lon.
-    //!
-    //!
-    //!
-
+    //! Extract Dependent variables of final state.
     const Eigen::VectorXd dep_var_FINAL_STATE = ( dynamicsSimulator.getDependentVariableHistory( ).rbegin() )->second;
-   // std::cout << "dep_var_FINAL_STATE: " << dep_var_FINAL_STATE << std::endl;
+
+
+    //! Extract Dependent variables of final state.
+    const std::map< double, Eigen::VectorXd > dep_var_historyMap = dynamicsSimulator.getDependentVariableHistory( );
+    // std::cout << "dep_var_FINAL_STATE: " << dep_var_FINAL_STATE << std::endl;
+
+    //! Declare number of elements in time history.
+    unsigned long rows = dep_var_historyMap.size();
+    unsigned long columns = ( ( dynamicsSimulator.getDependentVariableHistory( ).begin() )->second ).size();
+
+    Eigen::MatrixXd dep_var_history( rows, columns );
+    dep_var_history = Eigen::MatrixXd::Zero( rows, columns );
+
+    //    for ( std::map< double, Eigen::VectorXd >::iterator it = dep_var_history.begin(); it != dep_var_history.end(); ++it )
+    for ( unsigned long i = 0; i < rows; i++ )
+    {
+        dep_var_history.row( i ) = dep_var_historyMap.at( simulationStartEpoch + i * fixedStepSize );
+    }
+
+    Eigen::VectorXd dep_var_height = dep_var_history.col( 11 );
 
     //const double altitude_f_calc = dep_var_FINAL_STATE[3];
-    const double lat_f_rad_calc  = dep_var_FINAL_STATE[ 4 ];
-    const double lon_f_rad_calc  = dep_var_FINAL_STATE[ 5 ];
-    h_UP_calc                    = dep_var_FINAL_STATE[ 11 ];
-    std::cout << "lat_f_rad_calc: " << lat_f_rad_calc << std::endl;
-    std::cout << "lon_f_rad_calc: " << lon_f_rad_calc << std::endl;
-    std::cout << "h_UP_calc     : " << h_UP_calc << std::endl;
+    const double targetLat_rad_calc  = dep_var_FINAL_STATE[ 4 ];
+    const double targetLon_rad_calc  = dep_var_FINAL_STATE[ 5 ];
+    std::ptrdiff_t ind;
+    h_UP_calc                    = dep_var_height.maxCoeff(&ind);
+    h_DN_calc                    = dep_var_FINAL_STATE[ 11 ];
+    //std::cout << "lat_f_rad_calc: " << lat_f_rad_calc << std::endl;
+    //std::cout << "lon_f_rad_calc: " << lon_f_rad_calc << std::endl;
+    //std::cout << "h_UP_calc     : " << h_UP_calc << std::endl;
+    //std::cout << "h_DN_calc     : " << h_DN_calc << std::endl;
 
     //const double altitude_f_calc = std::sqrt( pow(systemFinalState_EARTh_UPIXED[0],2) +
     //       pow(systemFinalState_EARTh_UPIXED[1],2) + pow(systemFinalState_EARTh_UPIXED[2],2) ) ;
@@ -1489,20 +1509,21 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //const double lat_f_rad_calc = std::asin(systemFinalState_EARTh_UPIXED[2] / altitude_f_calc) ;
 
     //! Convert coordinates of final state to degrees: Earth-Fixed Frame
-    lat_f_deg_calc = unit_conversions::convertRadiansToDegrees( lat_f_rad_calc );
-    lon_f_deg_calc = unit_conversions::convertRadiansToDegrees( lon_f_rad_calc );
+    targetLat_deg_calc = unit_conversions::convertRadiansToDegrees( targetLat_rad_calc );
+    targetLon_deg_calc = unit_conversions::convertRadiansToDegrees( targetLon_rad_calc );
 
     //! Calculate angular distance of final state from target coordinates.
-    const double d_rad = bislip::variables::computeAngularDistance( lat_f_rad_calc, lon_f_rad_calc, lat_f_rad, lon_f_rad );
-    const double d_deg = unit_conversions::convertRadiansToDegrees( d_rad );
+    // const double d_rad = bislip::variables::computeAngularDistance( lat_f_rad_calc, lon_f_rad_calc, vehicleSystems->getTargetLat(), vehicleSystems->getTargetLon() );
+    const double d_to_go_deg = unit_conversions::convertRadiansToDegrees( dep_var_FINAL_STATE[ 34 ] );
+    //const double d_deg = unit_conversions::convertRadiansToDegrees( d_rad );
 
     //! Calculate offset of final state from GOAL state: Earth-Fixed Frame
-    //const double dif_lat_rad = lat_f_rad - lat_f_rad_calc;
-    //const double dif_lon_rad = lon_f_rad - lon_f_rad_calc;
+    //const double dif_lat_rad = targetLat_rad - lat_f_rad_calc;
+    //const double dif_lon_rad = targetLon_rad - lon_f_rad_calc;
 
     //! Calculate offsets of final state in degrees: Earth-Fixed Frame
-    const double dif_lat_deg = lat_f_deg - lat_f_deg_calc;
-    const double dif_lon_deg = lon_f_deg - lon_f_deg_calc;
+    const double dif_lat_deg = targetLat_deg - targetLat_deg_calc;
+    const double dif_lon_deg = targetLon_deg - targetLon_deg_calc;
 
     //! Calculate "norm" of offsets. This is an arbitrary function I have
     //! implemented to pass on as an 'objective function'. It relates the
@@ -1512,15 +1533,18 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     const double dif_norm = std::sqrt( ( dif_lat_deg * dif_lat_deg ) + ( dif_lon_deg * dif_lon_deg ) );
 
     //! Calculate offset of final angular distance to termination condition distance.
-    const double dif_d_deg = d_deg - terminationConditionsValues_[ 2 ];
+    const double dif_d_deg = d_to_go_deg - terminationConditionsValues_[ 2 ];
 
-    //! Calculate offset from goal elevation.
+    //! Calculate offset from maximum elevation.
     const double dif_h_UP = h_UP - h_UP_calc;
+
+    //! Calculate offset from final elevation.
+    const double dif_h_DN = h_DN - h_DN_calc;
 
     const double dif_xn_Ascent= xn_Ascent( nodes_Ascent - 1 ) - 1;
     const double dif_E_mapped_Ascent = E_mapped_Ascent( nodes_Ascent - 1 ) - 1;
     const double dif_xn_Descent= xn_Descent( nodes_Descent - 1 ) - 1;
-    const double dif_E_mapped_Descent = 0 - E_mapped_Descent( nodes_Descent - 1 );
+    const double dif_E_mapped_Descent = E_hat_f - E_mapped_Descent( nodes_Descent - 1 );
 
     //! Exract current mass
     double landingMass_calc = bodyMap.at( vehicle_name_ )->getBodyMass( );
@@ -1542,6 +1566,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     delta.push_back( dif_lon_deg );
     delta.push_back( dif_d_deg );
     delta.push_back( dif_h_UP );
+    delta.push_back( dif_h_DN );
     delta.push_back( tof );  // Not sure yet how this one affects the optimization. Included for completion.
     delta.push_back( dif_xn_Ascent);
     delta.push_back( dif_E_mapped_Ascent );
@@ -1565,8 +1590,8 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
             // std::to_string( chi_i_deg_ordered( 0 ) ) + "_" +
             std::to_string( tof ) + "_" +
             //std::to_string(x[3]) + "_" +
-            std::to_string( lat_f_deg_calc ) + "_" +
-            std::to_string( lon_f_deg_calc ) + "_" +
+            std::to_string( targetLat_deg_calc ) + "_" +
+            std::to_string( targetLon_deg_calc ) + "_" +
             simulation_save_time;
 
     //! Print results to terminal. Used to gauge progress.
@@ -1608,7 +1633,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //! a different type of output. Entries are binary, 0 or 1.
     if ( int( output_settingsValues_[ 1 ] ) == 1 )
     {
-     //   std::cout << "Saving EQM " << std::endl;
+        //   std::cout << "Saving EQM " << std::endl;
 
         //! Write propagation history to file.
         writeDataMapToTextFile( dynamicsSimulator.getEquationsOfMotionNumericalSolution( ),
@@ -1618,12 +1643,12 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                                 std::numeric_limits< double >::digits10,
                                 std::numeric_limits< double >::digits10,
                                 "," );
-     //   std::cout << "EQM Saved" << std::endl;
+        //   std::cout << "EQM Saved" << std::endl;
 
     }
     if ( int( output_settingsValues_[ 2 ] ) == 1 )
     {
-     //   std::cout << "Saving DepVar " << std::endl;
+        //   std::cout << "Saving DepVar " << std::endl;
 
         //! Write dependent variables' history to file.
         writeDataMapToTextFile( dynamicsSimulator.getDependentVariableHistory( ),
@@ -1633,13 +1658,13 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                                 std::numeric_limits< double >::digits10,
                                 std::numeric_limits< double >::digits10,
                                 "," );
-    //    std::cout << "DepVar Saved" << std::endl;
+        //    std::cout << "DepVar Saved" << std::endl;
 
 
     }
     if ( int( output_settingsValues_[ 3 ] ) == 1 )
     {
-     //   std::cout << "Saving interpolators_Ascent " << std::endl;
+        //   std::cout << "Saving interpolators_Ascent " << std::endl;
 
         writeDataMapToTextFile( interpolators_Ascent,
                                 complete_file_name_interpolators_Ascent,
@@ -1648,8 +1673,8 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                                 std::numeric_limits< double >::digits10,
                                 std::numeric_limits< double >::digits10,
                                 "," );
-     //   std::cout << "interpolators_Ascent Saved" << std::endl;
-     //   std::cout << "Saving map_DV_mapped_Ascent " << std::endl;
+        //   std::cout << "interpolators_Ascent Saved" << std::endl;
+        //   std::cout << "Saving map_DV_mapped_Ascent " << std::endl;
 
         writeDataMapToTextFile( map_DV_mapped_Ascent,
                                 complete_file_name_map_DV_mapped_Ascent,
@@ -1658,9 +1683,9 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                                 std::numeric_limits< double >::digits10,
                                 std::numeric_limits< double >::digits10,
                                 "," );
-     //   std::cout << "map_DV_mapped_Ascent Saved" << std::endl;
+        //   std::cout << "map_DV_mapped_Ascent Saved" << std::endl;
 
-     //   std::cout << "Saving interpolators_Descent " << std::endl;
+        //   std::cout << "Saving interpolators_Descent " << std::endl;
 
         writeDataMapToTextFile( interpolators_Descent,
                                 complete_file_name_interpolators_Descent,
@@ -1669,8 +1694,8 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                                 std::numeric_limits< double >::digits10,
                                 std::numeric_limits< double >::digits10,
                                 "," );
-      //  std::cout << "interpolators_Descent Saved" << std::endl;
-     //   std::cout << "Saving map_DV_mapped_Descent " << std::endl;
+        //  std::cout << "interpolators_Descent Saved" << std::endl;
+        //   std::cout << "Saving map_DV_mapped_Descent " << std::endl;
 
         writeDataMapToTextFile( map_DV_mapped_Descent,
                                 complete_file_name_map_DV_mapped_Descent,

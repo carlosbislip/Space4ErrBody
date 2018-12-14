@@ -1,4 +1,4 @@
-function [ evolutions ] = Get_Trajectories(evolutions,prop_path,depvar_path,interp_Ascent_path,interp_Descent_path,DV_mapped_path,v_i,gamma_i,pop_i,lon_i_rad,lat_f_deg,lon_f_deg, startEpoch)
+function [ evolutions ] = Get_Trajectories(evolutions,prop_path,depvar_path,interp_Ascent_path,interp_Descent_path,DV_mapped_Ascent_path,DV_mapped_Descent_path,v_i,gamma_i,pop_i,lon_i_rad,lat_f_deg,lon_f_deg, startEpoch)
 %UNTITLED7 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -25,7 +25,8 @@ for k = 1:(numel(pop_i) + 1)
     depvar_source = depvar_path(start(k):finish(k),:);
     interp_Ascent_source = interp_Ascent_path(start(k):finish(k),:);
     interp_Descent_source = interp_Descent_path(start(k):finish(k),:);
-    DV_mapped_source = DV_mapped_path(start(k):finish(k),:);
+    DV_mapped_Ascent_source = DV_mapped_Ascent_path(start(k):finish(k),:);
+    DV_mapped_Descent_source = DV_mapped_Descent_path(start(k):finish(k),:);
     for p = 1:population
         
         % Open this file and read in the contents
@@ -40,12 +41,16 @@ for k = 1:(numel(pop_i) + 1)
         interp_Ascent = dlmread(interp_Ascent_source{p,:},',');
         fclose(fid);
         
-               fid = fopen(interp_Descent_source{p,:});
+        fid = fopen(interp_Descent_source{p,:});
         interp_Descent = dlmread(interp_Descent_source{p,:},',');
         fclose(fid);
         
-        fid = fopen(DV_mapped_source{p,:});
-        DV_mapped = dlmread(DV_mapped_source{p,:},',');
+        fid = fopen(DV_mapped_Ascent_source{p,:});
+        DV_mapped_Ascent = dlmread(DV_mapped_Ascent_source{p,:},',');
+        fclose(fid);
+        
+                fid = fopen(DV_mapped_Descent_source{p,:});
+        DV_mapped_Descent = dlmread(DV_mapped_Descent_source{p,:},',');
         fclose(fid);
         
         % analyzed_simulations(k).tof = data(1,1) - data(end,1);
@@ -161,93 +166,106 @@ for k = 1:(numel(pop_i) + 1)
         
         %%%%%%%%
         
-        %         evolutions(k).trajectories(pp).individual.t = t(1:end);
-        %         evolutions(k).trajectories(pp).individual.x_R = R_R_vect(1:end,1);
-        %         evolutions(k).trajectories(pp).individual.y_R = R_R_vect(1:end,2);
-        %         evolutions(k).trajectories(pp).individual.z_R = R_R_vect(1:end,3);
-        %         evolutions(k).trajectories(pp).individual.R_R_norm = R_R_norm(1:end);
+        %         evolutions(k).trajectories(pp).individual.t = t(:);
+        %         evolutions(k).trajectories(pp).individual.x_R = R_R_vect(:,1);
+        %         evolutions(k).trajectories(pp).individual.y_R = R_R_vect(:,2);
+        %         evolutions(k).trajectories(pp).individual.z_R = R_R_vect(:,3);
+        %         evolutions(k).trajectories(pp).individual.R_R_norm = R_R_norm(:);
         
         
         
         
         
-        evolutions(k).trajectories(p).individual.t                     = depvar(1:end,1);
-        evolutions(k).trajectories(p).individual.time_vector           = depvar(1:end,1) - startEpoch;
-        evolutions(k).trajectories(p).individual.x_R                   = depvar(1:end,2);
-        evolutions(k).trajectories(p).individual.y_R                   = depvar(1:end,3);
-        evolutions(k).trajectories(p).individual.z_R                   = depvar(1:end,4);
-        evolutions(k).trajectories(p).individual.altitude              = depvar(1:end,5);
-        evolutions(k).trajectories(p).individual.latitude_angle        = rad2deg(depvar(1:end,6));
-        evolutions(k).trajectories(p).individual.longitude_angle       = rad2deg(depvar(1:end,7));
-        %    evolutions(k).trajectories(pp).individual.latitude_angle  = rad2deg(depvar(1:end,8));
-        %    evolutions(k).trajectories(pp).individual.longitude_angle = rad2deg(depvar(1:end,9));
-        evolutions(k).trajectories(p).individual.heading_angle         = rad2deg(depvar(1:end,8));
-        evolutions(k).trajectories(p).individual.flight_path_angle     = rad2deg(depvar(1:end,9));
-        evolutions(k).trajectories(p).individual.angle_of_attack       = rad2deg(depvar(1:end,10));
-        evolutions(k).trajectories(p).individual.angle_of_sideslip     = rad2deg(depvar(1:end,11));
-        evolutions(k).trajectories(p).individual.bank_angle            = rad2deg(depvar(1:end,12));
-        evolutions(k).trajectories(p).individual.height                = depvar(1:end,13);
-        evolutions(k).trajectories(p).individual.mach                  = depvar(1:end,14);
-        evolutions(k).trajectories(p).individual.airspeed              = depvar(1:end,15);
-        evolutions(k).trajectories(p).individual.total_aero_g_load     = depvar(1:end,16);
-        evolutions(k).trajectories(p).individual.acc_aero_x            = depvar(1:end,17);
-        evolutions(k).trajectories(p).individual.acc_aero_y            = depvar(1:end,18);
-        evolutions(k).trajectories(p).individual.acc_aero_z            = depvar(1:end,19);
-        evolutions(k).trajectories(p).individual.acc_grav_x            = depvar(1:end,20);
-        evolutions(k).trajectories(p).individual.acc_grav_y            = depvar(1:end,21);
-        evolutions(k).trajectories(p).individual.acc_grav_z            = depvar(1:end,22);
-        evolutions(k).trajectories(p).individual.acc_thru_x            = depvar(1:end,23);
-        evolutions(k).trajectories(p).individual.acc_thru_y            = depvar(1:end,24);
-        evolutions(k).trajectories(p).individual.acc_thru_z            = depvar(1:end,25);
-        evolutions(k).trajectories(p).individual.acc_x                 = depvar(1:end,17) + depvar(1:end,20) + depvar(1:end,23);
-        evolutions(k).trajectories(p).individual.acc_y                 = depvar(1:end,18) + depvar(1:end,21) + depvar(1:end,24);
-        evolutions(k).trajectories(p).individual.acc_z                 = depvar(1:end,19) + depvar(1:end,22) + depvar(1:end,25);
-        evolutions(k).trajectories(p).individual.acc_aero_M            = sqrt(depvar(1:end,17).^2 + depvar(1:end,18).^2 + depvar(1:end,19).^2);
-        evolutions(k).trajectories(p).individual.acc_grav_M            = sqrt(depvar(1:end,20).^2 + depvar(1:end,21).^2 + depvar(1:end,22).^2);
-        evolutions(k).trajectories(p).individual.acc_thru_M            = sqrt(depvar(1:end,23).^2 + depvar(1:end,24).^2 + depvar(1:end,25).^2);
-        evolutions(k).trajectories(p).individual.dynamic_pressure      = depvar(1:end,26);
-        evolutions(k).trajectories(p).individual.heating_rate          = depvar(1:end,27);
-        %evolutions(k).trajectories(p).individual.stagnation_flux       = depvar(1:end,27);
-        evolutions(k).trajectories(p).individual.mass_rate             = depvar(1:end,28);
-        evolutions(k).trajectories(p).individual.mass                  = depvar(1:end,29);
-        evolutions(k).trajectories(p).individual.E                     = depvar(1:end,30);
-        evolutions(k).trajectories(p).individual.E_hat                 = depvar(1:end,31);
-        evolutions(k).trajectories(p).individual.throttle              = depvar(1:end,32);
-        evolutions(k).trajectories(p).individual.thrust_angle          = depvar(1:end,33);
-        evolutions(k).trajectories(p).individual.engine_status         = depvar(1:end,34);
-        evolutions(k).trajectories(p).individual.distance_traveled     = rad2deg(depvar(1:end,35));
-        evolutions(k).trajectories(p).individual.distance_to_go        = rad2deg(depvar(1:end,36));
-        evolutions(k).trajectories(p).individual.heading_to_target     = rad2deg(depvar(1:end,37));
-        evolutions(k).trajectories(p).individual.heading_error         = rad2deg(depvar(1:end,38));
-        evolutions(k).trajectories(p).individual.q_dot_LE              = rad2deg(depvar(1:end,39));
+        evolutions(k).trajectories(p).individual.t                     = depvar(:,1);
+        evolutions(k).trajectories(p).individual.time_vector           = depvar(:,1) - startEpoch;
+        evolutions(k).trajectories(p).individual.x_R                   = depvar(:,2);
+        evolutions(k).trajectories(p).individual.y_R                   = depvar(:,3);
+        evolutions(k).trajectories(p).individual.z_R                   = depvar(:,4);
+        evolutions(k).trajectories(p).individual.altitude              = depvar(:,5);
+        evolutions(k).trajectories(p).individual.latitude_angle        = rad2deg(depvar(:,6));
+        evolutions(k).trajectories(p).individual.longitude_angle       = rad2deg(depvar(:,7));
+        %    evolutions(k).trajectories(pp).individual.latitude_angle  = rad2deg(depvar(:,8));
+        %    evolutions(k).trajectories(pp).individual.longitude_angle = rad2deg(depvar(:,9));
+        evolutions(k).trajectories(p).individual.heading_angle         = rad2deg(depvar(:,8));
+        evolutions(k).trajectories(p).individual.flight_path_angle     = rad2deg(depvar(:,9));
+        evolutions(k).trajectories(p).individual.angle_of_attack       = rad2deg(depvar(:,10));
+        evolutions(k).trajectories(p).individual.angle_of_sideslip     = rad2deg(depvar(:,11));
+        evolutions(k).trajectories(p).individual.bank_angle            = rad2deg(depvar(:,12));
+        evolutions(k).trajectories(p).individual.height                = depvar(:,13);
+        evolutions(k).trajectories(p).individual.mach                  = depvar(:,14);
+        evolutions(k).trajectories(p).individual.airspeed              = depvar(:,15);
+        evolutions(k).trajectories(p).individual.total_aero_g_load     = depvar(:,16);
+        evolutions(k).trajectories(p).individual.acc_aero_x            = depvar(:,17);
+        evolutions(k).trajectories(p).individual.acc_aero_y            = depvar(:,18);
+        evolutions(k).trajectories(p).individual.acc_aero_z            = depvar(:,19);
+        evolutions(k).trajectories(p).individual.acc_grav_x            = depvar(:,20);
+        evolutions(k).trajectories(p).individual.acc_grav_y            = depvar(:,21);
+        evolutions(k).trajectories(p).individual.acc_grav_z            = depvar(:,22);
+        evolutions(k).trajectories(p).individual.acc_thru_x            = depvar(:,23);
+        evolutions(k).trajectories(p).individual.acc_thru_y            = depvar(:,24);
+        evolutions(k).trajectories(p).individual.acc_thru_z            = depvar(:,25);
+        evolutions(k).trajectories(p).individual.acc_x                 = depvar(:,17) + depvar(:,20) + depvar(:,23);
+        evolutions(k).trajectories(p).individual.acc_y                 = depvar(:,18) + depvar(:,21) + depvar(:,24);
+        evolutions(k).trajectories(p).individual.acc_z                 = depvar(:,19) + depvar(:,22) + depvar(:,25);
+        evolutions(k).trajectories(p).individual.acc_aero_M            = sqrt(depvar(:,17).^2 + depvar(:,18).^2 + depvar(:,19).^2);
+        evolutions(k).trajectories(p).individual.acc_grav_M            = sqrt(depvar(:,20).^2 + depvar(:,21).^2 + depvar(:,22).^2);
+        evolutions(k).trajectories(p).individual.acc_thru_M            = sqrt(depvar(:,23).^2 + depvar(:,24).^2 + depvar(:,25).^2);
+        evolutions(k).trajectories(p).individual.dynamic_pressure      = depvar(:,26);
+        evolutions(k).trajectories(p).individual.heating_rate          = depvar(:,27);
+        %evolutions(k).trajectories(p).individual.stagnation_flux       = depvar(:,27);
+        evolutions(k).trajectories(p).individual.mass_rate             = depvar(:,28);
+        evolutions(k).trajectories(p).individual.mass                  = depvar(:,29);
+        evolutions(k).trajectories(p).individual.E                     = depvar(:,30);
+        evolutions(k).trajectories(p).individual.E_hat                 = depvar(:,31);
+        evolutions(k).trajectories(p).individual.throttle              = depvar(:,32);
+        evolutions(k).trajectories(p).individual.thrust_angle          = depvar(:,33);
+        evolutions(k).trajectories(p).individual.engine_status         = depvar(:,34);
+        evolutions(k).trajectories(p).individual.distance_traveled     = rad2deg(depvar(:,35));
+        evolutions(k).trajectories(p).individual.distance_to_go        = rad2deg(depvar(:,36));
+        evolutions(k).trajectories(p).individual.heading_to_target     = rad2deg(depvar(:,37));
+        evolutions(k).trajectories(p).individual.heading_error         = rad2deg(depvar(:,38));
+        evolutions(k).trajectories(p).individual.q_dot_LE              = rad2deg(depvar(:,39));
+        
+        evolutions(k).trajectories(p).individual.interp_E_mapped_Ascent               = interp_Ascent(:,1);
+        evolutions(k).trajectories(p).individual.interp_angle_of_attack_Ascent        = interp_Ascent(:,2);
+        evolutions(k).trajectories(p).individual.interp_bank_angle_Ascent             = interp_Ascent(:,3);
+        evolutions(k).trajectories(p).individual.interp_thrust_elevation_angle_Ascent = interp_Ascent(:,4);
+        evolutions(k).trajectories(p).individual.interp_thrust_azimuth_angle_Ascent   = interp_Ascent(:,5);
+        evolutions(k).trajectories(p).individual.interp_throttle_setting_Ascent       = interp_Ascent(:,6);
+        
+        evolutions(k).trajectories(p).individual.interp_E_mapped_Descent               = interp_Descent(:,1);
+        evolutions(k).trajectories(p).individual.interp_angle_of_attack_Descent        = interp_Descent(:,2);
+        evolutions(k).trajectories(p).individual.interp_bank_angle_Descent             = interp_Descent(:,3);
+        evolutions(k).trajectories(p).individual.interp_thrust_elevation_angle_Descent = interp_Descent(:,4);
+        evolutions(k).trajectories(p).individual.interp_thrust_azimuth_angle_Descent   = interp_Descent(:,5);
+        evolutions(k).trajectories(p).individual.interp_throttle_setting_Descent       = interp_Descent(:,6);
+        
+        evolutions(k).trajectories(p).individual.DV_E_mapped_Ascent               = DV_mapped_Ascent(:,1);
+        evolutions(k).trajectories(p).individual.DV_angle_of_attack_Ascent        = DV_mapped_Ascent(:,2);
+        evolutions(k).trajectories(p).individual.DV_bank_angle_Descent            = DV_mapped_Ascent(:,3);
+        evolutions(k).trajectories(p).individual.DV_thrust_elevation_angle_Ascent = DV_mapped_Ascent(:,4);
+        evolutions(k).trajectories(p).individual.DV_thrust_azimuth_angle_Ascent   = DV_mapped_Ascent(:,5);
+        evolutions(k).trajectories(p).individual.DV_throttle_setting_Ascent       = DV_mapped_Ascent(:,6);
+        
+        evolutions(k).trajectories(p).individual.DV_E_mapped_Descent               = DV_mapped_Descent(:,1);
+        evolutions(k).trajectories(p).individual.DV_angle_of_attack_Descent        = DV_mapped_Descent(:,2);
+        evolutions(k).trajectories(p).individual.DV_bank_angle_Descent             = DV_mapped_Descent(:,3);
+        evolutions(k).trajectories(p).individual.DV_thrust_elevation_angle_Descent = DV_mapped_Descent(:,4);
+        evolutions(k).trajectories(p).individual.DV_thrust_azimuth_angle_Descent   = DV_mapped_Descent(:,5);
+        evolutions(k).trajectories(p).individual.DV_throttle_setting_Descent       = DV_mapped_Descent(:,6);
         
         
         
-        evolutions(k).trajectories(p).individual.interp_E_mapped_Ascent         = interp_Ascent(1:end,1);
-        evolutions(k).trajectories(p).individual.interp_angle_of_attack_Ascent  = interp_Ascent(1:end,2);
-        evolutions(k).trajectories(p).individual.interp_thrust_angle     = interp_Ascent(1:end,3);
-        evolutions(k).trajectories(p).individual.interp_throttle_setting = interp_Ascent(1:end,4);
-        
-        evolutions(k).trajectories(p).individual.interp_E_mapped_Descent         = interp_Descent(1:end,1);
-        evolutions(k).trajectories(p).individual.interp_angle_of_attack_Descent  = interp_Descent(1:end,2);
-        evolutions(k).trajectories(p).individual.interp_bank_angle     = interp_Descent(1:end,3);
-        
-        evolutions(k).trajectories(p).individual.DV_E_mapped_Ascent         = DV_mapped(1:end,1);
-        evolutions(k).trajectories(p).individual.DV_angle_of_attack_Ascent  = DV_mapped(1:end,2);
-        evolutions(k).trajectories(p).individual.DV_thrust_angle     = DV_mapped(1:end,3);
-        evolutions(k).trajectories(p).individual.DV_throttle_setting = DV_mapped(1:end,4);
-        
-        
-        lat_c_rad = depvar(1:end,6); lon_c_rad = depvar(1:end,7);
+        lat_c_rad = depvar(:,6); lon_c_rad = depvar(:,7);
         lat_f_rad = deg2rad(lat_f_deg); lon_f_rad =  deg2rad(lon_f_deg);
         lat_dif = lat_f_rad - lat_c_rad; lon_dif = lon_f_rad - lon_c_rad;
         distance_to_go = rad2deg(acos(sin(lat_c_rad).*sin(lat_f_rad) + cos(lat_c_rad).*cos(lat_f_rad).*cos(lon_dif)));
         chi_req_rad_Y = sin(lon_dif).*cos(lat_f_rad);
         chi_req_rad_X = cos(lat_c_rad)*sin(lat_f_rad) - sin(lat_c_rad).*cos(lat_f_rad).*cos(lon_dif);
         chi_req_deg = rad2deg(atan2(chi_req_rad_Y,chi_req_rad_X));
-        chi_err_deg = rad2deg(depvar(1:end,8)) - chi_req_deg;
+        chi_err_deg = rad2deg(depvar(:,8)) - chi_req_deg;
         
-        %evolutions(k).trajectories(p).individual.E                = 9.80665*depvar(1:end,13) + 0.5*(depvar(1:end,15)).^2;
+        %evolutions(k).trajectories(p).individual.E                = 9.80665*depvar(:,13) + 0.5*(depvar(:,15)).^2;
         %evolutions(k).trajectories(p).individual.d_deg            = d_deg;
         %evolutions(k).trajectories(p).individual.heading_error    = chi_err_deg;
         %evolutions(k).trajectories(p).individual.heading_required = chi_req_deg;

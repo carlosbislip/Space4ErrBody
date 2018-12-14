@@ -31,7 +31,7 @@ for p = 1:numel(compilation)
         set (gca,'Fontsize',15)
         title(strcat('Interpolated AoA for Ascent - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
         ylim([0 30])
-         max_interp_E_mapped_Ascent = max([compilation(p).evolutions.max_interp_E_mapped_Ascent]);
+        max_interp_E_mapped_Ascent = max([compilation(p).evolutions.max_interp_E_mapped_Ascent]);
         xlim([0 max_interp_E_mapped_Ascent])
         xlabel('Mapped Energy: E_{mapped}') % x-axis label
         ylabel('Angle of attack (deg)') % y-axis label
@@ -45,7 +45,7 @@ for p = 1:numel(compilation)
             scatter(compilation(p).evolutions(k).trajectories(ii).individual.DV_E_mapped_Ascent,...
                 compilation(p).evolutions(k).trajectories(ii).individual.DV_angle_of_attack_Ascent);
         end
-       
+        
         %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
         hold off
         saveas(...
@@ -72,22 +72,22 @@ for p = 1:numel(compilation)
         set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
         set (gca,'Fontsize',15)
         title(strcat('Interpolated AoA for Descent - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
-        ylim([0 300])
-         max_interp_E_mapped_Descent = max([compilation(p).evolutions.max_interp_E_mapped_Descent]);
-       % xlim([0 max_interp_E_mapped_Descent])
+        ylim([0 50])
+        max_interp_E_mapped_Descent = max([compilation(p).evolutions.max_interp_E_mapped_Descent]);
+        % xlim([0 max_interp_E_mapped_Descent])
         xlabel('Mapped Energy: E_{mapped}') % x-axis label
         ylabel('Angle of attack (deg)') % y-axis label
         set(gca,'YTick', 0:30:300);
-      %  set(gca,'XTick', 0:.2:max_interp_E_mapped_Descent);
+        %  set(gca,'XTick', 0:.2:max_interp_E_mapped_Descent);
         hold on
         
         for ii = 1:numel(compilation(p).evolutions(k).trajectories)
             plot(compilation(p).evolutions(k).trajectories(ii).individual.interp_E_mapped_Descent,...
                 compilation(p).evolutions(k).trajectories(ii).individual.interp_angle_of_attack_Descent);
-          %  scatter(compilation(p).evolutions(k).trajectories(ii).individual.DV_E_mapped_Ascent,...
-           %     compilation(p).evolutions(k).trajectories(ii).individual.DV_angle_of_attack_Ascent);
+            scatter(compilation(p).evolutions(k).trajectories(ii).individual.DV_E_mapped_Descent,...
+                compilation(p).evolutions(k).trajectories(ii).individual.DV_angle_of_attack_Descent);
         end
-       
+        
         %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
         hold off
         saveas(...
@@ -104,7 +104,7 @@ for p = 1:numel(compilation)
     end
 end
 
-%% Interpolators: Thrust Elevation Angle
+%% Interpolators: Thrust Elevation Angle - Ascent
 for p = 1:numel(compilation)
     
     for k = 1:numel(compilation(p).evolutions)
@@ -112,10 +112,10 @@ for p = 1:numel(compilation)
         figure(fig_num)
         set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
         set (gca,'Fontsize',15)
-        title(strcat('Interpolated eps_T - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
-        %ylim([0 10])
+        title(strcat('Interpolated eps_T for Ascent - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+        ylim([-30 30])
         % max_tof = max([compilation(p).evolutions.max_tof]);
-         max_interp_E_mapped_Ascent = max([compilation(p).evolutions.max_interp_E_mapped]);
+        max_interp_E_mapped_Ascent = max([compilation(p).evolutions.max_interp_E_mapped_Ascent]);
         xlim([0 max_interp_E_mapped_Ascent])
         xlabel('Mapped Energy: E_{mapped}') % x-axis label
         ylabel('Thrust Elevation Angle (deg)') % y-axis label
@@ -124,19 +124,19 @@ for p = 1:numel(compilation)
         hold on
         
         for ii = 1:numel(compilation(p).evolutions(k).trajectories)
-            plot(compilation(p).evolutions(k).trajectories(ii).individual.interp_E_mapped,...
-                compilation(p).evolutions(k).trajectories(ii).individual.interp_thrust_angle);
-                        scatter(compilation(p).evolutions(k).trajectories(ii).individual.DV_E_mapped,...
-                compilation(p).evolutions(k).trajectories(ii).individual.DV_thrust_angle);
+            plot(compilation(p).evolutions(k).trajectories(ii).individual.interp_E_mapped_Ascent,...
+                compilation(p).evolutions(k).trajectories(ii).individual.interp_thrust_elevation_angle_Ascent);
+            scatter(compilation(p).evolutions(k).trajectories(ii).individual.DV_E_mapped_Ascent,...
+                compilation(p).evolutions(k).trajectories(ii).individual.DV_thrust_elevation_angle_Ascent);
         end
-       
+        
         %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
         hold off
         saveas(...
             figure(fig_num),...
             strcat(...
             mainpath,...
-            '/figures/interp_eps_T_Evolution_',...
+            '/figures/interp_eps_T_Ascent_Evolution_',...
             num2str(k - 1),...
             '_Set',...
             convertCharsToStrings(compilation(p).set),...
@@ -146,39 +146,41 @@ for p = 1:numel(compilation)
     end
 end
 
-%% Interpolators: Throttle Setting
+
+
+%% Interpolators: Thrust Elevation Angle - Descent
 for p = 1:numel(compilation)
     
     for k = 1:numel(compilation(p).evolutions)
-        fig_num = p*100 + 3459000 + k*1;
+        fig_num = p*100 + 3459100 + k*1;
         figure(fig_num)
         set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
         set (gca,'Fontsize',15)
-        title(strcat('Throttle Setting - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
-        %ylim([0 1])
+        title(strcat('Interpolated eps_T for Descent - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+        ylim([-30 30])
         % max_tof = max([compilation(p).evolutions.max_tof]);
-         max_interp_E_mapped_Ascent = max([compilation(p).evolutions.max_interp_E_mapped]);
-        xlim([0 max_interp_E_mapped_Ascent])
+        %max_interp_E_mapped_Descent = max(abs([compilation(p).evolutions.max_interp_E_mapped_Descent]));
+        %xlim([0 max_interp_E_mapped_Descent])
         xlabel('Mapped Energy: E_{mapped}') % x-axis label
-        ylabel('Throttle Setting (-)') % y-axis label
+        ylabel('Thrust Elevation Angle (deg)') % y-axis label
         % set(gca,'YTick', 0:1:10);
-        set(gca,'XTick', 0:.2:max_interp_E_mapped_Ascent);
+       % set(gca,'XTick', 0:.2:max_interp_E_mapped_Descent);
         hold on
         
         for ii = 1:numel(compilation(p).evolutions(k).trajectories)
-            plot(compilation(p).evolutions(k).trajectories(ii).individual.interp_E_mapped,...
-                compilation(p).evolutions(k).trajectories(ii).individual.interp_throttle_setting);
-                                    scatter(compilation(p).evolutions(k).trajectories(ii).individual.DV_E_mapped,...
-                compilation(p).evolutions(k).trajectories(ii).individual.DV_throttle_setting);
+            plot(compilation(p).evolutions(k).trajectories(ii).individual.interp_E_mapped_Descent,...
+                compilation(p).evolutions(k).trajectories(ii).individual.interp_thrust_elevation_angle_Descent);
+            scatter(compilation(p).evolutions(k).trajectories(ii).individual.DV_E_mapped_Descent,...
+                compilation(p).evolutions(k).trajectories(ii).individual.DV_thrust_elevation_angle_Descent);
         end
-       
+        
         %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
         hold off
         saveas(...
             figure(fig_num),...
             strcat(...
             mainpath,...
-            '/figures/interp_throttle_Evolution_',...
+            '/figures/interp_eps_T_Descent_Evolution_',...
             num2str(k - 1),...
             '_Set',...
             convertCharsToStrings(compilation(p).set),...
@@ -187,6 +189,94 @@ for p = 1:numel(compilation)
         close(fig_num);
     end
 end
+
+
+%% Interpolators: Throttle Setting - Ascent
+for p = 1:numel(compilation)
+    
+    for k = 1:numel(compilation(p).evolutions)
+        fig_num = p*100 + 3459000 + k*1;
+        figure(fig_num)
+        set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
+        set (gca,'Fontsize',15)
+        title(strcat('Throttle Setting for Ascent - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+        ylim([-1 2])
+        % max_tof = max([compilation(p).evolutions.max_tof]);
+%        max_interp_E_mapped_Ascent = max([compilation(p).evolutions.max_interp_E_mapped]);
+       % xlim([0 max_interp_E_mapped_Ascent])
+        xlabel('Mapped Energy: E_{mapped}') % x-axis label
+        ylabel('Throttle Setting (-)') % y-axis label
+        % set(gca,'YTick', 0:1:10);
+        %set(gca,'XTick', 0:.2:max_interp_E_mapped_Ascent);
+        hold on
+        
+        for ii = 1:numel(compilation(p).evolutions(k).trajectories)
+            plot(compilation(p).evolutions(k).trajectories(ii).individual.interp_E_mapped_Ascent,...
+                compilation(p).evolutions(k).trajectories(ii).individual.interp_throttle_setting_Ascent);
+            scatter(compilation(p).evolutions(k).trajectories(ii).individual.DV_E_mapped_Ascent,...
+                compilation(p).evolutions(k).trajectories(ii).individual.DV_throttle_setting_Ascent);
+        end
+        
+        %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
+        hold off
+        saveas(...
+            figure(fig_num),...
+            strcat(...
+            mainpath,...
+            '/figures/interp_throttle_Ascent_Evolution_',...
+            num2str(k - 1),...
+            '_Set',...
+            convertCharsToStrings(compilation(p).set),...
+            '.png'),...
+            'png');
+        close(fig_num);
+    end
+end
+
+
+%% Interpolators: Throttle Setting - Descent
+for p = 1:numel(compilation)
+    
+    for k = 1:numel(compilation(p).evolutions)
+        fig_num = p*100 + 3459000 + k*1;
+        figure(fig_num)
+        set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
+        set (gca,'Fontsize',15)
+        title(strcat('Throttle Setting for Descent - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+        ylim([-1 2])
+        % max_tof = max([compilation(p).evolutions.max_tof]);
+%        max_interp_E_mapped_Ascent = max([compilation(p).evolutions.max_interp_E_mapped]);
+       % xlim([0 max_interp_E_mapped_Ascent])
+        xlabel('Mapped Energy: E_{mapped}') % x-axis label
+        ylabel('Throttle Setting (-)') % y-axis label
+        % set(gca,'YTick', 0:1:10);
+        %set(gca,'XTick', 0:.2:max_interp_E_mapped_Ascent);
+        hold on
+        
+        for ii = 1:numel(compilation(p).evolutions(k).trajectories)
+            plot(compilation(p).evolutions(k).trajectories(ii).individual.interp_E_mapped_Descent,...
+                compilation(p).evolutions(k).trajectories(ii).individual.interp_throttle_setting_Descent);
+            scatter(compilation(p).evolutions(k).trajectories(ii).individual.DV_E_mapped_Descent,...
+                compilation(p).evolutions(k).trajectories(ii).individual.DV_throttle_setting_Descent);
+        end
+        
+        %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
+        hold off
+        saveas(...
+            figure(fig_num),...
+            strcat(...
+            mainpath,...
+            '/figures/interp_throttle_Descent_Evolution_',...
+            num2str(k - 1),...
+            '_Set',...
+            convertCharsToStrings(compilation(p).set),...
+            '.png'),...
+            'png');
+        close(fig_num);
+    end
+end
+
+
 %% Time History: Aero G-load - per Evolution
 for p = 1:numel(compilation)
     
@@ -223,7 +313,7 @@ for p = 1:numel(compilation)
             '.png'),...
             'png');
         close(fig_num);
-  end  
+    end
 end
 
 %% Time History: Thrust Acc. Components - per Evolution
@@ -252,8 +342,8 @@ for p = 1:numel(compilation)
             plot(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
                 compilation(p).evolutions(k).trajectories(ii).individual.acc_thru_z,'b');
         end
-     legend('x-dir','y-dir','z-dir')
-
+        legend('x-dir','y-dir','z-dir')
+        
         %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
         hold off
         saveas(...
@@ -267,7 +357,7 @@ for p = 1:numel(compilation)
             '.png'),...
             'png');
         close(fig_num);
-   end
+    end
 end
 
 
@@ -293,10 +383,10 @@ for p = 1:numel(compilation)
         for ii = 1:numel(compilation(p).evolutions(k).trajectories)
             plot(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
                 compilation(p).evolutions(k).trajectories(ii).individual.acc_thru_M);
-
+            
         end
-     %legend('x-dir','y-dir','z-dir')
-
+        %legend('x-dir','y-dir','z-dir')
+        
         %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
         hold off
         saveas(...
@@ -310,7 +400,7 @@ for p = 1:numel(compilation)
             '.png'),...
             'png');
         close(fig_num);
-   end
+    end
 end
 
 %% Time History: Airspeed - per Evolution
@@ -335,7 +425,7 @@ for p = 1:numel(compilation)
             plot(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
                 compilation(p).evolutions(k).trajectories(ii).individual.airspeed);
         end
-     
+        
         %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
         hold off
         saveas(...
@@ -349,7 +439,7 @@ for p = 1:numel(compilation)
             '.png'),...
             'png');
         close(fig_num);
-   end
+    end
 end
 
 %% Time History: Mach - per Evolution
@@ -374,7 +464,7 @@ for p = 1:numel(compilation)
             plot(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
                 compilation(p).evolutions(k).trajectories(ii).individual.mach);
         end
-     
+        
         %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
         hold off
         saveas(...
@@ -388,7 +478,7 @@ for p = 1:numel(compilation)
             '.png'),...
             'png');
         close(fig_num);
-   end
+    end
 end
 
 %% Time History: Mass rate - per Evolution
@@ -413,7 +503,7 @@ for p = 1:numel(compilation)
             plot(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
                 compilation(p).evolutions(k).trajectories(ii).individual.mass_rate);
         end
-      
+        
         %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
         hold off
         saveas(...
@@ -427,10 +517,10 @@ for p = 1:numel(compilation)
             '.png'),...
             'png');
         close(fig_num);
-   end
+    end
 end
 
-% 
+%
 %% Time History: Specific Energy - per Evolution
 for p = 1:numel(compilation)
     
@@ -445,7 +535,7 @@ for p = 1:numel(compilation)
         xlim([0 max_tof])
         xlabel('Propagation Time (s)') % x-axis label
         ylabel('Specific Energy (E)') % y-axis label
-       % set(gca,'YTick', 0:2e5:2e6);
+        % set(gca,'YTick', 0:2e5:2e6);
         set(gca,'XTick', 0:50:max_tof);
         hold on
         
@@ -491,12 +581,12 @@ for p = 1:numel(compilation)
         set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
         set (gca,'Fontsize',15)
         title(strcat('Normalized Specific Energy through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
-        % ylim([0 .11])
+        ylim([0 1])
         max_tof = max([compilation(p).evolutions.max_tof]);
         xlim([0 max_tof])
         xlabel('Propagation Time (s)') % x-axis label
         ylabel('Normalized Specific Energy') % y-axis label
-        % set(gca,'YTick', 0:.1);
+         set(gca,'YTick', 0:.1:1);
         set(gca,'XTick', 0:200:max_tof);
         hold on
         
@@ -552,20 +642,20 @@ end
 %             compilation(p).evolutions(k).individuals.lat_f_deg,'x')
 %         legendtext(k) = cellstr(strcat(strrep(convertCharsToStrings(compilation(p).set),'_',' '),' - Evolution:_{ } ', num2str(k-1)));
 %     end
-%     
+%
 %     plot(lon_f_deg,lat_f_deg,'MarkerSize',20)
 %     plot(lon_f_deg*[1 1],90*[-1 1],'k','LineWidth',2)
 %     plot(180*[-1 1],lat_f_deg*[1 1],'k','LineWidth',2)
-%     
-     th = 0:pi/50:2*pi;
-     xunit = .75 * cos(th) + lon_f_deg;
-     yunit = .75 * sin(th) + lat_f_deg;
+%
+th = 0:pi/50:2*pi;
+xunit = .75 * cos(th) + lon_f_deg;
+yunit = .75 * sin(th) + lat_f_deg;
 %     plot(xunit, yunit,'k','LineWidth',2);
 %     scatter(lon_f_deg,lat_f_deg,100,'r','x')
 %     axP = get(gca,'Position');
 %     legend(legendtext,'Location','southeastoutside')
 %     set(gca, 'Position', axP)
-%     
+%
 %     clear legendtext
 %     %xlim([(lon_IAD_deg - 20) (lon_IAD_deg + 20)])
 %     %ylim([(lat_IAD_deg - 10) (lat_IAD_deg + 10)])
@@ -579,11 +669,11 @@ end
 %         '.png'),...
 %         'png');
 %     close(fig_num);
-%     
+%
 % end
-% 
+%
 % %% Termination State on 2D Map - Zoom - per Set
-% 
+%
 % for p = 1:numel(compilation)
 %     fig_num = p + 100;
 %     figure(fig_num)
@@ -599,14 +689,14 @@ end
 %     set(gca,'XTick', -180:1:180);
 %     xlim([(lon_f_deg - 10) (lon_f_deg + 10)])
 %     ylim([(lat_f_deg - 5) (lat_f_deg + 5)])
-%     
+%
 %     for k = 1:numel(compilation(p).evolutions)
 %         scatter(...
 %             compilation(p).evolutions(k).individuals.lon_f_deg,...
 %             compilation(p).evolutions(k).individuals.lat_f_deg,'x')
 %         legendtext(k) = cellstr(strcat(strrep(convertCharsToStrings(compilation(p).set),'_',' '),' - Evolution:_{ } ', num2str(k-1)));
 %     end
-%     
+%
 %     plot(lon_f_deg*[1 1],90*[-1 1],'k','LineWidth',2)
 %     plot(180*[-1 1],lat_f_deg*[1 1],'k','LineWidth',2)
 %     plot(xunit, yunit,'k','LineWidth',2);
@@ -615,11 +705,11 @@ end
 %     legend(legendtext,'Location','southeastoutside')
 %     set(gca, 'Position', axP)
 %     clear legendtext
-%     
+%
 %     hold off
-%     
+%
 %     print(figure(fig_num),'MySavedPlot','-dpng')
-%     
+%
 %     saveas(...
 %         figure(fig_num),...
 %         strcat(...
@@ -629,7 +719,7 @@ end
 %         '.png'),...
 %         'png');
 %     close(fig_num);
-%     
+%
 % end
 
 %% Trajectories on 2D Map - per Set
@@ -683,7 +773,7 @@ for p = 1:numel(compilation)
     close(fig_num);
     
 end
-% 
+%
 % %% Trajectories on 2D Map - Zoom - per Set
 % %close all
 % for p = 1:numel(compilation)
@@ -701,13 +791,13 @@ end
 %     set(gca,'XTick', -180:1:180);
 %     xlim([(lon_f_deg - 10) (lon_f_deg + 10)])
 %     ylim([(lat_f_deg - 5) (lat_f_deg + 5)])
-%     
+%
 %     if compilation(1).validation == 1
 %         xlim([-72 -52])
 %         ylim([-3 7])
-%         
+%
 %     end
-%     
+%
 %     for k = 1:numel(compilation(p).evolutions)
 %         for ii = 1:numel(compilation(p).evolutions(k).trajectories)
 %             plot(...
@@ -716,7 +806,7 @@ end
 %             legendtext(k) = cellstr(strcat(strrep(convertCharsToStrings(compilation(p).set),'_',' '),' - Evolution:_{ } ', num2str(k-1)));
 %         end
 %     end
-%     
+%
 %     plot(lon_f_deg,lat_f_deg,'MarkerSize',20)
 %     plot(lon_f_deg*[1 1],90*[-1 1],'k','LineWidth',2)
 %     plot(180*[-1 1],lat_f_deg*[1 1],'k','LineWidth',2)
@@ -725,7 +815,7 @@ end
 %     axP = get(gca,'Position');
 %     % legend(legendtext,'Location','southeastoutside')
 %     set(gca, 'Position', axP)
-%     
+%
 %     clear legendtext
 %     %xlim([(lon_IAD_deg - 20) (lon_IAD_deg + 20)])
 %     %ylim([(lat_IAD_deg - 10) (lat_IAD_deg + 10)])
@@ -739,16 +829,16 @@ end
 %         '.png'),...
 %         'png');
 %     close(fig_num);
-%     
+%
 % end
-% 
-% 
+%
+%
 % %% Trajectory on 2D Map - Zoom - per Evolution
 % %close all
 % for p = 1:numel(compilation)
-%     
+%
 %     for k = 1:numel(compilation(p).evolutions)
-%         
+%
 %         fig_num = p*10 + 310 + k;
 %         figure(fig_num)
 %         hold on
@@ -763,23 +853,23 @@ end
 %         set(gca,'XTick', -180:1:180);
 %         xlim([(lon_f_deg - 10) (lon_f_deg + 10)])
 %         ylim([(lat_f_deg - 5) (lat_f_deg + 5)])
-%         
+%
 %         if compilation(1).validation == 1
-%             
+%
 %             xlim([-72 -52])
 %             ylim([-3 7])
-%             
+%
 %         end
-%         
+%
 %         for ii = 1:numel(compilation(p).evolutions(k).trajectories)
-%             
+%
 %             plot(...
 %                 compilation(p).evolutions(k).trajectories(ii).individual.longitude_angle,...
 %                 compilation(p).evolutions(k).trajectories(ii).individual.latitude_angle,'LineWidth',2)
 %             %legendtext(k) = cellstr(strcat(strrep(convertCharsToStrings(compilation(p).set),'_',' '),' - Evolution:_{ } ', num2str(k-1)));
-%             
+%
 %         end
-%         
+%
 %         plot(lon_f_deg,lat_f_deg,'MarkerSize',20)
 %         plot(lon_f_deg*[1 1],90*[-1 1],'k','LineWidth',2)
 %         plot(180*[-1 1],lat_f_deg*[1 1],'k','LineWidth',2)
@@ -788,7 +878,7 @@ end
 %         axP = get(gca,'Position');
 %         % legend(legendtext,'Location','southeastoutside')
 %         set(gca, 'Position', axP)
-%         
+%
 %         clear legendtext
 %         %xlim([(lon_IAD_deg - 20) (lon_IAD_deg + 20)])
 %         %ylim([(lat_IAD_deg - 10) (lat_IAD_deg + 10)])
@@ -803,11 +893,11 @@ end
 %             '.png'),...
 %             'png');
 %         close(fig_num);
-%         
+%
 %     end
 % end
-% 
-% 
+%
+%
 % %% Plot Trajectories on 3D Earth
 % %
 % % for p = 1:numel(compilation)
@@ -905,9 +995,9 @@ end
 % %     saveas(figure(fig_num),strcat(mainpath,'/figures/Trajectories_3D_Map_2_Set',convertCharsToStrings(compilation(p).set),'.png'));
 % %
 % % end
-% 
-% 
-% 
+%
+%
+%
 % %%
 % % for p = 1:numel(compilation)
 % %
@@ -950,9 +1040,9 @@ end
 % %
 % % saveas(gcf,strcat(mainpath,'/figures/Trajectory in 3D - 1 - ',strrep(convertCharsToStrings(compilation(p).set),'_',' '),'.png'));
 % % end
-% 
+%
 % %% Grid Visualization: v_i, gamma_i, and chi_i
-% 
+%
 % % for p = 1:numel(compilation)
 % %
 % %     figure(p +500)
@@ -987,8 +1077,8 @@ end
 % %         saveas(gcf,strcat(mainpath,'/figures/Inter-Continental Ballistic Tajectory - Cases tested -_{ } ',strrep(convertCharsToStrings(compilation(p).set),'_',' '),'.png'));
 % %
 % % end
-% 
-% 
+%
+%
 
 %% Time History: Angle of Attack - per Evolution
 for p = 1:numel(compilation)
@@ -1025,7 +1115,7 @@ for p = 1:numel(compilation)
             convertCharsToStrings(compilation(p).set),...
             '.png'),...
             'png');
-       % close(fig_num);
+        % close(fig_num);
     end
 end
 
@@ -1064,7 +1154,7 @@ for p = 1:numel(compilation)
             convertCharsToStrings(compilation(p).set),...
             '.png'),...
             'png');
-       % close(fig_num);
+        % close(fig_num);
     end
 end
 
@@ -1117,12 +1207,12 @@ for p = 1:numel(compilation)
         set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
         set (gca,'Fontsize',15)
         title(strcat('Heating Rate at Leading Edge through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
-       % ylim([0 100])
+        % ylim([0 100])
         max_tof = max([compilation(p).evolutions.max_tof]);
         xlim([0 max_tof])
         xlabel('Propagation Time (s)') % x-axis label
         ylabel('Heating Rate at Leading Edge (W/m)') % y-axis label
-       % set(gca,'YTick', 0:10:100);
+        % set(gca,'YTick', 0:10:100);
         set(gca,'XTick', 0:200:max_tof);
         hold on
         
@@ -1156,7 +1246,7 @@ for p = 1:numel(compilation)
         set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
         set (gca,'Fontsize',15)
         title(strcat('Dynamic Pressure through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
-       % ylim([-90 90])
+        % ylim([-90 90])
         max_tof = max([compilation(p).evolutions.max_tof]);
         xlim([0 max_tof])
         xlabel('Propagation Time (s)') % x-axis label
@@ -1550,7 +1640,7 @@ for p = 1:numel(compilation)
         set (gca,'Fontsize',15)
         title(strcat('Height vs. Velocity - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
         ylim([0 150])
-       % max_tof = max([compilation(p).evolutions.max_tof]);
+        % max_tof = max([compilation(p).evolutions.max_tof]);
         xlim([0 8000])
         xlabel('Velocity (m/s)') % x-axis label
         ylabel('Height (km)') % y-axis label
@@ -1575,7 +1665,7 @@ for p = 1:numel(compilation)
             convertCharsToStrings(compilation(p).set),...
             '.png'),...
             'png');
-       % close(fig_num);
+        % close(fig_num);
     end
 end
 
@@ -1590,12 +1680,12 @@ for p = 1:numel(compilation)
         set (gca,'Fontsize',15)
         title(strcat('Height vs. Heating Rate at Leading Edge - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
         ylim([0 150])
-       % max_tof = max([compilation(p).evolutions.max_tof]);
-       % xlim([0 8000])
+        % max_tof = max([compilation(p).evolutions.max_tof]);
+        % xlim([0 8000])
         xlabel('Heating Rate at Leading Edge (W/m^2)') % x-axis label
         ylabel('Height (km)') % y-axis label
         set(gca,'YTick', 0:10:150);
-       % set(gca,'XTick', 0:500:8000);
+        % set(gca,'XTick', 0:500:8000);
         hold on
         
         for ii = 1:numel(compilation(p).evolutions(k).trajectories)
@@ -1603,7 +1693,7 @@ for p = 1:numel(compilation)
                 compilation(p).evolutions(k).trajectories(ii).individual.height/1e3);
         end
         
-       plot([0 8000],(25)*[1 1],'k','LineWidth',2)
+        plot([0 8000],(25)*[1 1],'k','LineWidth',2)
         hold off
         saveas(...
             figure(fig_num),...
@@ -1615,7 +1705,7 @@ for p = 1:numel(compilation)
             convertCharsToStrings(compilation(p).set),...
             '.png'),...
             'png');
-       % close(fig_num);
+        % close(fig_num);
     end
 end
 
@@ -1629,7 +1719,7 @@ for p = 1:numel(compilation)
         set (gca,'Fontsize',15)
         title(strcat('Heating Rate at Leading Edge vs. Velocity - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
         %ylim([0 150])
-       % max_tof = max([compilation(p).evolutions.max_tof]);
+        % max_tof = max([compilation(p).evolutions.max_tof]);
         xlim([0 8000])
         xlabel('Velocity (m/s)') % x-axis label
         ylabel('Heating Rate at Leading Edge (W/m^2)') % y-axis label
@@ -1654,7 +1744,7 @@ for p = 1:numel(compilation)
             convertCharsToStrings(compilation(p).set),...
             '.png'),...
             'png');
-       % close(fig_num);
+        % close(fig_num);
     end
 end
 
@@ -1696,11 +1786,11 @@ for p = 1:numel(compilation)
         close(fig_num);
     end
 end
-% 
-% 
+%
+%
 % %% Time History: Radial Distance - per Set
 % for p = 1:numel(compilation)
-%     
+%
 %     fig_num = p + 7000;
 %     figure(fig_num)
 %     set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
@@ -1714,15 +1804,15 @@ end
 %     set(gca,'YTick', 6.350e3:0.05e3:6.6e3);
 %     set(gca,'XTick', 0:200:max_tof);
 %     hold on
-%     
+%
 %     for k = 1:numel(compilation(p).evolutions)
-%         
+%
 %         for ii = 1:numel(compilation(p).evolutions(k).trajectories)
 %             plot(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
 %                 compilation(p).evolutions(k).trajectories(ii).individual.R_R_norm/1e3);
 %         end
 %     end
-%     
+%
 %     plot([0 max_tof],(6371 + 25)*[1 1],'k','LineWidth',2)
 %     hold off
 %     saveas(figure(fig_num),strcat(mainpath,'/figures/R_norm_v_T_Set',...
@@ -1730,15 +1820,15 @@ end
 %         '.png'),...
 %         'png');
 %     close(fig_num);
-%     
+%
 % end
-% 
-% 
-% 
-% 
+%
+%
+%
+%
 % %% 'Best' values
 % for p = 1:numel(compilation)
-%     
+%
 %     for k = 1:numel(compilation(p).evolutions)
 %         best_gamma_i(k,:)   = [compilation(p).evolutions(k).best.gamma_i];
 %         best_chi_i(k,:)     = [compilation(p).evolutions(k).best.chi_i];
@@ -1747,7 +1837,7 @@ end
 %         best_tof(k,:)       = [compilation(p).evolutions(k).best.tof];
 %     end
 %     legendtext = [{'Minimum d_{deg} offset'} {'Minimum height offset'} {'Minimum tof'}];
-%     
+%
 %     fig_num = p + 8000 + 1;
 %     figure(fig_num)
 %     set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
@@ -1772,7 +1862,7 @@ end
 %         'png');
 %     close(fig_num);
 %     hold off
-%     
+%
 %     fig_num = fig_num + 1;
 %     figure(fig_num)
 %     set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
@@ -1785,7 +1875,7 @@ end
 %     ylabel('Heading angle (deg)') % y-axis label
 %     %set(gca,'YTick', 6.350e3:0.05e3:6.6e3);
 %     %set(gca,'XTick', 0:200:max_tof);
-%     
+%
 %     hold on
 %     for ii = 1:3
 %         plot(linspace(1,size(best_chi_i,1),size(best_chi_i,1))-1,best_chi_i(:,ii));
@@ -1798,7 +1888,7 @@ end
 %         'png');
 %     close(fig_num);
 %     hold off
-%     
+%
 %     fig_num = fig_num + 1;
 %     figure(fig_num)
 %     set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
@@ -1823,7 +1913,7 @@ end
 %         'png');
 %     close(fig_num);
 %     hold off
-%     
+%
 %     fig_num = fig_num + 1;
 %     figure(fig_num)
 %     set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
@@ -1848,7 +1938,7 @@ end
 %         'png');
 %     close(fig_num);
 %     hold off
-%     
+%
 %     fig_num = fig_num + 1;
 %     figure(fig_num)
 %     set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
@@ -1873,10 +1963,10 @@ end
 %         'png');
 %     close(fig_num);
 %     hold off
-%     
+%
 % end
-% 
-% 
+%
+%
 % %% 'Best' Trajectories on 2D Map - Zoom - per Set
 % %close all
 % for p = 1:numel(compilation)
@@ -1894,17 +1984,17 @@ end
 %     set(gca,'XTick', -180:1:180);
 %     xlim([(lon_f_deg - 10) (lon_f_deg + 10)])
 %     ylim([(lat_f_deg - 5) (lat_f_deg + 5)])
-%     
+%
 %     if compilation(1).validation == 1
 %         xlim([-72 -52])
 %         ylim([-3 7])
-%         
+%
 %     end
 %     for k = 1:numel(compilation(p).evolutions)
 %         best_index(k,:)   = [compilation(p).evolutions(k).best.index];
 %     end
-%     
-%     
+%
+%
 %     for k = 1:numel(compilation(p).evolutions)
 %         for ii = 1:size(best_index,2)
 %             plot(...
@@ -1913,7 +2003,7 @@ end
 %             legendtext(k) = cellstr(strcat(strrep(convertCharsToStrings(compilation(p).set),'_',' '),' - Evolution:_{ } ', num2str(k-1)));
 %         end
 %     end
-%     
+%
 %     plot(lon_f_deg,lat_f_deg,'MarkerSize',20)
 %     plot(lon_f_deg*[1 1],90*[-1 1],'k','LineWidth',2)
 %     plot(180*[-1 1],lat_f_deg*[1 1],'k','LineWidth',2)
@@ -1922,7 +2012,7 @@ end
 %     axP = get(gca,'Position');
 %     % legend(legendtext,'Location','southeastoutside')
 %     set(gca, 'Position', axP)
-%     
+%
 %     clear legendtext
 %     %xlim([(lon_IAD_deg - 20) (lon_IAD_deg + 20)])
 %     %ylim([(lat_IAD_deg - 10) (lat_IAD_deg + 10)])
@@ -1936,9 +2026,9 @@ end
 %         '.png'),...
 %         'png');
 %     close(fig_num);
-%     
+%
 % end
-% 
+%
 % %% 'Best' Trajectories on 2D Map - Zoom - per Set
 % %close all
 % for p = 1:numel(compilation)
@@ -1956,19 +2046,19 @@ end
 %     set(gca,'XTick', -180:1:180);
 %     xlim([(lon_f_deg - 10) (lon_f_deg + 10)])
 %     ylim([(lat_f_deg - 5) (lat_f_deg + 5)])
-%     
+%
 %     if compilation(1).validation == 1
 %         set(gca,'YTick', -60:20:40);
 %         set(gca,'XTick', -140:20:0);
 %         ylim([-60 40])
 %         xlim([-145 0])
-%         
+%
 %     end
 %     for k = 1:numel(compilation(p).evolutions)
 %         best_index(k,:)   = [compilation(p).evolutions(k).best.index];
 %     end
-%     
-%     
+%
+%
 %     for k = 1:numel(compilation(p).evolutions)
 %         for ii = 1:size(best_index,2)
 %             plot(...
@@ -1977,7 +2067,7 @@ end
 %             legendtext(k) = cellstr(strcat(strrep(convertCharsToStrings(compilation(p).set),'_',' '),' - Evolution:_{ } ', num2str(k-1)));
 %         end
 %     end
-%     
+%
 %     plot(lon_f_deg,lat_f_deg,'MarkerSize',20)
 %     plot(lon_f_deg*[1 1],90*[-1 1],'k','LineWidth',2)
 %     plot(180*[-1 1],lat_f_deg*[1 1],'k','LineWidth',2)
@@ -1986,7 +2076,7 @@ end
 %     axP = get(gca,'Position');
 %     % legend(legendtext,'Location','southeastoutside')
 %     set(gca, 'Position', axP)
-%     
+%
 %     clear legendtext
 %     %xlim([(lon_IAD_deg - 20) (lon_IAD_deg + 20)])
 %     %ylim([(lat_IAD_deg - 10) (lat_IAD_deg + 10)])
@@ -2000,11 +2090,11 @@ end
 %         '.png'),...
 %         'png');
 %     close(fig_num);
-%     
+%
 % end
-% 
-% 
-% 
+%
+%
+%
 % %%
 % % for p = 1:numel(compilation)
 % %
@@ -2036,10 +2126,10 @@ end
 % %
 % % end
 % %%
-% 
-% 
+%
+%
 % for p = 1:numel(compilation)
-%     
+%
 %     %set(figure(p + 200),'units','pixels','position',[0,0,1200,600])
 %     %   xlabel('\tau (deg)') % x-axis label
 %     %   ylabel('\delta (deg)') % y-axis label
@@ -2049,14 +2139,14 @@ end
 %     %XTickLabel = [];
 %     %YTickLabel = [];
 %     max_tof = max([compilation(p).evolutions.max_tof]);
-%     
-%     
+%
+%
 %     for ii = 1:numel(compilation(p).evolutions)
-%         
+%
 %         for k = 1:30:numel(compilation(p).evolutions(ii).trajectories)
-%             
+%
 %             basenumber = 1000000000 + p*100000000 +ii*10000000 + k*100;
-%             
+%
 %             basenumber = basenumber+1;
 %             figure(basenumber)
 %             title('Time History: \chi')
@@ -2073,7 +2163,7 @@ end
 %             hold off
 %             saveas(figure(basenumber),strcat(mainpath,'/figures/heading_v_T_',num2str(ii),'_Set',num2str(k),convertCharsToStrings(compilation(p).set),'.png'));
 %             close(basenumber);
-%             
+%
 %             basenumber = basenumber+1;
 %             figure(basenumber)
 %             title('Time History: \gamma')
@@ -2090,7 +2180,7 @@ end
 %             hold off
 %             saveas(figure(basenumber),strcat(mainpath,'/figures/flightpath_v_T_',num2str(ii),'_Set',num2str(k),convertCharsToStrings(compilation(p).set),'.png'));
 %             close(basenumber);
-%             
+%
 %             basenumber = basenumber+1;
 %             figure(basenumber)
 %             title('Time History: \alpha')
@@ -2108,7 +2198,7 @@ end
 %             hold off
 %             saveas(figure(basenumber),strcat(mainpath,'/figures/AoA_v_T_',num2str(ii),'_Set',num2str(k),convertCharsToStrings(compilation(p).set),'.png'));
 %             close(basenumber);
-%             
+%
 %             %             basenumber = basenumber+1;
 %             %             figure(basenumber)
 %             %             title('Time History: \beta')
@@ -2124,7 +2214,7 @@ end
 %             %             plot(compilation(p).evolutions(i).trajectories(k).individual.time_vector,(compilation(p).evolutions(i).trajectories(k).individual.angle_of_sideslip));
 %             %             hold off
 %             %                                                 saveas(figure(basenumber),strcat('/Users/bislip/Cloud Storage/OneDrive/School/TUDelft/Space Flight/Thesis/code/figures/sideslip_v_T_',num2str(i),'_',num2str(k),convertCharsToStrings(compilation(p).set),'.png'));
-%             
+%
 %             basenumber = basenumber+1;
 %             figure(basenumber)
 %             title('Time History: \sigma')
@@ -2140,7 +2230,7 @@ end
 %             plot(compilation(p).evolutions(ii).trajectories(k).individual.time_vector,(compilation(p).evolutions(ii).trajectories(k).individual.heading_required));
 %             plot(compilation(p).evolutions(ii).trajectories(k).individual.time_vector,(compilation(p).evolutions(ii).trajectories(k).individual.heading_error));
 %             plot(compilation(p).evolutions(ii).trajectories(k).individual.time_vector,(compilation(p).evolutions(ii).trajectories(k).individual.d_deg));
-%             
+%
 %             plot([0 max_tof],30*[1 1],'k','LineWidth',2)
 %             plot([0 max_tof],-30*[1 1],'k','LineWidth',2)
 %             plot([0 max_tof],10*[1 1],'k','LineWidth',2)
@@ -2160,7 +2250,7 @@ end
 %             hold off
 %             saveas(figure(basenumber),strcat(mainpath,'/figures/bank_v_T_',num2str(ii),'_Set',num2str(k),convertCharsToStrings(compilation(p).set),'.png'));
 %             close(basenumber);
-%             
+%
 %             %             basenumber = basenumber+1;
 %             %             figure(basenumber)
 %             %             title('bank - 3D')
@@ -2190,38 +2280,38 @@ end
 %             %
 %             %
 %             %             hold off
-%             
-%             
-%             
+%
+%
+%
 %         end
 %     end
 %     % view([12,-5])
 %     %  ax = gca;               % get the current axis
 %     %  ax.Clipping = 'off';
 %     %  hold off
-%     
+%
 % end
-% 
-% 
-% 
-% 
-% 
-% 
-% 
-% 
-% 
-% 
-% 
-% 
-% 
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
 % %%
 % 'a'
 % % filename = '/Users/bislip/tudatBundle/tudatApplications//Space4Errbody/SimulationOutput/HORUS_OUTPUT/HORUSPropagationHistory.dat';
-% 
+%
 % %filename = '/Users/bislip/tudatBundle/tudatExampleApplications/satellitePropagatorExamples/SatellitePropagatorExamples/SimulationOutput/ApolloCapsuleExample/apolloPropagationHistory.dat'
-% 
+%
 % % M = dlmread(filename,',');
-% 
+%
 % % for i = 1:out
 % % t(i) = M(1:end,1);
 % % x_I = M(1:end,2);
@@ -2232,14 +2322,14 @@ end
 % % w_I = M(1:end,7);
 % %
 % % end
-% 
+%
 % % max_coordinate = max(max(abs(M(1:end,2:4))));
 % % n = floor(log(abs(max_coordinate))./log(10));
 % % extents = round(max_coordinate,-n);
 % % eo = 10^n;
 % % R_E = 6.371003216460394e6;
-% 
-% 
+%
+%
 % %%
 % % R_I_vect = [x_I y_I z_I];
 % % R_I_norm = sqrt(x_I.^2+y_I.^2+z_I.^2);
@@ -2248,9 +2338,9 @@ end
 % % delta_I = asin(z_I./R_I_norm);
 % % tau_I_deg = tau_I*180/pi;
 % % delta_I_deg = delta_I*180/pi;
-% 
-% 
-% 
+%
+%
+%
 % %
 % % % Calculate Transformation Matrix from Inertial Frame to Rotational Frame
 % % omega_E = 7.2921150e-5;
@@ -2269,7 +2359,7 @@ end
 % % y_R(:,1) = squeeze(R_R_vect(2,1,:));
 % % z_R(:,1) = squeeze(R_R_vect(3,1,:));
 % % R_R_norm = sqrt(x_R.^2+y_R.^2+z_R.^2);
-% 
+%
 % % % Calculate latitude and longitude in Rotational Frame
 % % tau_R = atan(y_R./x_R); % rad
 % % delta_R = asin(z_R./R_R_norm); % rad
@@ -2369,14 +2459,14 @@ end
 % % plot(t,R_I_norm-a_2)
 % % plot(t,sqrt((R_I_norm-a_2).^2))
 % % hold off
-% 
-% 
+%
+%
 % %%
 % %
 % % hold on
 % % %[S_x, S_y, S_z] = sphere(100);
 % % %surf(S_x*r, S_y*r, S_z*r);
-% 
+%
 % %
 % % %  color_line3(x_I2,y_I2,z_I2,t);
 % % %scatter3(x_I2(1),y_I2(1),z_I2(1),'filled')

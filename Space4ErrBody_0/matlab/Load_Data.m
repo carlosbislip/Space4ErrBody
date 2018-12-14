@@ -102,19 +102,38 @@ switch option
             evolutions(k).trajectories.individual.acc_aero_M        = nan;
             evolutions(k).trajectories.individual.acc_grav_M        = nan;
             evolutions(k).trajectories.individual.acc_thru_M        = nan;
-            evolutions(k).trajectories.individual.interp_E_Ascent                 = nan;
-            evolutions(k).trajectories.individual.interp_angle_of_attack_Ascent   = nan;
-            evolutions(k).trajectories.individual.interp_angle_of_attack_Descent   = nan;
-            evolutions(k).trajectories.individual.interp_thrust_angle      = nan;
-            evolutions(k).trajectories.individual.interp_bank_angle      = nan;
-            evolutions(k).trajectories.individual.interp_throttle_setting  = nan;
-            evolutions(k).trajectories.individual.DV_E_mapped_Ascent          = nan;
-            evolutions(k).trajectories.individual.DV_angle_of_attack_Ascent   = nan;
-            evolutions(k).trajectories.individual.DV_thrust_angle      = nan;
-            evolutions(k).trajectories.individual.DV_throttle_setting  = nan;
+            evolutions(k).trajectories.individual.interp_E_Ascent                      = nan;
+            evolutions(k).trajectories.individual.interp_angle_of_attack_Ascent        = nan;
+            evolutions(k).trajectories.individual.interp_bank_angle_Ascent             = nan;
+            evolutions(k).trajectories.individual.interp_thrust_elevation_angle_Ascent = nan;
+            evolutions(k).trajectories.individual.interp_thrust_azimuth_angle_Ascent   = nan;
+            evolutions(k).trajectories.individual.interp_throttle_setting_Ascent       = nan;
+            
+            evolutions(k).trajectories.individual.DV_E_mapped_Ascent               = nan;
+            evolutions(k).trajectories.individual.DV_angle_of_attack_Ascent        = nan;
+            evolutions(k).trajectories.individual.DV_bank_angle_Ascent             = nan;
+            evolutions(k).trajectories.individual.DV_thrust_elevation_angle_Ascent = nan;
+            evolutions(k).trajectories.individual.DV_thrust_azimuth_angle_Ascent   = nan;
+            evolutions(k).trajectories.individual.DV_throttle_setting_Ascent       = nan;
+            
+            evolutions(k).trajectories.individual.interp_E_Descent                      = nan;
+            evolutions(k).trajectories.individual.interp_angle_of_attack_Descent        = nan;
+            evolutions(k).trajectories.individual.interp_bank_angle_Descent             = nan;
+            evolutions(k).trajectories.individual.interp_thrust_elevation_angle_Descent = nan;
+            evolutions(k).trajectories.individual.interp_thrust_azimuth_angle_Descent   = nan;
+            evolutions(k).trajectories.individual.interp_throttle_setting_Descent = nan;
+            
+            evolutions(k).trajectories.individual.DV_E_mapped_Descent               = nan;
+            evolutions(k).trajectories.individual.DV_angle_of_attack_Descent        = nan;
+            evolutions(k).trajectories.individual.DV_bank_angle_Descent             = nan;
+            evolutions(k).trajectories.individual.DV_thrust_elevation_angle_Descent = nan;
+            evolutions(k).trajectories.individual.DV_thrust_azimuth_angle_Descent   = nan;
+            evolutions(k).trajectories.individual.DV_throttle_setting_Descent       = nan;
+            
+            
             evolutions(k).max_tof             = nan;
-            evolutions(k).max_interp_E_mapped_Ascent             = nan;
-            evolutions(k).max_interp_E_mapped_Descent             = nan;
+            evolutions(k).max_interp_E_mapped_Ascent = nan;
+            evolutions(k).max_interp_E_mapped_Descent = nan;
             evolutions(k).individuals.v_i     = nan;
             evolutions(k).individuals.gamma_i = nan;
             evolutions(k).individuals.chi_i   = nan;

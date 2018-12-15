@@ -532,13 +532,13 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     const unsigned long  N = ( parameterList_Ascent_.size() - 3 ) * nodes_Ascent - 1;
 
     //! Declare and initialize various parameters common to the entire trajectory.
+    //!     Initial velocity.
     const double V_i = x[ N ];
+    //!     Velocity at the maximum height.
     const double V_UP = x[ N + 1 ];
+    //!     Maximum height.
     const double h_UP = x[ N + 2 ];
 
-    // std::cout << "V_i =  " << V_i << std::endl;
-    // std::cout << "V_UP =  " << V_UP << std::endl;
-    // std::cout << "h_UP =  " << h_UP << std::endl;
 
     // std::cout << "Re-allocate Descent DVs" << std::endl;
     //! Re-allocate decision vector values into workable vectors for Descent phase.
@@ -556,10 +556,13 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     const unsigned long NN = ( parameterList_Descent_.size() - 1 ) * nodes_Descent - 1;
 
     //! Declare and initialize last parameter common to the entire trajectory.
+    //!     Final velocity.
     const double V_DN = x[ N + NN + 3 ];
 
     //std::cout << "Create vector of node locations for ascent" << std::endl;
     //! Create vector of node locations for Ascent phase.
+    //!     This vector starts from zero, where it's last element is the sum of
+    //!     all intervals.
     xn_Ascent( 0 ) = 0;
     for( unsigned int i = 0; i < nodes_Ascent - 1; i++ )
     {
@@ -568,10 +571,12 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
     // std::cout << "Create vector of node locations for descent" << std::endl;
     //! Create vector of node locations for Descent phase.
-    xn_Descent( 0 ) = 0;//xn_interval_Descent.sum();
+    //!     This vector starts from the sum of all intervals, where it's last element
+    //!     is zero.
+    xn_Descent( 0 ) = xn_interval_Descent.sum();
     for( unsigned int i = 0; i < nodes_Descent - 1; i++ )
     {
-        xn_Descent( i + 1 )        = xn_Descent( i ) + xn_interval_Descent( i );
+        xn_Descent( i + 1 )        = xn_Descent( i ) - xn_interval_Descent( i );
     }
 
 
@@ -660,29 +665,24 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     vehicleSystems->setE_max( E_max );
 
     //! Normalize initial, maximum, and final specific energy levels.
-    double E_hat_i = bislip::variables::computeNormalizedSpecificEnergy( h_i, V_i, E_max );
-    double E_hat_max = bislip::variables::computeNormalizedSpecificEnergy( h_UP, V_UP, E_max );
-    double E_hat_f = bislip::variables::computeNormalizedSpecificEnergy( h_DN, V_DN, E_max );
+    const double E_hat_i = bislip::variables::computeNormalizedSpecificEnergy( h_i, V_i, E_max );
+    const double E_hat_max = bislip::variables::computeNormalizedSpecificEnergy( h_UP, V_UP, E_max );
+    const double E_hat_f = bislip::variables::computeNormalizedSpecificEnergy( h_DN, V_DN, E_max );
 
-    //! Map normalized specific energy levels to control node locations
-    Eigen::VectorXd E_mapped_Ascent( nodes_Ascent );
-    Eigen::VectorXd E_mapped_Descent( nodes_Descent );
+    //! Map normalized specific energy levels to control node locations.
+    Eigen::VectorXd E_mapped_Ascent( xn_Ascent.size() );
+    Eigen::VectorXd E_mapped_Descent( xn_Descent.size() );
     E_mapped_Ascent = ( E_hat_max - E_hat_i ) * xn_Ascent.array() + E_hat_i;
-    E_mapped_Descent = E_hat_max + ( E_hat_f - E_hat_max ) * xn_Descent.array();
-
+    E_mapped_Descent = ( E_hat_max - E_hat_f ) * xn_Descent.array() + E_hat_f;
+    //E_mapped_Descent = E_mapped_Descent.reverse().eval();
     //std::cout << "xn_Descent=  " << xn_Descent<< std::endl;
     //std::cout << "E_mapped_Ascent=  " << E_mapped_Ascent<< std::endl;
-    //std::cout << "E_mapped_Descent=  " << E_mapped_Descent<< std::endl;
-
-
-    //std::this_thread::sleep_for( std::chrono::nanoseconds( 1000 ) );
-
-
+    std::cout << "E_mapped_Descent=  " << E_mapped_Descent<< std::endl;
 
     //! Declare data maps used for decision vector values related to Ascent phase.
     std::map< double, double > map_alpha_deg_Ascent, map_eps_T_deg_Ascent, map_phi_T_deg_Ascent, map_throttle_Ascent, map_sigma_deg_Ascent;
     std::map< double, Eigen::VectorXd > map_DV_mapped_Ascent;
-    Eigen::VectorXd DV_mapped_Ascent ( 5 );
+    Eigen::VectorXd DV_mapped_Ascent ( 6 );
 
     //std::cout << "Mapping Ascent DVs" << std::endl;
     //! Associate decision vector values to mapped normalized specific energy levels within data maps.
@@ -693,13 +693,14 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
         map_eps_T_deg_Ascent[ E_mapped_Ascent( i ) ] = DV_mapped_Ascent( 2 ) = eps_T_deg_Ascent( i );
         map_phi_T_deg_Ascent[ E_mapped_Ascent( i ) ] = DV_mapped_Ascent( 3 ) = phi_T_deg_Ascent( i );
         map_throttle_Ascent[ E_mapped_Ascent( i ) ]  = DV_mapped_Ascent( 4 ) = throttle_Ascent( i );
+        DV_mapped_Ascent( 5 ) = xn_Ascent( i );
         map_DV_mapped_Ascent[ E_mapped_Ascent( i ) ] = DV_mapped_Ascent;
     }
 
     //! Declare data maps used for decision vector values related to Descent phase.
     std::map< double, double > map_alpha_deg_Descent, map_eps_T_deg_Descent, map_phi_T_deg_Descent, map_throttle_Descent, map_sigma_deg_Descent;
     std::map< double, Eigen::VectorXd > map_DV_mapped_Descent;
-    Eigen::VectorXd DV_mapped_Descent ( 5 );
+    Eigen::VectorXd DV_mapped_Descent ( 6 );
 
     //std::cout << "Mapping Descent DVs" << std::endl;
     //! Associate decision vector values to mapped normalized specific energy levels within data maps.
@@ -710,20 +711,21 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
         map_eps_T_deg_Descent[ E_mapped_Descent( i ) ] = DV_mapped_Descent( 2 ) = eps_T_deg_Descent( i );
         map_phi_T_deg_Descent[ E_mapped_Descent( i ) ] = DV_mapped_Descent( 3 ) = phi_T_deg_Descent( i );
         map_throttle_Descent[ E_mapped_Descent( i ) ]  = DV_mapped_Descent( 4 ) = throttle_Descent( i );
+        DV_mapped_Descent( 5 ) = xn_Descent( i );
         map_DV_mapped_Descent[ E_mapped_Descent( i ) ] = DV_mapped_Descent;
     }
 
     //! Calculate first derivatives for Hermite Spline Interpolation according to https://doi.org/10.1016/j.cam.2017.09.049.
-    std::vector< double > alpha_deg_Ascent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, alpha_deg_Ascent, nodes_Ascent );
-    std::vector< double > sigma_deg_Ascent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, sigma_deg_Ascent, nodes_Ascent );
-    std::vector< double > eps_T_deg_Ascent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, eps_T_deg_Ascent, nodes_Ascent );
-    std::vector< double > phi_T_deg_Ascent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, phi_T_deg_Ascent, nodes_Ascent );
-    std::vector< double > throttle_Ascent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, throttle_Ascent, nodes_Ascent );
-    std::vector< double > alpha_deg_Descent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Descent, alpha_deg_Descent, nodes_Descent );
-    std::vector< double > sigma_deg_Descent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, sigma_deg_Descent, nodes_Descent );
-    std::vector< double > eps_T_deg_Descent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, eps_T_deg_Descent, nodes_Descent );
-    std::vector< double > phi_T_deg_Descent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, phi_T_deg_Descent, nodes_Descent );
-    std::vector< double > throttle_Descent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, throttle_Descent, nodes_Descent );
+    std::vector< double > alpha_deg_Ascent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, alpha_deg_Ascent, E_mapped_Ascent.size() );
+    std::vector< double > sigma_deg_Ascent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, sigma_deg_Ascent, E_mapped_Ascent.size() );
+    std::vector< double > eps_T_deg_Ascent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, eps_T_deg_Ascent, E_mapped_Ascent.size() );
+    std::vector< double > phi_T_deg_Ascent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, phi_T_deg_Ascent, E_mapped_Ascent.size() );
+    std::vector< double > throttle_Ascent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, throttle_Ascent, E_mapped_Ascent.size() );
+    std::vector< double > alpha_deg_Descent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Descent, alpha_deg_Descent, E_mapped_Descent.size() );
+    std::vector< double > sigma_deg_Descent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, sigma_deg_Descent, E_mapped_Descent.size() );
+    std::vector< double > eps_T_deg_Descent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, eps_T_deg_Descent, E_mapped_Descent.size() );
+    std::vector< double > phi_T_deg_Descent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, phi_T_deg_Descent, E_mapped_Descent.size() );
+    std::vector< double > throttle_Descent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, throttle_Descent, E_mapped_Descent.size() );
 
     //! Declare and initialize interpolator settings.
     std::shared_ptr< interpolators::InterpolatorSettings > interpolatorSettings = std::make_shared< interpolators::InterpolatorSettings >( hermite_spline_interpolator );
@@ -731,20 +733,20 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //std::cout << "Creating Ascent Interpolators" << std::endl;
     //! Declare and initialize interpolators for Ascent phase.
     std::shared_ptr< OneDimensionalInterpolator< double, double > > interpolator_alpha_deg_Ascent, interpolator_sigma_deg_Ascent, interpolator_eps_T_deg_Ascent, interpolator_phi_T_deg_Ascent, interpolator_throttle_Ascent;
-    interpolator_alpha_deg_Ascent = interpolators::createOneDimensionalInterpolator< double, double >( map_alpha_deg_Ascent, interpolatorSettings, std::make_pair( alpha_deg_Ascent( 0 ), alpha_deg_Ascent( nodes_Ascent - 1 ) ), alpha_deg_Ascent_derivatives );
-    interpolator_sigma_deg_Ascent = interpolators::createOneDimensionalInterpolator< double, double >( map_sigma_deg_Ascent, interpolatorSettings, std::make_pair( sigma_deg_Ascent( 0 ), sigma_deg_Ascent( nodes_Ascent - 1 ) ), sigma_deg_Ascent_derivatives );
-    interpolator_eps_T_deg_Ascent = interpolators::createOneDimensionalInterpolator< double, double >( map_eps_T_deg_Ascent, interpolatorSettings, std::make_pair( eps_T_deg_Ascent( 0 ), eps_T_deg_Ascent( nodes_Ascent - 1 ) ), eps_T_deg_Ascent_derivatives );
-    interpolator_phi_T_deg_Ascent = interpolators::createOneDimensionalInterpolator< double, double >( map_phi_T_deg_Ascent, interpolatorSettings, std::make_pair( phi_T_deg_Ascent( 0 ), phi_T_deg_Ascent( nodes_Ascent - 1 ) ), phi_T_deg_Ascent_derivatives );
-    interpolator_throttle_Ascent = interpolators::createOneDimensionalInterpolator< double, double >( map_throttle_Ascent, interpolatorSettings, std::make_pair( throttle_Ascent( 0 ), throttle_Ascent( nodes_Ascent - 1 ) ), throttle_Ascent_derivatives );
+    interpolator_alpha_deg_Ascent = interpolators::createOneDimensionalInterpolator< double, double >( map_alpha_deg_Ascent, interpolatorSettings, std::make_pair( alpha_deg_Ascent( 0 ), alpha_deg_Ascent( E_mapped_Ascent.size() - 1 ) ), alpha_deg_Ascent_derivatives );
+    interpolator_sigma_deg_Ascent = interpolators::createOneDimensionalInterpolator< double, double >( map_sigma_deg_Ascent, interpolatorSettings, std::make_pair( sigma_deg_Ascent( 0 ), sigma_deg_Ascent( E_mapped_Ascent.size() - 1 ) ), sigma_deg_Ascent_derivatives );
+    interpolator_eps_T_deg_Ascent = interpolators::createOneDimensionalInterpolator< double, double >( map_eps_T_deg_Ascent, interpolatorSettings, std::make_pair( eps_T_deg_Ascent( 0 ), eps_T_deg_Ascent( E_mapped_Ascent.size() - 1 ) ), eps_T_deg_Ascent_derivatives );
+    interpolator_phi_T_deg_Ascent = interpolators::createOneDimensionalInterpolator< double, double >( map_phi_T_deg_Ascent, interpolatorSettings, std::make_pair( phi_T_deg_Ascent( 0 ), phi_T_deg_Ascent( E_mapped_Ascent.size() - 1 ) ), phi_T_deg_Ascent_derivatives );
+    interpolator_throttle_Ascent = interpolators::createOneDimensionalInterpolator< double, double >( map_throttle_Ascent, interpolatorSettings, std::make_pair( throttle_Ascent( 0 ), throttle_Ascent( E_mapped_Ascent.size() - 1 ) ), throttle_Ascent_derivatives );
 
     //std::cout << "Creating Descent Interpolators" << std::endl;
     //! Declare and initialize interpolators for Descent phase.
     std::shared_ptr< OneDimensionalInterpolator< double, double > > interpolator_alpha_deg_Descent, interpolator_sigma_deg_Descent, interpolator_eps_T_deg_Descent, interpolator_phi_T_deg_Descent, interpolator_throttle_Descent;
-    interpolator_alpha_deg_Descent = interpolators::createOneDimensionalInterpolator< double, double >( map_alpha_deg_Descent, interpolatorSettings, std::make_pair( alpha_deg_Descent( 0 ), alpha_deg_Descent( nodes_Descent - 1 ) ), alpha_deg_Descent_derivatives );
-    interpolator_sigma_deg_Descent = interpolators::createOneDimensionalInterpolator< double, double >( map_sigma_deg_Descent, interpolatorSettings, std::make_pair( sigma_deg_Descent( 0 ), sigma_deg_Descent( nodes_Descent - 1 ) ), sigma_deg_Descent_derivatives );
-    interpolator_eps_T_deg_Descent = interpolators::createOneDimensionalInterpolator< double, double >( map_eps_T_deg_Descent, interpolatorSettings, std::make_pair( eps_T_deg_Descent( 0 ), eps_T_deg_Descent( nodes_Descent - 1 ) ), eps_T_deg_Descent_derivatives );
-    interpolator_phi_T_deg_Descent = interpolators::createOneDimensionalInterpolator< double, double >( map_phi_T_deg_Descent, interpolatorSettings, std::make_pair( phi_T_deg_Descent( 0 ), phi_T_deg_Descent( nodes_Descent - 1 ) ), phi_T_deg_Descent_derivatives );
-    interpolator_throttle_Descent  = interpolators::createOneDimensionalInterpolator< double, double >( map_throttle_Descent,  interpolatorSettings, std::make_pair( throttle_Descent( 0 ), throttle_Descent( nodes_Descent - 1 ) ), throttle_Descent_derivatives );
+    interpolator_alpha_deg_Descent = interpolators::createOneDimensionalInterpolator< double, double >( map_alpha_deg_Descent, interpolatorSettings, std::make_pair( alpha_deg_Descent( 0 ), alpha_deg_Descent( E_mapped_Descent.size() - 1 ) ), alpha_deg_Descent_derivatives );
+    interpolator_sigma_deg_Descent = interpolators::createOneDimensionalInterpolator< double, double >( map_sigma_deg_Descent, interpolatorSettings, std::make_pair( sigma_deg_Descent( 0 ), sigma_deg_Descent( E_mapped_Descent.size() - 1 ) ), sigma_deg_Descent_derivatives );
+    interpolator_eps_T_deg_Descent = interpolators::createOneDimensionalInterpolator< double, double >( map_eps_T_deg_Descent, interpolatorSettings, std::make_pair( eps_T_deg_Descent( 0 ), eps_T_deg_Descent( E_mapped_Descent.size() - 1 ) ), eps_T_deg_Descent_derivatives );
+    interpolator_phi_T_deg_Descent = interpolators::createOneDimensionalInterpolator< double, double >( map_phi_T_deg_Descent, interpolatorSettings, std::make_pair( phi_T_deg_Descent( 0 ), phi_T_deg_Descent( E_mapped_Descent.size() - 1 ) ), phi_T_deg_Descent_derivatives );
+    interpolator_throttle_Descent  = interpolators::createOneDimensionalInterpolator< double, double >( map_throttle_Descent,  interpolatorSettings, std::make_pair( throttle_Descent( 0 ), throttle_Descent( E_mapped_Descent.size() - 1 ) ), throttle_Descent_derivatives );
 
     // std::cout << "Pass Ascent Interpolators to vehicle systems" << std::endl;
     //! Pass Ascent phase interpolators to vehicle systems.
@@ -773,11 +775,11 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
     //std::cout << "Evaluate Interpolators and store to print out" << std::endl;
     //! Loop to populate vectors of interpolated values and then pass to data map.
-    //!     Number of evaluations has been arbitrarily chosen.
+    //!     Number of evaluations has been arbitrarily selected.
     double pp = 0;
     for ( unsigned int i = 0; i < 1001; ++i )
     {
-        eval = pp * E_mapped_Ascent( nodes_Ascent - 1 ) / 1000;
+        eval = pp * E_mapped_Ascent( E_mapped_Ascent.size() - 1 ) / 1000;
         interpolated_values_Ascent( 0 ) = interpolator_alpha_deg_Ascent->interpolate( eval );
         interpolated_values_Ascent( 1 ) = interpolator_sigma_deg_Ascent->interpolate( eval );
         interpolated_values_Ascent( 2 ) = interpolator_eps_T_deg_Ascent->interpolate( eval );
@@ -786,7 +788,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
         interpolators_Ascent[ eval ] = interpolated_values_Ascent;
 
-        eval = pp * E_mapped_Descent( nodes_Descent - 1 ) / 1000;
+        eval = pp * E_mapped_Descent( 0 ) / 1000;
         interpolated_values_Descent( 0 ) = interpolator_alpha_deg_Descent->interpolate( eval );
         interpolated_values_Descent( 1 ) = interpolator_sigma_deg_Descent->interpolate( eval );
         interpolated_values_Descent( 2 ) = interpolator_eps_T_deg_Descent->interpolate( eval );
@@ -929,7 +931,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
     //! Declare and initialize counter.
     //!     Information is extracted directly from vectors created from input data, which requires the counter for the upper bound value.
-    int p = 0;
+    unsigned long p = 0;
 
     //! Loop to populate the data map with pairs associated to string values related to Ascent phase.
     for( unsigned long i = 0; i < parameterList_Ascent_.size(); i++)
@@ -1541,10 +1543,11 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //! Calculate offset from final elevation.
     const double dif_h_DN = h_DN - h_DN_calc;
 
-    const double dif_xn_Ascent= xn_Ascent( nodes_Ascent - 1 ) - 1;
-    const double dif_E_mapped_Ascent = E_mapped_Ascent( nodes_Ascent - 1 ) - 1;
-    const double dif_xn_Descent= xn_Descent( nodes_Descent - 1 ) - 1;
-    const double dif_E_mapped_Descent = E_hat_f - E_mapped_Descent( nodes_Descent - 1 );
+    const double dif_xn_Ascent= xn_Ascent( E_mapped_Ascent.size() - 1 ) - 1;
+    const double dif_E_mapped_Ascent = E_mapped_Ascent( E_mapped_Ascent.size() - 1 ) - 1;
+    const double dif_xn_Descent= xn_Descent( E_mapped_Descent.size() - 1 ) - 1;
+    //const double dif_E_mapped_Descent_f = E_hat_f - E_mapped_Descent( nodes_Descent - 1 );
+    const double dif_E_mapped_Descent_i = E_mapped_Descent( 0 ) - 1;
 
     //! Exract current mass
     double landingMass_calc = bodyMap.at( vehicle_name_ )->getBodyMass( );
@@ -1571,7 +1574,8 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     delta.push_back( dif_xn_Ascent);
     delta.push_back( dif_E_mapped_Ascent );
     delta.push_back( dif_xn_Descent);
-    delta.push_back( dif_E_mapped_Descent );
+   // delta.push_back( dif_E_mapped_Descent_i );
+    delta.push_back( dif_E_mapped_Descent_i );
     delta.push_back( dif_mass );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1604,8 +1608,8 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                  std::setw(16) <<  dif_E_mapped_Ascent <<
                  std::setw(15) << "dif_xn_Descent= " <<
                  std::setw(14) << dif_xn_Descent<<
-                 std::setw(15) << " dif_E_mapped_Descent = " <<
-                 std::setw(16) <<  dif_E_mapped_Descent <<
+                 std::setw(15) << " dif_E_mapped_Descent_i = " <<
+                 std::setw(16) <<  dif_E_mapped_Descent_i <<
                  std::setw(15) << " dif_mass = " <<
                  std::setw(16) <<  dif_mass <<
                  std::setw(15) << " dif_norm = " <<

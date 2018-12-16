@@ -59,7 +59,7 @@ struct Space4ErrBody {
 
     std::vector< double >::size_type get_nobj() const
     {
-        return 12u;
+        return 9u;
     }
     std::vector< double >::size_type get_nec() const
     {

@@ -79,8 +79,9 @@ switch option
             evolutions(k).trajectories.individual.heating_rate      = nan;
             evolutions(k).trajectories.individual.mass              = nan;
             evolutions(k).trajectories.individual.mass_rate         = nan;
-            evolutions(k).trajectories.individual.throttle          = nan;
-            evolutions(k).trajectories.individual.thrust_angle      = nan;
+            evolutions(k).trajectories.individual.throttle_setting          = nan;
+            evolutions(k).trajectories.individual.thrust_elevation_angle      = nan;
+            evolutions(k).trajectories.individual.thrust_azimuth_angle      = nan;
             evolutions(k).trajectories.individual.engine_status     = nan;
             evolutions(k).trajectories.individual.distance_traveled = nan;
             evolutions(k).trajectories.individual.distance_to_go    = nan;

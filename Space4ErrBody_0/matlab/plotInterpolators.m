@@ -447,4 +447,92 @@ for p = 1:numel(compilation)
     end
 end
 
+
+%% Interpolators: Node Location - Ascent
+for p = 1:numel(compilation)
+    
+    for k = 1:numel(compilation(p).evolutions)
+        fig_num = p*100 + 3459000 + k*1;
+        figure(fig_num)
+        set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
+        set (gca,'Fontsize',15)
+        title(strcat('Node Location for Ascent - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+        ylim([0 10])
+        % max_tof = max([compilation(p).evolutions.max_tof]);
+%        max_interp_E_mapped_Ascent = max([compilation(p).evolutions.max_interp_E_mapped]);
+        xlim([0 10])
+        ylabel('Mapped Energy: E_{mapped}') % x-axis label
+        xlabel('Node Location (-)') % y-axis label
+        % set(gca,'YTick', 0:1:10);
+        %set(gca,'XTick', 0:.2:max_interp_E_mapped_Ascent);
+        hold on
+        
+        for ii = 1:numel(compilation(p).evolutions(k).trajectories)
+            plot(compilation(p).evolutions(k).trajectories(ii).individual.DV_node_location_Ascent,...
+                compilation(p).evolutions(k).trajectories(ii).individual.DV_E_mapped_Ascent);
+            scatter(compilation(p).evolutions(k).trajectories(ii).individual.DV_node_location_Ascent,...
+                compilation(p).evolutions(k).trajectories(ii).individual.DV_E_mapped_Ascent);
+        end
+        
+        %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
+        hold off
+        saveas(...
+            figure(fig_num),...
+            strcat(...
+            mainpath,...
+            '/figures/node_location_Ascent_Evolution_',...
+            num2str(k - 1),...
+            '_Set',...
+            convertCharsToStrings(compilation(p).set),...
+            '.png'),...
+            'png');
+        close(fig_num);
+    end
+end
+
+
+
+
+%% Interpolators: Node Location - Descent
+for p = 1:numel(compilation)
+    
+    for k = 1:numel(compilation(p).evolutions)
+        fig_num = p*100 + 3459000 + k*1;
+        figure(fig_num)
+        set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
+        set (gca,'Fontsize',15)
+        title(strcat('Node Location for Descent - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+        ylim([0 10])
+        % max_tof = max([compilation(p).evolutions.max_tof]);
+%        max_interp_E_mapped_Ascent = max([compilation(p).evolutions.max_interp_E_mapped]);
+        xlim([0 10])
+        ylabel('Mapped Energy: E_{mapped}') % x-axis label
+        xlabel('Node Location (-)') % y-axis label
+        % set(gca,'YTick', 0:1:10);
+        %set(gca,'XTick', 0:.2:max_interp_E_mapped_Ascent);
+        hold on
+        
+        for ii = 1:numel(compilation(p).evolutions(k).trajectories)
+            plot(compilation(p).evolutions(k).trajectories(ii).individual.DV_node_location_Ascent,...
+                compilation(p).evolutions(k).trajectories(ii).individual.DV_E_mapped_Ascent);
+            scatter(compilation(p).evolutions(k).trajectories(ii).individual.DV_node_location_Ascent,...
+                compilation(p).evolutions(k).trajectories(ii).individual.DV_E_mapped_Ascent);
+        end
+        %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
+        hold off
+        saveas(...
+            figure(fig_num),...
+            strcat(...
+            mainpath,...
+            '/figures/node_location_Descent_Evolution_',...
+            num2str(k - 1),...
+            '_Set',...
+            convertCharsToStrings(compilation(p).set),...
+            '.png'),...
+            'png');
+        close(fig_num);
+    end
+end
+
+
 end

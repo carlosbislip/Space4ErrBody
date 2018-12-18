@@ -243,10 +243,12 @@ for k = 1:(numel(pop_i) + 1)
         
         evolutions(k).trajectories(p).individual.DV_E_mapped_Ascent               = DV_mapped_Ascent(:,1);
         evolutions(k).trajectories(p).individual.DV_angle_of_attack_Ascent        = DV_mapped_Ascent(:,2);
-        evolutions(k).trajectories(p).individual.DV_bank_angle_Ascent            = DV_mapped_Ascent(:,3);
+        evolutions(k).trajectories(p).individual.DV_bank_angle_Ascent             = DV_mapped_Ascent(:,3);
         evolutions(k).trajectories(p).individual.DV_thrust_elevation_angle_Ascent = DV_mapped_Ascent(:,4);
         evolutions(k).trajectories(p).individual.DV_thrust_azimuth_angle_Ascent   = DV_mapped_Ascent(:,5);
         evolutions(k).trajectories(p).individual.DV_throttle_setting_Ascent       = DV_mapped_Ascent(:,6);
+        evolutions(k).trajectories(p).individual.DV_node_location_Ascent          = DV_mapped_Ascent(:,7);
+
         
         evolutions(k).trajectories(p).individual.DV_E_mapped_Descent               = DV_mapped_Descent(:,1);
         evolutions(k).trajectories(p).individual.DV_angle_of_attack_Descent        = DV_mapped_Descent(:,2);
@@ -254,6 +256,7 @@ for k = 1:(numel(pop_i) + 1)
         evolutions(k).trajectories(p).individual.DV_thrust_elevation_angle_Descent = DV_mapped_Descent(:,4);
         evolutions(k).trajectories(p).individual.DV_thrust_azimuth_angle_Descent   = DV_mapped_Descent(:,5);
         evolutions(k).trajectories(p).individual.DV_throttle_setting_Descent       = DV_mapped_Descent(:,6);
+        evolutions(k).trajectories(p).individual.DV_node_location_Descent          = DV_mapped_Descent(:,7);
         
         
         

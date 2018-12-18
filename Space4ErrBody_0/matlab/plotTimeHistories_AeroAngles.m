@@ -36,7 +36,7 @@ for p = 1:numel(compilation)
             convertCharsToStrings(compilation(p).set),...
             '.png'),...
             'png');
-        % close(fig_num);
+         close(fig_num);
     end
 end
 
@@ -76,7 +76,7 @@ for p = 1:numel(compilation)
             convertCharsToStrings(compilation(p).set),...
             '.png'),...
             'png');
-        % close(fig_num);
+         close(fig_num);
     end
 end
 
@@ -118,7 +118,7 @@ for p = 1:numel(compilation)
             convertCharsToStrings(compilation(p).set),...
             '.png'),...
             'png');
-        % close(fig_num);
+        close(fig_num);
     end
 end
 

@@ -151,7 +151,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            UNPACK INPUT DATA             //////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    std::cout << "Unpacking data" << std::endl;
+    //std::cout << "Unpacking data" << std::endl;
 
     //! Declare and initialize simulation start epoch.
     const double simulationStartEpoch = simulation_settingsValues_[ 0 ]; // 10/28/2018  11:00:00 AM  ---> 2458419.95833333000000000000000
@@ -218,9 +218,9 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //const double h_UP = terminationConditionsValues_[ 3 ];
     const double h_DN = terminationConditionsValues_[ 4 ];
     //const double V_UP = terminationConditionsValues_[ 5 ];
-    const double n_max = terminationConditionsValues_[ 6 ];
-    const double q_dot_max = terminationConditionsValues_[ 7 ];
-    const double q_dyn_max = terminationConditionsValues_[ 8 ];
+    const double constraint_MechanicalLoad = terminationConditionsValues_[ 6 ];
+    const double constraint_HeatingRate = terminationConditionsValues_[ 7 ];
+    const double constraint_DynamicPressure = terminationConditionsValues_[ 8 ];
 
     //! Still working on these
     const double R_N = 3.0;
@@ -301,7 +301,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
         const double radius_Equator =  6378137.0;
         const double radius_pole = 6356752.3142;
-       /* const double polar_angle_i_deg = 90 - lat_i_deg;
+        /* const double polar_angle_i_deg = 90 - lat_i_deg;
         const double polar_angle_f_deg = 90 - lat_f_deg;
         const double polar_angle_i_rad = polar_angle_i_deg * mathematical_constants::PI / 180;
         const double polar_angle_f_rad = polar_angle_f_deg * mathematical_constants::PI / 180;
@@ -677,7 +677,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //E_mapped_Descent = E_mapped_Descent.reverse().eval();
     //std::cout << "xn_Descent=  " << xn_Descent<< std::endl;
     //std::cout << "E_mapped_Ascent=  " << E_mapped_Ascent<< std::endl;
-    std::cout << "E_mapped_Descent=  " << E_mapped_Descent<< std::endl;
+    //std::cout << "E_mapped_Descent=  " << E_mapped_Descent<< std::endl;
 
     //! Declare data maps used for decision vector values related to Ascent phase.
     std::map< double, double > map_alpha_deg_Ascent, map_eps_T_deg_Ascent, map_phi_T_deg_Ascent, map_throttle_Ascent, map_sigma_deg_Ascent;
@@ -958,7 +958,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     ///////////////////////             CREATE ACCELERATIONS            ///////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    //std::cout << "Setting Accelerations" << std::endl;
+//    std::cout << "Setting Accelerations" << std::endl;
 
     //! Declare acceleration data map.
     SelectedAccelerationMap accelerationSettingsMap;
@@ -1062,7 +1062,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     ///////////////////////          CREATE LIST OF DEPENDENT VARIABLES        ////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    //std::cout << "Creating list of dependent variables" << std::endl;
+   // std::cout << "Creating list of dependent variables" << std::endl;
 
     //! Create vector that will contian the list of dependent variables to save/output.
     //!     The file that prints out the text saying what is saved has been modified
@@ -1196,6 +1196,10 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                     vehicle_name_ ) );
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
+                    thrust_azimuth_angle,
+                    vehicle_name_ ) );
+    dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
                     engine_status,
                     vehicle_name_ ) );
     dep_varList.push_back(
@@ -1222,6 +1226,11 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     body_fixed_thrust_vector,
                     vehicle_name_ ) );
+    dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    bending_moment,
+                    vehicle_name_ ) );
+
 
     //! Create and initialize object with list of dependent variables
     std::shared_ptr< DependentVariableSaveSettings > dep_varToSave =
@@ -1284,14 +1293,14 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     local_dynamic_pressure_dependent_variable,
                     vehicle_name_,
-                    centralBodyName), q_dyn_max , false );
+                    centralBodyName), constraint_DynamicPressure*1.5 , false );
 
     std::shared_ptr< PropagationTerminationSettings > q_dot_TerminationSettings =
             std::make_shared< tudat::propagators::PropagationDependentVariableTerminationSettings >(
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     local_aerodynamic_heat_rate_dependent_variable,
                     vehicle_name_,
-                    centralBodyName), q_dot_max , false );
+                    centralBodyName), constraint_HeatingRate , false );
     std::shared_ptr< PropagationTerminationSettings > height_UP_TerminationSettings =
             std::make_shared< tudat::propagators::PropagationDependentVariableTerminationSettings >(
                 std::make_shared< SingleDependentVariableSaveSettings >(
@@ -1317,13 +1326,13 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //terminationSettingsList.push_back( thrustTerminationSettings );
     terminationSettingsList.push_back( d_to_go_TerminationSettings );
     terminationSettingsList.push_back( d_traveled_TerminationSettings );
-    terminationSettingsList.push_back( mass_TerminationSettings );
-    terminationSettingsList.push_back( E_hat_TerminationSettings );
-    terminationSettingsList.push_back( q_dyn_TerminationSettings );
-    terminationSettingsList.push_back( q_dot_TerminationSettings );
-    terminationSettingsList.push_back( height_UP_TerminationSettings );
+    //terminationSettingsList.push_back( mass_TerminationSettings );
+    //terminationSettingsList.push_back( E_hat_TerminationSettings );
+    //  terminationSettingsList.push_back( q_dyn_TerminationSettings );
+    //terminationSettingsList.push_back( q_dot_TerminationSettings );
+    //    terminationSettingsList.push_back( height_UP_TerminationSettings );
     terminationSettingsList.push_back( height_DN_TerminationSettings );
-    terminationSettingsList.push_back( flight_path_angle_TerminationSettings );
+    // terminationSettingsList.push_back( flight_path_angle_TerminationSettings );
 
     // PropagationHybridTerminationSettings( terminationSettingsList,
     //                                       true,
@@ -1409,7 +1418,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     ///////////////////////          PROPAGATE TRAJECTORY          ////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-   // std::cout << "Starting propagation" << std::endl;
+    // std::cout << "Starting propagation" << std::endl;
 
     //! Propagate trajectory.
     SingleArcDynamicsSimulator< double > dynamicsSimulator(
@@ -1425,10 +1434,16 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
     //! Initialize variables used objectives functions.
     double finalDistanceToTarget_deg_calc = initialDistanceToTarget_deg;
-    //std::cout << d_f_deg_calc << std::endl;
+    //std::cout << "Cleaning up" << std::endl;
     double h_DN_calc = h_DN;
     double h_UP_calc = h_UP;
+    double V_UP_calc = V_UP;
+    double V_DN_calc = V_DN;
     double tof = simulation_settingsValues_[ 1 ];
+    double maximum_NormalizedSpecificEnergy = E_hat_max;
+    double maximum_DynamicPressure = constraint_DynamicPressure;
+    double maximum_MechanicalLoad = constraint_MechanicalLoad;
+    double finalMass = initialMass;
 
     //! Retrieve results
     //! Maybe this command would allow the use of certain results to guide
@@ -1472,34 +1487,137 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //const double lat_f_deg_GOAL_calc = lat_f_rad_GOAL_calc * 180 / mathematical_constants::PI;
 
     //! Extract Dependent variables of final state.
-    const Eigen::VectorXd dep_var_FINAL_STATE = ( dynamicsSimulator.getDependentVariableHistory( ).rbegin() )->second;
+    const Eigen::VectorXd dependentVariable_FINALSTATE = ( dynamicsSimulator.getDependentVariableHistory( ).rbegin() )->second;
 
 
     //! Extract Dependent variables of final state.
-    const std::map< double, Eigen::VectorXd > dep_var_historyMap = dynamicsSimulator.getDependentVariableHistory( );
-    // std::cout << "dep_var_FINAL_STATE: " << dep_var_FINAL_STATE << std::endl;
+    const std::map< double, Eigen::VectorXd > dependentVariableTimeHistoryMap = dynamicsSimulator.getDependentVariableHistory( );
+    // std::cout << "dependentVariable_FINALSTATE: " << dependentVariable_FINALSTATE << std::endl;
 
     //! Declare number of elements in time history.
-    unsigned long rows = dep_var_historyMap.size();
-    unsigned long columns = ( ( dynamicsSimulator.getDependentVariableHistory( ).begin() )->second ).size();
+    long rows = dependentVariableTimeHistoryMap.size();
+    long columns = ( ( dynamicsSimulator.getDependentVariableHistory( ).begin() )->second ).size();
 
-    Eigen::MatrixXd dep_var_history( rows, columns );
-    dep_var_history = Eigen::MatrixXd::Zero( rows, columns );
+    Eigen::MatrixXd dependentVariableTimeHistoryMatrix( rows, columns );
+    dependentVariableTimeHistoryMatrix = Eigen::MatrixXd::Zero( rows, columns );
 
-    //    for ( std::map< double, Eigen::VectorXd >::iterator it = dep_var_history.begin(); it != dep_var_history.end(); ++it )
-    for ( unsigned long i = 0; i < rows; i++ )
+    //    for ( std::map< double, Eigen::VectorXd >::iterator it = dependentVariableTimeHistoryMatrix.begin(); it != dependentVariableTimeHistoryMatrix.end(); ++it )
+    for ( long i = 0; i < rows; i++ )
     {
-        dep_var_history.row( i ) = dep_var_historyMap.at( simulationStartEpoch + i * fixedStepSize );
+        dependentVariableTimeHistoryMatrix.row( i ) = dependentVariableTimeHistoryMap.at( simulationStartEpoch + i * fixedStepSize );
     }
 
-    Eigen::VectorXd dep_var_height = dep_var_history.col( 11 );
+    Eigen::VectorXd dependentVariable_Height = dependentVariableTimeHistoryMatrix.col( 11 );
+    Eigen::VectorXd dependentVariable_Airspeed = dependentVariableTimeHistoryMatrix.col( 13 );
+    Eigen::VectorXd dependentVariable_MechanicalLoad = dependentVariableTimeHistoryMatrix.col( 14 );
+    Eigen::VectorXd dependentVariable_DynamicPressure = dependentVariableTimeHistoryMatrix.col( 24 );
+    Eigen::VectorXd dependentVariable_HeatingRate = dependentVariableTimeHistoryMatrix.col( 25 );
+    Eigen::VectorXd dependentVariable_NormalizedSpecificEnergy = dependentVariableTimeHistoryMatrix.col( 29 );
 
-    //const double altitude_f_calc = dep_var_FINAL_STATE[3];
-    const double targetLat_rad_calc  = dep_var_FINAL_STATE[ 4 ];
-    const double targetLon_rad_calc  = dep_var_FINAL_STATE[ 5 ];
-    std::ptrdiff_t ind;
-    h_UP_calc                    = dep_var_height.maxCoeff(&ind);
-    h_DN_calc                    = dep_var_FINAL_STATE[ 11 ];
+
+    //const double altitude_f_calc = dependentVariable_FINALSTATE[3];
+    const double targetLat_rad_calc  = dependentVariable_FINALSTATE[ 4 ];
+    const double targetLon_rad_calc  = dependentVariable_FINALSTATE[ 5 ];
+    const double E_hat_f_calc        = dependentVariable_FINALSTATE[ 29 ];
+    std::ptrdiff_t ind_maximum_height;
+    h_UP_calc                    = dependentVariable_Height.maxCoeff( &ind_maximum_height );
+    V_UP_calc                    = dependentVariable_Airspeed( ind_maximum_height );
+    h_DN_calc                    = dependentVariable_FINALSTATE[ 11 ];
+    V_DN_calc                    = dependentVariable_FINALSTATE[ 13 ];
+    std::ptrdiff_t index_MaximumNormalizedSpecificEnergy;
+    maximum_NormalizedSpecificEnergy  = dependentVariable_NormalizedSpecificEnergy.maxCoeff( &index_MaximumNormalizedSpecificEnergy );
+    finalMass = bodyMap.at( vehicle_name_ )->getBodyMass( );
+
+    std::ptrdiff_t index_MaximumDynamicPressure;
+    maximum_DynamicPressure               = dependentVariable_DynamicPressure.maxCoeff( &index_MaximumDynamicPressure );
+
+    //! Non-monotonic Energy during Ascent Penalty
+    //Eigen::VectorXd dependentVariable_NormalizedSpecificEnergy_dif_Ascent( index_MaximumNormalizedSpecificEnergy );
+    //dependentVariable_NormalizedSpecificEnergy_dif_Ascent = Eigen::VectorXd::Zero( index_MaximumNormalizedSpecificEnergy );
+    //for ( long i = 1 ; i < index_MaximumNormalizedSpecificEnergy; i++ )
+    //{
+    //    if ( dependentVariable_NormalizedSpecificEnergy( i ) < dependentVariable_NormalizedSpecificEnergy( i - 1 ) ) { dependentVariable_NormalizedSpecificEnergy_dif_Ascent( i ) = dependentVariable_NormalizedSpecificEnergy( i - 1 ) - dependentVariable_NormalizedSpecificEnergy( i ); }
+        //   std::cout << "dependentVariable_NormalizedSpecificEnergy( i - 1 ) - dependentVariable_NormalizedSpecificEnergy( i ): " <<dependentVariable_NormalizedSpecificEnergy( i - 1 ) - dependentVariable_NormalizedSpecificEnergy( i )<< std::endl;
+   //         std::cout << "dependentVariable_NormalizedSpecificEnergy_dif_Ascent( " << i << " ): " << dependentVariable_NormalizedSpecificEnergy_dif_Ascent( i ) << std::endl;
+    //}
+    //const double penaltyMonotonicAscent = dependentVariable_NormalizedSpecificEnergy_dif_Ascent.sum();
+    const double penaltyMonotonicAscent = bislip::variables::computePenalty( dependentVariable_NormalizedSpecificEnergy, 1, index_MaximumNormalizedSpecificEnergy, 0, fixedStepSize, tof, true );
+   // std::cout << "Monotonic Ascent Penalty: " << penaltyMonotonicAscent << std::endl;
+
+    //! Non-monotonic Energy during Descent Penalty
+   // Eigen::VectorXd dependentVariable_NormalizedSpecificEnergy_dif_Descent( dependentVariable_NormalizedSpecificEnergy.size() );
+   // dependentVariable_NormalizedSpecificEnergy_dif_Descent = Eigen::VectorXd::Zero( dependentVariable_NormalizedSpecificEnergy.size() );
+    //for ( long i = index_MaximumNormalizedSpecificEnergy ; i < dependentVariable_NormalizedSpecificEnergy.size(); i++ )
+   // {
+    //    if ( dependentVariable_NormalizedSpecificEnergy( i ) > dependentVariable_NormalizedSpecificEnergy( i - 1 ) ) { dependentVariable_NormalizedSpecificEnergy_dif_Descent( i ) = dependentVariable_NormalizedSpecificEnergy( i ) - dependentVariable_NormalizedSpecificEnergy( i - 1 ); }
+//           std::cout << "dependentVariable_NormalizedSpecificEnergy_dif_Descent( " << i << " ): " << dependentVariable_NormalizedSpecificEnergy_dif_Descent( i ) << std::endl;
+    //}
+    //const double penaltyMonotonicDescent = dependentVariable_NormalizedSpecificEnergy_dif_Descent.sum();
+  //  std::cout << "Non-monotonic Energy during Descent Penalty: " << penaltyMonotonicDescent << std::endl;
+    const double penaltyMonotonicDescent = bislip::variables::computePenalty( dependentVariable_NormalizedSpecificEnergy, index_MaximumNormalizedSpecificEnergy, dependentVariable_NormalizedSpecificEnergy.size(), 0, fixedStepSize, tof, true );
+    //std::cout << "Monotonic Descent Penalty: " << penaltyMonotonicDescent << std::endl;
+
+
+    //! Dynamic Pressure Penalty
+   // const double penaltyDynamicPressure = bislip::variables::computePenalty( dependentVariable_DynamicPressure, constraint_DynamicPressure, fixedStepSize, tof );
+    const double penaltyDynamicPressure = bislip::variables::computePenalty( dependentVariable_DynamicPressure, 1, dependentVariable_DynamicPressure.size(), constraint_DynamicPressure, fixedStepSize, tof, false );
+    //std::cout << "Dynamic Pressure Penalty: " << penaltyDynamicPressure << std::endl;
+
+    //! Mechanical Load Penalty
+    const double penaltyMechanicalLoad = bislip::variables::computePenalty( dependentVariable_MechanicalLoad, 1, dependentVariable_MechanicalLoad.size(), constraint_MechanicalLoad, fixedStepSize, tof, false );
+    //std::cout << "Mechanical Load Penalty: " << penaltyMechanicalLoad << std::endl;
+
+    //! Heating Rate Penalty
+     const double penaltyHeatingRate = bislip::variables::computePenalty( dependentVariable_HeatingRate, 1, dependentVariable_HeatingRate.size(), constraint_HeatingRate, fixedStepSize, tof, false );
+     //std::cout << "Heating Rate Penalty: " << penaltyHeatingRate << std::endl;
+
+
+     /*    std::cout << "Dynamic Pressure Penalty" << std::endl;
+
+ *
+ *   Eigen::VectorXd dependentVariable_DynamicPressure_Violation( dependentVariable_DynamicPressure.size() );
+    dependentVariable_DynamicPressure_Violation =  Eigen::VectorXd::Zero( dependentVariable_DynamicPressure.size() );
+    for ( long i = 1 ; i < dependentVariable_DynamicPressure.size(); i++ )
+    {
+        if ( dependentVariable_DynamicPressure ( i ) > constraint_DynamicPressure ) { dependentVariable_DynamicPressure_Violation( i ) = dependentVariable_DynamicPressure( i ) - constraint_DynamicPressure; }
+    }
+    std::ptrdiff_t index_MaximumDynamicPressureViolation;
+    double maximum_DynamicPressureViolation               = dependentVariable_DynamicPressure_Violation.maxCoeff( &index_MaximumDynamicPressureViolation );
+    const double penaltyDynamicPressure = ( maximum_DynamicPressureViolation / constraint_DynamicPressure ) + ( fixedStepSize * dependentVariable_DynamicPressure_Violation.sum() ) / ( tof * constraint_DynamicPressure  );
+
+    //! Mechanical Load Penalty
+ *  Eigen::VectorXd dependentVariable_MechanicalLoad_Violation( dependentVariable_MechanicalLoad.size() );
+    dependentVariable_MechanicalLoad_Violation =  Eigen::VectorXd::Zero( dependentVariable_MechanicalLoad.size() );
+    for ( long i = 1 ; i < dependentVariable_MechanicalLoad.size(); i++ )
+    {
+        if ( dependentVariable_MechanicalLoad ( i ) > constraint_MechanicalLoad ) { dependentVariable_MechanicalLoad_Violation( i ) = dependentVariable_MechanicalLoad( i ) - constraint_MechanicalLoad; }
+    }
+    std::ptrdiff_t index_MaximumMechanicalLoadViolation;
+    double maximum_MechanicalLoadViolation               = dependentVariable_MechanicalLoad_Violation.maxCoeff( &index_MaximumMechanicalLoadViolation );
+    //! Mechanical Load Penalty
+   const double penaltyMechanicalLoad = ( maximum_MechanicalLoadViolation / constraint_MechanicalLoad ) + ( fixedStepSize * dependentVariable_MechanicalLoad_Violation.sum() ) / ( tof * constraint_MechanicalLoad  );
+
+ *
+ *
+ *
+ *  Eigen::VectorXd dependentVariable_HeatingRate_Violation( dependentVariable_HeatingRate.size() );
+    dependentVariable_HeatingRate_Violation =  Eigen::VectorXd::Zero( dependentVariable_HeatingRate.size() );
+    for ( long i = 1 ; i < dependentVariable_HeatingRate.size(); i++ )
+    {
+        if ( dependentVariable_DynamicPressure ( i ) > constraint_HeatingRate ) { dependentVariable_HeatingRate_Violation( i ) = dependentVariable_HeatingRate( i ) - constraint_HeatingRate; }
+    }
+    std::ptrdiff_t index_MaximumHeatingRateViolation;
+    double maximum_HeatingRateViolation = dependentVariable_HeatingRate_Violation.maxCoeff( &index_MaximumHeatingRateViolation );
+            ( maximum_HeatingRateViolation / constraint_HeatingRate ) + ( fixedStepSize * dependentVariable_HeatingRate_Violation.sum() ) / ( tof * constraint_HeatingRate );
+
+ *
+ */
+
+
+
+
+
+
     //std::cout << "lat_f_rad_calc: " << lat_f_rad_calc << std::endl;
     //std::cout << "lon_f_rad_calc: " << lon_f_rad_calc << std::endl;
     //std::cout << "h_UP_calc     : " << h_UP_calc << std::endl;
@@ -1516,7 +1634,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
     //! Calculate angular distance of final state from target coordinates.
     // const double d_rad = bislip::variables::computeAngularDistance( lat_f_rad_calc, lon_f_rad_calc, vehicleSystems->getTargetLat(), vehicleSystems->getTargetLon() );
-    const double d_to_go_deg = unit_conversions::convertRadiansToDegrees( dep_var_FINAL_STATE[ 34 ] );
+    const double d_to_go_deg = unit_conversions::convertRadiansToDegrees( dependentVariable_FINALSTATE[ 34 ] );
     //const double d_deg = unit_conversions::convertRadiansToDegrees( d_rad );
 
     //! Calculate offset of final state from GOAL state: Earth-Fixed Frame
@@ -1534,29 +1652,34 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //!  'proper' it is, yet is what works for the current BALLISTIC case.
     const double dif_norm = std::sqrt( ( dif_lat_deg * dif_lat_deg ) + ( dif_lon_deg * dif_lon_deg ) );
 
-    //! Calculate offset of final angular distance to termination condition distance.
-    const double dif_d_deg = d_to_go_deg - terminationConditionsValues_[ 2 ];
-
     //! Calculate offset from maximum elevation.
     const double dif_h_UP = h_UP - h_UP_calc;
 
+    const double dif_V_UP = abs( V_UP - V_UP_calc );
+
     //! Calculate offset from final elevation.
     const double dif_h_DN = h_DN - h_DN_calc;
+    const double dif_V_DN = abs( V_DN - V_DN_calc );
 
-    const double dif_xn_Ascent= xn_Ascent( E_mapped_Ascent.size() - 1 ) - 1;
-    const double dif_E_mapped_Ascent = E_mapped_Ascent( E_mapped_Ascent.size() - 1 ) - 1;
-    const double dif_xn_Descent= xn_Descent( E_mapped_Descent.size() - 1 ) - 1;
-    //const double dif_E_mapped_Descent_f = E_hat_f - E_mapped_Descent( nodes_Descent - 1 );
-    const double dif_E_mapped_Descent_i = E_mapped_Descent( 0 ) - 1;
+    //! Calculate offset of final angular distance to termination condition distance.
+    const double costDistanceToGo                                 = ( d_to_go_deg - terminationConditionsValues_[ 2 ] ) / terminationConditionsValues_[ 2 ] ;
+    const double costHeatingRate                                  = ( fixedStepSize * dependentVariable_HeatingRate.sum() ) / ( tof * constraint_HeatingRate );
+    const double costConsumedMass                                 = abs( initialMass - finalMass ) / initialMass;
 
-    //! Exract current mass
-    double landingMass_calc = bodyMap.at( vehicle_name_ )->getBodyMass( );
-    if ( isnan( landingMass_calc ) == 1 )
-    {
-        landingMass_calc = initialMass;
-    }
-    //! Calculate offset from goal mass.
-    const double dif_mass = abs( landingMass - landingMass_calc );
+    //const double penaltyLatitudeDifference = abs( targetLat_deg - targetLat_deg_calc );
+    //const double penaltyLongitudeDifference = abs( targetLon_deg - targetLon_deg_calc );
+    const double penaltyCoordinateOffsets                         = std::sqrt( ( dif_lat_deg * dif_lat_deg ) + ( dif_lon_deg * dif_lon_deg ) ) / initialDistanceToTarget_deg;
+
+    const double penaltyFinalNodeMagnitudeAscent                  = xn_Ascent( E_mapped_Ascent.size() - 1 ) - 1;
+    const double penaltyInitialNodeMagnitudeDescent               = xn_Descent( 0 ) - 1;
+    const double penaltyMaximumNormalizedSpecificEnergyAscent     = abs( E_hat_max - maximum_NormalizedSpecificEnergy );
+    const double penaltyMinimumNormalizedSpecificEnergyDescent    = abs( E_hat_f_calc - E_hat_f );
+
+    const double penaltyFinalMappedNormalizedSpecificEnergyAscent    = E_mapped_Ascent( E_mapped_Ascent.size() - 1 ) - 1;
+    const double penaltyInitialMappedNormalizedSpecificEnergyDescent = E_mapped_Descent( 0 ) - 1;
+    const double penaltyMappedNormalizedSpecificEnergyInterface      = abs( E_mapped_Descent( 0 ) - E_mapped_Ascent( E_mapped_Ascent.size() - 1 ) );
+
+    const double penaltyNoFlight                                  = 10000.0 * ( 1.0 - maximum_NormalizedSpecificEnergy ) * ( 1.0 - maximum_NormalizedSpecificEnergy );
 
     //! Assign values to Fitness vector! At the moment these are all 'objective
     //! functions'. No constraints have been implemented. To modify this I have
@@ -1564,19 +1687,13 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
     //! function, equality contraints, and inequlity constraints. This vector
     //! here must contain them is that exact order: nOF, nEC, nIC.
     std::vector< double > delta;
-    delta.push_back( dif_norm );
-    delta.push_back( dif_lat_deg );
-    delta.push_back( dif_lon_deg );
-    delta.push_back( dif_d_deg );
-    delta.push_back( dif_h_UP );
-    delta.push_back( dif_h_DN );
-    delta.push_back( tof );  // Not sure yet how this one affects the optimization. Included for completion.
-    delta.push_back( dif_xn_Ascent);
-    delta.push_back( dif_E_mapped_Ascent );
-    delta.push_back( dif_xn_Descent);
-   // delta.push_back( dif_E_mapped_Descent_i );
-    delta.push_back( dif_E_mapped_Descent_i );
-    delta.push_back( dif_mass );
+    delta.push_back( costDistanceToGo + penaltyCoordinateOffsets );
+    delta.push_back( penaltyMaximumNormalizedSpecificEnergyAscent + penaltyMinimumNormalizedSpecificEnergyDescent + penaltyMonotonicAscent + penaltyMonotonicDescent );
+    delta.push_back( penaltyFinalNodeMagnitudeAscent + penaltyInitialNodeMagnitudeDescent + penaltyFinalMappedNormalizedSpecificEnergyAscent + penaltyInitialMappedNormalizedSpecificEnergyDescent + penaltyMappedNormalizedSpecificEnergyInterface );
+    delta.push_back( costConsumedMass );
+    delta.push_back( costHeatingRate + penaltyHeatingRate );
+    delta.push_back( penaltyDynamicPressure + penaltyMechanicalLoad + penaltyNoFlight );
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////        PRINT SIMULATION OUTPUT TO FILE               //////////////////////////////////////////
@@ -1598,33 +1715,44 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
             std::to_string( targetLon_deg_calc ) + "_" +
             simulation_save_time;
 
+
+    for( unsigned int i = 0; i < delta.size() - 1; i++)
+    {
+        std::cout  << delta[ i ] << "  |  " ;
+    }
+    std::cout  << delta[ delta.size() - 1 ] << std::endl;
+
+    /*
     //! Print results to terminal. Used to gauge progress.
     std::cout << std::fixed << std::setprecision(10) <<
-                 std::setw(15) << "V_i = " <<
+                 std::setw(15) << " V_i = " <<
                  std::setw(14) << V_i <<
-                 std::setw(15) << "dif_xn_Ascent= " <<
-                 std::setw(14) << dif_xn_Ascent<<
-                 std::setw(15) << " dif_E_mapped_Ascent = " <<
-                 std::setw(16) <<  dif_E_mapped_Ascent <<
-                 std::setw(15) << "dif_xn_Descent= " <<
-                 std::setw(14) << dif_xn_Descent<<
-                 std::setw(15) << " dif_E_mapped_Descent_i = " <<
-                 std::setw(16) <<  dif_E_mapped_Descent_i <<
+                 std::setw(33) << " costFinalNodeMagnitudeAscent = " <<
+                 std::setw(14) << costFinalNodeMagnitudeAscent<<
+                 std::setw(40) << " costFinalMappedNormalizedSpecificEnergyAscent = " <<
+                 std::setw(16) << costFinalMappedNormalizedSpecificEnergyAscent <<
+                 std::setw(36) << " costInitialNodeMagnitudeDescent = " <<
+                 std::setw(14) << costInitialNodeMagnitudeDescent<<
+                 std::setw(53) << " costInitialMappedNormalizedSpecificEnergyDescent = " <<
+                 std::setw(16) << costInitialMappedNormalizedSpecificEnergyDescent <<
                  std::setw(15) << " dif_mass = " <<
-                 std::setw(16) <<  dif_mass <<
-                 std::setw(15) << " dif_norm = " <<
+                 std::setw(16) << costConsumedMass <<
+                 std::setw(15) << " costConsumedMass = " <<
                  std::setw(16) << dif_norm <<
                  std::setw(15) << " dif_lat_deg = " <<
                  std::setw(16) << dif_lat_deg <<
                  std::setw(15) << " dif_lon_deg = " <<
                  std::setw(16) << dif_lon_deg <<
-                 std::setw(13) << "dif_d_deg = " <<
-                 std::setw(16) << dif_d_deg <<
-                 std::setw(9) << "dif_h_UP = " <<
+                 std::setw(21) << " costDistanceToGo = " <<
+                 std::setw(16) << costDistanceToGo <<
+                 std::setw(9) << " dif_h_UP = " <<
                  std::setw(16) << dif_h_UP <<
-                 std::setw(7) << "tof = " <<
+                 std::setw(9) << " dif_h_DN = " <<
+                 std::setw(16) << dif_h_DN <<
+                 std::setw(7) << " tof = " <<
                  std::setw(16) << tof <<
                  std::setw(60) << simulation_file_name_suffix << std::endl;
+                 */
 
     std::string complete_file_name_Prop = "HORUSPropHistory_" + simulation_file_name_suffix + ".dat";
     std::string complete_file_name_DepVar = "HORUSDepVar_" + simulation_file_name_suffix + ".dat";

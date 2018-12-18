@@ -153,6 +153,19 @@ double computeHeatingRateTauber (
         const double &q_dot_FP,
         const double &lambda);
 
+double computeBendingMoment (
+        const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions);
+
+double computePenalty (
+        const Eigen::VectorXd &dependentVariable_TimeHistory,
+        const long &startIterator,
+        const long &endIterator,
+        const double &constraint, const double &fixedStepSize, const double &tof, const bool &direct );
+
+
+
+
+
 } // namespace variables
 } // namespace bislip
 

@@ -230,26 +230,11 @@ std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, doubl
 
     if ( flight_path_angle >  0 )
     {
-        if (parameter == "Angle of Attack")
-        {
-            interpolator = vehicleSystems->getThrustElevationAngleInterpolator_Ascent();
-        }
-        if (parameter == "Bank Angle")
-        {
-            interpolator = vehicleSystems->getBankAngleInterpolator_Ascent();
-        }
-        if (parameter == "Thrust Elevation Angle")
-        {
-            interpolator = vehicleSystems->getThrustElevationAngleInterpolator_Ascent();
-        }
-        if (parameter == "Thrust Azimuth Angle")
-        {
-            interpolator = vehicleSystems->getThrustAzimuthAngleInterpolator_Ascent();
-        }
-        if (parameter == "Throttle Setting")
-        {
-            interpolator = vehicleSystems->getThrottleInterpolator_Ascent();
-        }
+        if ( parameter == "Angle of Attack") { interpolator = vehicleSystems->getThrustElevationAngleInterpolator_Ascent(); }
+        if ( parameter == "Bank Angle") { interpolator = vehicleSystems->getBankAngleInterpolator_Ascent(); }
+        if ( parameter == "Thrust Elevation Angle") { interpolator = vehicleSystems->getThrustElevationAngleInterpolator_Ascent(); }
+        if ( parameter == "Thrust Azimuth Angle") { interpolator = vehicleSystems->getThrustAzimuthAngleInterpolator_Ascent(); }
+        if ( parameter == "Throttle Setting") { interpolator = vehicleSystems->getThrottleInterpolator_Ascent(); }
     }
     else
     {
@@ -286,49 +271,19 @@ std::pair < double, double > chooseGuidanceBounds (
 
     if ( flight_path_angle >  0 )
     {
-        if (parameter == "Angle of Attack")
-        {
-            bounds = vehicleSystems->getParameterBounds( "ascent", parameter );
-        }
-        if (parameter == "Bank Angle")
-        {
-            bounds = vehicleSystems->getParameterBounds( "ascent", parameter );
-        }
-        if (parameter == "Thrust Elevation Angle")
-        {
-            bounds = vehicleSystems->getParameterBounds( "ascent", parameter );
-        }
-        if (parameter == "Thrust Azimuth Angle")
-        {
-            bounds = vehicleSystems->getParameterBounds( "ascent", parameter );
-        }
-        if (parameter == "Throttle Setting")
-        {
-            bounds = vehicleSystems->getParameterBounds( "ascent", parameter );
-        }
+        if ( parameter == "Angle of Attack" ) { bounds = vehicleSystems->getParameterBounds( "ascent", parameter ); }
+        if ( parameter == "Bank Angle" ) { bounds = vehicleSystems->getParameterBounds( "ascent", parameter ); }
+        if ( parameter == "Thrust Elevation Angle" ) { bounds = vehicleSystems->getParameterBounds( "ascent", parameter ); }
+        if ( parameter == "Thrust Azimuth Angle" ) {  bounds = vehicleSystems->getParameterBounds( "ascent", parameter ); }
+        if ( parameter == "Throttle Setting" ) { bounds = vehicleSystems->getParameterBounds( "ascent", parameter ); }
     }
     else
     {
-        if (parameter == "Angle of Attack")
-        {
-            bounds = vehicleSystems->getParameterBounds( "descent", parameter );
-        }
-        if (parameter == "Bank Angle")
-        {
-            bounds = vehicleSystems->getParameterBounds( "descent", parameter );
-        }
-        if (parameter == "Thrust Elevation Angle")
-        {
-            bounds = vehicleSystems->getParameterBounds( "descent", parameter );
-        }
-        if (parameter == "Thrust Azimuth Angle")
-        {
-            bounds = vehicleSystems->getParameterBounds( "descent", parameter );
-        }
-        if (parameter == "Throttle Setting")
-        {
-            bounds = vehicleSystems->getParameterBounds( "descent", parameter );
-        }
+        if ( parameter == "Angle of Attack" ) { bounds = vehicleSystems->getParameterBounds( "descent", parameter ); }
+        if ( parameter == "Bank Angle" ) { bounds = vehicleSystems->getParameterBounds( "descent", parameter ); }
+        if ( parameter == "Thrust Elevation Angle" ) { bounds = vehicleSystems->getParameterBounds( "descent", parameter ); }
+        if ( parameter == "Thrust Azimuth Angle" ) {  bounds = vehicleSystems->getParameterBounds( "descent", parameter ); }
+        if ( parameter == "Throttle Setting" ) { bounds = vehicleSystems->getParameterBounds( "descent", parameter ); }
     }
     return bounds;
 }
@@ -546,6 +501,73 @@ double computeHeatingRateTauber (
 
     return q_dot_LE;
 }
+
+double computeBendingMoment (
+        const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions)
+{
+    const double dynamicPressure = flightConditions->getCurrentDynamicPressure();
+    const double angleOfAttack = flightConditions->getAerodynamicAngleCalculator()->getAerodynamicAngle( tudat::reference_frames::angle_of_attack );
+
+    //  double q_dot_LE = std::pow ( 0.5 * q_dot_s * q_dot_s * cos_lambda * cos_lambda + q_dot_FP * q_dot_FP * sin_lambda * sin_lambda, 0.5 );
+    //  std::cout << "q_dot_FP: " << q_dot_FP << std::endl;
+    // std::cout << "q_dot_LE: " << q_dot_LE << std::endl;
+
+    return dynamicPressure * angleOfAttack;
+}
+
+double computePenalty (
+        const Eigen::VectorXd &dependentVariable_TimeHistory,
+        const long &startIterator,
+        const long &endIterator,
+        const double &constraint, const double &fixedStepSize, const double &tof, const bool &direct )
+{
+    Eigen::VectorXd dependentVariable_Violation( dependentVariable_TimeHistory.size() );
+    dependentVariable_Violation = Eigen::VectorXd::Zero( dependentVariable_TimeHistory.size() );
+
+    if ( direct == true )
+    {
+        if ( startIterator == 1 )
+        {  for ( long i = startIterator; i < endIterator + 1; i++ )
+            {
+                if ( dependentVariable_TimeHistory( i ) < dependentVariable_TimeHistory( i - 1 ) ) { dependentVariable_Violation( i ) = dependentVariable_TimeHistory( i - 1 ) - dependentVariable_TimeHistory( i ); }
+             //   std::cout << "dependentVariable_Violation( " << i << " ): " << dependentVariable_Violation( i ) << std::endl;
+
+            }
+        }
+        else
+        {
+            for ( long i = startIterator + 1; i < endIterator; i++ )
+            {
+                if ( dependentVariable_TimeHistory( i ) > dependentVariable_TimeHistory( i - 1 ) ) { dependentVariable_Violation( i ) = dependentVariable_TimeHistory( i ) - dependentVariable_TimeHistory( i - 1 ); }
+             //   std::cout << "dependentVariable_Violation( " << i << " ): " << dependentVariable_Violation( i ) << std::endl;
+
+            }
+        }
+    }
+    else
+    {
+        for ( long i = startIterator; i < endIterator; i++ )
+        {
+            if ( dependentVariable_TimeHistory ( i ) > constraint ) { dependentVariable_Violation( i ) = dependentVariable_TimeHistory( i ) - constraint; }
+
+           // std::cout << "dependentVariable_Violation( " << i << " ): " << dependentVariable_Violation( i ) << std::endl;
+        }
+    }
+    double penalty = 0;
+    std::ptrdiff_t index_MaximumViolation;
+    double maximum_Violation = dependentVariable_Violation.maxCoeff( &index_MaximumViolation );
+
+    if ( direct == true ) { penalty = dependentVariable_Violation.sum(); }
+    else { penalty =  ( maximum_Violation / constraint ) + ( fixedStepSize * dependentVariable_Violation.sum() ) / ( tof * constraint ); }
+
+    //std::cout << "penalty = " << penalty << std::endl;
+
+
+    return penalty;
+}
+
+
+
 /*
 
 Eigen::MatrixXd getDependentVariableMatrix( const tudat::propagators::SingleArcDynamicsSimulator< double > simulatedDynamics, const double simulationStartEpoch, const double fixedStepSize )

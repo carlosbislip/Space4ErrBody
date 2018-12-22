@@ -17,6 +17,8 @@ if compilation(1).validation == 1
     
 end
 
+%%
+plotTrajectories( compilation, mainpath );
 
 %%
 plotInterpolators( compilation, mainpath );
@@ -24,33 +26,21 @@ plotInterpolators( compilation, mainpath );
 %%
 plotTimeHistories_AeroAngles( compilation, mainpath );
 
-
 %%
 plotTimeHistories_Thermo( compilation, mainpath );
-
 
 %%
 plotTimeHistories_Mechanical( compilation, mainpath );
 
-
 %%
 plotTimeHistories_EngineOps( compilation, mainpath );
-
-
-%%
-plotTrajectories( compilation, mainpath );
-
 
 %%
 plotTimeHistories_SpatialAwareness( compilation, mainpath );
 
 
 %%
-plotTrajectories( compilation, mainpath );
-
-%%
 plotCompoundRelations( compilation, mainpath );
-
 
 %% Time History: Airspeed - per Evolution
 for p = 1:numel(compilation)

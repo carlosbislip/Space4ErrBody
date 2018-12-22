@@ -37,8 +37,8 @@ switch lower(shapetype)
     case 'spheroid'
         % Radius of the earth; equatorial/polar
         % http://en.wikipedia.org/wiki/Earth_radius
-        requator = 6378.1370;
-        rpolar = 6356.7523;
+        requator = 6378137.0;
+        rpolar = 6356752.3;
         rr = rpolar/requator;
     case 'spherical'
         rr = 1;
@@ -50,9 +50,9 @@ lat = linspace(-pi/2, pi/2, n(1)+1);
 lon = linspace(-pi, pi, n(2)+1);
 lon(end)=[];
 [LON LAT] = meshgrid(lon, lat);
-X = cos(LON).*cos(LAT);
-Y = sin(LON).*cos(LAT);
-Z = rr*sin(LAT);
+X = requator*cos(LON).*cos(LAT);
+Y = requator*sin(LON).*cos(LAT);
+Z = requator*rr*sin(LAT);
 
 %% Generate face
 Vertices = [X(:) Y(:) Z(:)];

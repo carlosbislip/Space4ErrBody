@@ -75,8 +75,8 @@ switch lower(shapetype)
     case 'spheroid'
         % Radius of the earth; equatorial/polar
         % http://en.wikipedia.org/wiki/Earth_radius
-        requator = 6378.1370;
-        rpolar = 6356.7523;
+        requator = 6378137.0;
+        rpolar = 6356752.3;
         rr = rpolar/requator;
     case 'spherical'
         rr = 1;

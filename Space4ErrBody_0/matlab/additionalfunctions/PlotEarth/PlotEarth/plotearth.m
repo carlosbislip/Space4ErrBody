@@ -193,8 +193,8 @@ end
     end
 
 %% Read the map
-display('read the map\n')
-display('\tmap: %s\n', mapfname)
+%display('read the map\n')
+%display('\tmap: %s\n', mapfname)
 [A map] = imread(mapfname);
 
 try % sometime memory problem occurs
@@ -217,23 +217,23 @@ try % sometime memory problem occurs
     end
 
     % Resampling RGB
-    display('resampling image\n');
+%    display('resampling image\n');
     [A m n] = resampling(A, offsetx, offsety, nxy, samplestep, ...
                          projection, @display);
-    display('\tresolution = %d x %d x %d\n', m, n(1), n(2));
+%    display('\tresolution = %d x %d x %d\n', m, n(1), n(2));
   
     % Indexed color
     if ~fullcolor && size(A,3)==3
-        display('indexing color\n');
+ %       display('indexing color\n');
         if isempty(which('rgb2ind'))
             warning('RGB2IND:Missing', ...
                     'RRB2IND is missing (Image processing required)');
         else
             [A clmap] = rgb2ind(A,ncolors);
-            display('\tnumber of colors = %d\n', size(clmap,1));
+    %        display('\tnumber of colors = %d\n', size(clmap,1));
         end
     else
-        display('full RGB color scheme\n');
+   %     display('full RGB color scheme\n');
     end
     % 3 (RGB) or 1 (indexed color)
     d3 = size(A,3);
@@ -253,16 +253,16 @@ try % sometime memory problem occurs
     % Project on sphere
     switch projection
         case 'cube',
-            display('compute cubed-sphere\n');
+    %        display('compute cubed-sphere\n');
             [Vertices Faces FaceID] = cubedsphere(n(1), ...
                                                'equidistance', shape);
         case 'mercator',
-            display('compute mercator-sphere\n');
+    %        display('compute mercator-sphere\n');
             [Vertices Faces FaceID] = mercator(n, shape);            
     end
     
     %% Preparation
-    display('preparation\n')
+  %  display('preparation\n')
     
     xleft = 1 + ((1:m)-1)*n(2);
     xright = xleft + (n(2)-1);
@@ -281,9 +281,10 @@ try % sometime memory problem occurs
     end
     
     %% Plot the earth map on sphere
-    display('plot earth\n')
+  %  display('plot earth\n')
     % Open axe
     if ~ishandle(axehandle)
+        varargin{end}
         fig = figure(varargin{end});
         %set(fig, 'Color','k', 'Name', ['Earth: ' maptype]); % black background
         
@@ -299,7 +300,7 @@ try % sometime memory problem occurs
     if d3==3
         Mapping = 'direct';
     else
-        Mapping = 'scaled';
+      %  Mapping = 'scaled';
     end
     
     for ID=1:m % loop on faces   

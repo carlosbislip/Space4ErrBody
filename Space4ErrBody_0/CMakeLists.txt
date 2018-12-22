@@ -54,10 +54,10 @@ enable_testing()
 
 # Set lib and bin directories where static libraries and unit tests are built.
 if(NOT LIBROOT)
-    set(LIBROOT "${CODEROOT}/Space4ErrBody_0")
+    set(LIBROOT "${CODEROOT}/Space4ErrBody_1")
 endif()
 if(NOT BINROOT)
-    set(BINROOT "${CODEROOT}/Space4ErrBody_0")
+    set(BINROOT "${CODEROOT}/Space4ErrBody_1")
 endif()
 
 # Set the global macros for setting up targets.
@@ -89,7 +89,7 @@ include_directories(AFTER
 
 #if(NOT SPACE4ErrBody_DISTRIBUTION_PATH)
 #    set(SPACE4ErrBody_DISTRIBUTION_PATH
-#        "${TUDAT_BUNDLE_DISTRIBUTION_PATH}/tudatApplications/Space4ErrBody_0")
+#        "${TUDAT_BUNDLE_DISTRIBUTION_PATH}/tudatApplications/Space4ErrBody_1")
 #endif(NOT SPACE4ErrBody_DISTRIBUTION_PATH)
 
 # Install files.
@@ -242,7 +242,7 @@ include(tudatLinkLibraries)
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Space4ErrBody_Executables_and_Headers")
 
-add_executable(Space4ErrBody_Optimization_0 "${SRCROOT}/Space4ErrBody_Optimization.cpp")
-setup_executable_target(Space4ErrBody_Optimization_0 "${SRCROOT}")
-target_link_libraries(Space4ErrBody_Optimization_0 Space4ErrBody_Executables_and_Headers ${TUDAT_PROPAGATION_LIBRARIES}
+add_executable(Space4ErrBody_Optimization_1 "${SRCROOT}/Space4ErrBody_Optimization.cpp")
+setup_executable_target(Space4ErrBody_Optimization_1 "${SRCROOT}")
+target_link_libraries(Space4ErrBody_Optimization_1 Space4ErrBody_Executables_and_Headers ${TUDAT_PROPAGATION_LIBRARIES}
     pthread ${Boost_LIBRARIES} )

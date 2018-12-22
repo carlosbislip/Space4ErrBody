@@ -457,10 +457,10 @@ for p = 1:numel(compilation)
         set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
         set (gca,'Fontsize',15)
         title(strcat('Node Location for Ascent - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
-        ylim([0 10])
+        ylim([0 1])
         % max_tof = max([compilation(p).evolutions.max_tof]);
 %        max_interp_E_mapped_Ascent = max([compilation(p).evolutions.max_interp_E_mapped]);
-        xlim([0 10])
+        xlim([0 1])
         ylabel('Mapped Energy: E_{mapped}') % x-axis label
         xlabel('Node Location (-)') % y-axis label
         % set(gca,'YTick', 0:1:10);
@@ -502,10 +502,10 @@ for p = 1:numel(compilation)
         set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
         set (gca,'Fontsize',15)
         title(strcat('Node Location for Descent - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
-        ylim([0 10])
+        ylim([0 1])
         % max_tof = max([compilation(p).evolutions.max_tof]);
 %        max_interp_E_mapped_Ascent = max([compilation(p).evolutions.max_interp_E_mapped]);
-        xlim([0 10])
+        xlim([0 1])
         ylabel('Mapped Energy: E_{mapped}') % x-axis label
         xlabel('Node Location (-)') % y-axis label
         % set(gca,'YTick', 0:1:10);

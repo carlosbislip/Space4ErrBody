@@ -72,7 +72,7 @@ void MyGuidance::updateGuidance( const double currentTime )
         std::shared_ptr< tudat::system_models::VehicleSystems > vehicleSystems = bodyMap_.at( vehicleName_ )->getVehicleSystems();
 
         const double AoA = bislip::variables::evaluateGuidanceInterpolator (
-                    FlightConditions_->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::flight_path_angle ),
+                    //FlightConditions_->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::flight_path_angle ),
                     "Angle of Attack",
                     vehicleSystems,
                     FlightConditions_->getCurrentAltitude(),
@@ -80,7 +80,7 @@ void MyGuidance::updateGuidance( const double currentTime )
                     vehicleSystems->getE_max() );
 
         const double sigma = bislip::variables::evaluateGuidanceInterpolator (
-                    FlightConditions_->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::flight_path_angle ),
+                   // FlightConditions_->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::flight_path_angle ),
                     "Bank Angle",
                     vehicleSystems,
                     FlightConditions_->getCurrentAltitude(),

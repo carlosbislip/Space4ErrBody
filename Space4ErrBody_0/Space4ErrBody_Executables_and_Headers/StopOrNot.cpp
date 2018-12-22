@@ -72,7 +72,7 @@ bool StopOrNot( const tudat::simulation_setup::NamedBodyMap& bodyMap,
 
     //! Evaluate current throttle setting and thrust elevation angle.
     double throttle = bislip::variables::evaluateGuidanceInterpolator(
-                    current_gamma,
+                    //current_gamma,
                     "Throttle Setting",
                     bodyMap.at( vehicleName )->getVehicleSystems(),
                     current_height,

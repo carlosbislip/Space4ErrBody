@@ -8,8 +8,11 @@
 #include <utility>
 
 #include <Tudat/Mathematics/Interpolators/oneDimensionalInterpolator.h>
+#include <Tudat/Mathematics/Interpolators/createInterpolator.h>
 #include <Tudat/Astrodynamics/Aerodynamics/flightConditions.h>
 #include <Tudat/Astrodynamics/SystemModels/vehicleSystems.h>
+#include <Tudat/Mathematics/Interpolators/createInterpolator.h>
+
 
 namespace bislip {
 
@@ -77,23 +80,34 @@ double computeNormalizedSpecificEnergy (
         const double &airspeed,
         const double &E_max);
 
-std::vector< double > HermiteDerivatives (const Eigen::VectorXd &h, const Eigen::VectorXd &y, const long &nodes);
+std::vector< double > HermiteDerivatives (
+        const Eigen::VectorXd &mappedNormalizedSpecificEnergy,
+        const Eigen::VectorXd &y);
+
+std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > createOneDimensionalHermiteInterpolator (
+            const Eigen::VectorXd &parameterValues,
+            const Eigen::VectorXd &normalizedSpecificEnergy,
+            const std::map< double, double > &mapped_data,
+            const std::shared_ptr< tudat::interpolators::InterpolatorSettings > &interpolatorSettings );
 
 std::string passGuidanceParameter (
         const std::string &parameter);
 
+std::string passDirection (
+        const std::string &direction);
+
 std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > chooseGuidanceInterpolator (
-        const double &flight_path_angle,
+//        const double &flight_path_angle,
         const std::string &parameter,
         const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems);
 
 std::pair < double, double > chooseGuidanceBounds (
-        const double &flight_path_angle,
+//        const double &flight_path_angle,
         const std::string &parameter,
         const std::shared_ptr<tudat::system_models::VehicleSystems> &vehicleSystems);
 
 double evaluateGuidanceInterpolator (
-        const double &flightpathangle,
+//        const double &flightpathangle,
         const std::string &parameter,
         const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems,
         const double &height,

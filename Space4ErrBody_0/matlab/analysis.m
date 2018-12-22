@@ -14,7 +14,7 @@ format long
 %%
 online = 0;
 
-mainpath = '/Users/bislip/Cloud Storage/OneDrive/School/TUDelft/Space Flight/Thesis/tudatBundle.git/tudatApplications/Space4ErrBody.git/Space4ErrBody_0/matlab/';
+mainpath = '/Users/bislip/Cloud Storage/OneDrive/School/TUDelft/Space Flight/Thesis/tudatBundle.git/tudatApplications/Space4ErrBody.git/Space4ErrBody_1/matlab/';
 
 if online == 1
     mainpath = '..';

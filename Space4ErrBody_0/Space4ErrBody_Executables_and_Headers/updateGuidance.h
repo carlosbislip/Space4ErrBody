@@ -14,18 +14,13 @@ namespace bislip {
 class MyGuidance: public tudat::aerodynamics::AerodynamicGuidance
 {
 public:
+
     //! Constructor.
     MyGuidance(
             const tudat::simulation_setup::NamedBodyMap& bodyMap,
             const std::string vehicleName):
-        //const std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > interpolator_alpha_deg,
-        //const std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > interpolator_eps_T_deg,
-        //const std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > interpolator_throttle ):
         bodyMap_( bodyMap ),
         vehicleName_( vehicleName ){ }
-    //        interpolator_alpha_deg_( interpolator_alpha_deg ),
-    //       interpolator_eps_T_deg_( interpolator_eps_T_deg ),
-    //       interpolator_throttle_( interpolator_throttle ){ }
 
     //! Destructor.
     ~MyGuidance( ){ }

@@ -10,6 +10,7 @@
 #include <vector>
 
 #include <Tudat/Mathematics/Interpolators/oneDimensionalInterpolator.h>
+#include <Tudat/Mathematics/Interpolators/createInterpolator.h>
 #include <Tudat/Astrodynamics/Aerodynamics/aerodynamics.h>
 #include <Tudat/Astrodynamics/Aerodynamics/flightConditions.h>
 #include <Tudat/Astrodynamics/SystemModels/vehicleSystems.h>
@@ -179,14 +180,15 @@ double computeNormalizedSpecificEnergy (
 }
 
 //! https://doi.org/10.1016/j.cam.2017.09.049
-std::vector< double > HermiteDerivatives( const Eigen::VectorXd &E_mapped, const Eigen::VectorXd &y, const long &nodes )
+std::vector< double > HermiteDerivatives( const Eigen::VectorXd &mappedNormalizedSpecificEnergy, const Eigen::VectorXd &y )
 {
+    long nodes = mappedNormalizedSpecificEnergy.size();
     Eigen::VectorXd h( nodes - 1 ), dely( nodes - 1 ), b( nodes ), x( nodes );
     Eigen::MatrixXd A( nodes, nodes );
     std::vector< double > x_vect;
     double mu, lambda;
 
-    for ( long i = 0; i < nodes - 1; ++i ) { h( i ) = E_mapped( i + 1 ) - E_mapped( i ); dely( i ) = ( y( i + 1 ) - y( i ) ) / h( i ); }
+    for ( long i = 0; i < nodes - 1; ++i ) { h( i ) = mappedNormalizedSpecificEnergy( i + 1 ) - mappedNormalizedSpecificEnergy( i ); dely( i ) = ( y( i + 1 ) - y( i ) ) / h( i ); }
 
     A = Eigen::MatrixXd::Zero( nodes, nodes );
     A( 0, 0 ) = 4.0;
@@ -215,81 +217,66 @@ std::vector< double > HermiteDerivatives( const Eigen::VectorXd &E_mapped, const
     return x_vect;
 }
 
+std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > createOneDimensionalHermiteInterpolator (
+            const Eigen::VectorXd &parameterValues,
+            const Eigen::VectorXd &mappedNormalizedSpecificEnergy,
+            const std::map< double, double > &mapped_data,
+            const std::shared_ptr< tudat::interpolators::InterpolatorSettings > &interpolatorSettings )
+{
+   return tudat::interpolators::createOneDimensionalInterpolator< double, double >(
+               mapped_data,
+               interpolatorSettings,
+               std::make_pair( parameterValues( 0 ), parameterValues( parameterValues.size() - 1 ) ),
+               bislip::variables::HermiteDerivatives( mappedNormalizedSpecificEnergy, parameterValues ) );
+}
+
 std::string passGuidanceParameter (
         const std::string &parameter)
 {
     return parameter;
 }
 
+std::string passDirection (
+        const std::string &direction)
+{
+    return direction;
+}
+
+
 std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > chooseGuidanceInterpolator(
-        const double &flight_path_angle,
+       // const double &flight_path_angle,
         const std::string &parameter,
         const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems)
 {
     std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > interpolator;
 
-    if ( flight_path_angle >  0 )
-    {
-        if ( parameter == "Angle of Attack") { interpolator = vehicleSystems->getThrustElevationAngleInterpolator_Ascent(); }
-        if ( parameter == "Bank Angle") { interpolator = vehicleSystems->getBankAngleInterpolator_Ascent(); }
-        if ( parameter == "Thrust Elevation Angle") { interpolator = vehicleSystems->getThrustElevationAngleInterpolator_Ascent(); }
-        if ( parameter == "Thrust Azimuth Angle") { interpolator = vehicleSystems->getThrustAzimuthAngleInterpolator_Ascent(); }
-        if ( parameter == "Throttle Setting") { interpolator = vehicleSystems->getThrottleInterpolator_Ascent(); }
-    }
-    else
-    {
-        if (parameter == "Angle of Attack")
-        {
-            interpolator = vehicleSystems->getThrustElevationAngleInterpolator_Descent();
-        }
-        if (parameter == "Bank Angle")
-        {
-            interpolator = vehicleSystems->getBankAngleInterpolator_Descent();
-        }
-        if (parameter == "Thrust Elevation Angle")
-        {
-            interpolator = vehicleSystems->getThrustElevationAngleInterpolator_Descent();
-        }
-        if (parameter == "Thrust Azimuth Angle")
-        {
-            interpolator = vehicleSystems->getThrustAzimuthAngleInterpolator_Descent();
-        }
-        if (parameter == "Throttle Setting")
-        {
-            interpolator = vehicleSystems->getThrottleInterpolator_Descent();
-        }
-    }
+        if ( parameter == "Angle of Attack") { interpolator = vehicleSystems->getAngleOfAttackInterpolator(); }
+        if ( parameter == "Bank Angle") { interpolator = vehicleSystems->getBankAngleInterpolator(); }
+        if ( parameter == "Thrust Elevation Angle") { interpolator = vehicleSystems->getThrustElevationAngleInterpolator(); }
+        if ( parameter == "Thrust Azimuth Angle") { interpolator = vehicleSystems->getThrustAzimuthAngleInterpolator(); }
+        if ( parameter == "Throttle Setting") { interpolator = vehicleSystems->getThrottleInterpolator(); }
+
     return interpolator;
 }
 
 std::pair < double, double > chooseGuidanceBounds (
-        const double &flight_path_angle,
+        //const double &flight_path_angle,
         const std::string &parameter,
         const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems)
 {
     std::pair < double, double > bounds;
 
-    if ( flight_path_angle >  0 )
-    {
-        if ( parameter == "Angle of Attack" ) { bounds = vehicleSystems->getParameterBounds( "ascent", parameter ); }
-        if ( parameter == "Bank Angle" ) { bounds = vehicleSystems->getParameterBounds( "ascent", parameter ); }
-        if ( parameter == "Thrust Elevation Angle" ) { bounds = vehicleSystems->getParameterBounds( "ascent", parameter ); }
-        if ( parameter == "Thrust Azimuth Angle" ) {  bounds = vehicleSystems->getParameterBounds( "ascent", parameter ); }
-        if ( parameter == "Throttle Setting" ) { bounds = vehicleSystems->getParameterBounds( "ascent", parameter ); }
-    }
-    else
-    {
-        if ( parameter == "Angle of Attack" ) { bounds = vehicleSystems->getParameterBounds( "descent", parameter ); }
-        if ( parameter == "Bank Angle" ) { bounds = vehicleSystems->getParameterBounds( "descent", parameter ); }
-        if ( parameter == "Thrust Elevation Angle" ) { bounds = vehicleSystems->getParameterBounds( "descent", parameter ); }
-        if ( parameter == "Thrust Azimuth Angle" ) {  bounds = vehicleSystems->getParameterBounds( "descent", parameter ); }
-        if ( parameter == "Throttle Setting" ) { bounds = vehicleSystems->getParameterBounds( "descent", parameter ); }
-    }
+        if ( parameter == "Angle of Attack" ) { bounds = vehicleSystems->getParameterBounds( parameter ); }
+        if ( parameter == "Bank Angle" ) { bounds = vehicleSystems->getParameterBounds( parameter ); }
+        if ( parameter == "Thrust Elevation Angle" ) { bounds = vehicleSystems->getParameterBounds( parameter ); }
+        if ( parameter == "Thrust Azimuth Angle" ) {  bounds = vehicleSystems->getParameterBounds( parameter ); }
+        if ( parameter == "Throttle Setting" ) { bounds = vehicleSystems->getParameterBounds( parameter ); }
+
     return bounds;
 }
 
 double evaluateGuidanceInterpolator (
-        const double &flightpathangle,
+       // const double &flightpathangle,
         const std::string &parameter,
         const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems,
         const double &height,
@@ -297,10 +284,10 @@ double evaluateGuidanceInterpolator (
         const double &E_max)
 {
     //! Select parameter interpolator.
-    std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > interpolator = bislip::variables::chooseGuidanceInterpolator( flightpathangle, parameter, vehicleSystems );
+    std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > interpolator = bislip::variables::chooseGuidanceInterpolator( parameter, vehicleSystems );
 
     //! Select parameter bounds.
-    std::pair < double, double > bounds =  bislip::variables::chooseGuidanceBounds( flightpathangle, parameter, vehicleSystems );
+    std::pair < double, double > bounds =  bislip::variables::chooseGuidanceBounds( parameter, vehicleSystems );
 
     //! Evaluate interpolator.
     double evaluation = interpolator->interpolate( bislip::variables::computeNormalizedSpecificEnergy( height, airspeed, E_max ) );
@@ -318,7 +305,7 @@ Eigen::Vector3d computeBodyFixedThrustDirection (
 {
     // std::cout << "Computing Body Fixed Thrust Direction" << std::endl;
     const double eps_T =  evaluateGuidanceInterpolator (
-                flightConditions->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::flight_path_angle ),
+               // flightConditions->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::flight_path_angle ),
                 "Thrust Elevation Angle",
                 vehicleSystems,
                 flightConditions->getCurrentAltitude(),
@@ -326,7 +313,7 @@ Eigen::Vector3d computeBodyFixedThrustDirection (
                 vehicleSystems->getE_max() );
 
     const double phi_T = evaluateGuidanceInterpolator (
-                flightConditions->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::flight_path_angle ),
+                //flightConditions->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::flight_path_angle ),
                 "Thrust Azimuth Angle",
                 vehicleSystems,
                 flightConditions->getCurrentAltitude(),
@@ -346,7 +333,7 @@ double computeThrustMagnitude (
         const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems)
 {
     const double throttle = bislip::variables::evaluateGuidanceInterpolator (
-                flightConditions->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::flight_path_angle ),
+                //flightConditions->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::flight_path_angle ),
                 "Throttle Setting",
                 vehicleSystems,
                 flightConditions->getCurrentAltitude(),

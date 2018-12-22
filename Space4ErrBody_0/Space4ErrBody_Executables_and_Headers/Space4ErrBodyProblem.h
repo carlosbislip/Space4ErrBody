@@ -8,8 +8,8 @@
  *    http://tudat.tudelft.nl/LICENSE.
  */
 
-#ifndef SPACE4ERRBODY_OPTIMIZATION_HPP
-#define SPACE4ERRBODY_OPTIMIZATION_HPP
+#ifndef SPACE4ERRBODY_HPP
+#define SPACE4ERRBODY_HPP
 
 #include <utility>
 #include <vector>
@@ -31,13 +31,13 @@ using namespace pagmo;
 //using namespace pagmo::problem;
 
 //! Define the problem PaGMO-style
-struct Space4ErrBody {
+struct Space4ErrBodyProblem {
 
     //! Empty constructor
-    Space4ErrBody( ) { }
+    Space4ErrBodyProblem( ) { }
 
     //! Constructor.
-    Space4ErrBody( const std::vector< std::vector< double > > &bounds,
+    Space4ErrBodyProblem( const std::vector< std::vector< double > > &bounds,
                    const std::string &problem_name,
                    const std::string &vehicleName,
                    const std::vector< std::string > &parameterList_Ascent,
@@ -61,7 +61,8 @@ struct Space4ErrBody {
                    const tudat::basic_astrodynamics::AccelerationMap &accelerationsMap,
                    const std::shared_ptr< tudat::ephemerides::RotationalEphemeris > &earthRotationalEphemeris,
                    const std::shared_ptr< tudat::propagators::DependentVariableSaveSettings > &dependentVariablesToSave,
-                   const std::shared_ptr< tudat::propagators::PropagationTerminationSettings > &terminationSettings,
+                          const std::shared_ptr< tudat::propagators::PropagationTerminationSettings > &terminationSettings_Ascent,
+                          const std::shared_ptr< tudat::propagators::PropagationTerminationSettings > &terminationSettings_Descent,
                    const std::map< std::string, std::shared_ptr< tudat::basic_astrodynamics::MassRateModel > > &massRateModels,
                    const std::shared_ptr< tudat::propagators::SingleArcPropagatorSettings< double > > &massPropagatorSettings_Ascent);
 
@@ -85,10 +86,10 @@ struct Space4ErrBody {
     }
 
     //! Serialization function for Pagmo compatibility
-    template <typename Archive>
-    void serialize(Archive &ar)
+    template < typename Archive >
+    void serialize( Archive &ar )
     {
-        ar(problemBounds_);
+        ar( problemBounds_ );
     }
 
 private:
@@ -117,7 +118,8 @@ private:
     const tudat::basic_astrodynamics::AccelerationMap accelerationsMap_;
     const std::shared_ptr< tudat::ephemerides::RotationalEphemeris > earthRotationalEphemeris_;
     const std::shared_ptr< tudat::propagators::DependentVariableSaveSettings > dependentVariablesToSave_;
-    const std::shared_ptr< tudat::propagators::PropagationTerminationSettings > terminationSettings_;
+    const std::shared_ptr< tudat::propagators::PropagationTerminationSettings > terminationSettings_Ascent_;
+    const std::shared_ptr< tudat::propagators::PropagationTerminationSettings > terminationSettings_Descent_;
     const std::map< std::string, std::shared_ptr< tudat::basic_astrodynamics::MassRateModel > > massRateModels_;
     const std::shared_ptr< tudat::propagators::SingleArcPropagatorSettings< double > > massPropagatorSettings_Ascent_;
 };

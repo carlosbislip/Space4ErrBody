@@ -3,7 +3,7 @@
 #include <pagmo/io.hpp>
 #include <pagmo/archipelago.hpp>
 
-#include "Space4ErrBody_Executables_and_Headers/Space4ErrBody.h"
+#include "Space4ErrBody_Executables_and_Headers/Space4ErrBodyProblem.h"
 #include "Space4ErrBody_Executables_and_Headers/getAlgorithm.h"
 #include "Space4ErrBody_Executables_and_Headers/applicationOutput_tudat.h"
 #include "Space4ErrBody_Executables_and_Headers/applicationOutput_pagmo.h"
@@ -177,7 +177,7 @@ int main()
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            UNPACK INPUT DATA             //////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   // std::cout << "Unpacking data" << std::endl;
+    // std::cout << "Unpacking data" << std::endl;
 
     //! Declare and initialize simulation start epoch.
     const double simulationStartEpoch = simulation_settingsValues[ 0 ]; // 10/28/2018  11:00:00 AM  ---> 2458419.95833333000000000000000
@@ -274,7 +274,7 @@ int main()
     ///////////////////////            CREATE PARAMETER BOUNDS          ///////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-   // std::cout << "Create Parameter Bounds" << std::endl;
+    // std::cout << "Create Parameter Bounds" << std::endl;
 
     //! Declare data maps of strings and pairs to store parameter bounds.
     //!     Strings are used for the parameter names.
@@ -308,7 +308,7 @@ int main()
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            CREATE ENVIRONMENT            //////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   // std::cout << "Creating environment" << std::endl;
+    // std::cout << "Creating environment" << std::endl;
 
     //! Declare and initialize central body name.
     const std::string centralBodyName = "Earth";
@@ -319,12 +319,12 @@ int main()
                                     simulationStartEpoch - 10.0 * fixedStepSize,
                                     simulationEndEpoch + 10.0 * fixedStepSize );
 
-  //  std::cout << "Define atmospheric model." << std::endl;
+    //  std::cout << "Define atmospheric model." << std::endl;
     //! Define atmospheric model.
     bodySettings[ centralBodyName ]->atmosphereSettings = std::make_shared< AtmosphereSettings >(
                 nrlmsise00 );
 
-   // std::cout << "Define ephemeris model settings." << std::endl;
+    // std::cout << "Define ephemeris model settings." << std::endl;
     //! Define ephemeris model settings.
     //! This is an acceptable 'cheat' were Earth is placed at the barycenter.
     //! Use only when there arent any third body perturbations (Moon, Sun, etc.)
@@ -332,7 +332,7 @@ int main()
             std::make_shared< ConstantEphemerisSettings >(
                 Eigen::Vector6d::Zero( ), "SSB", "J2000" );
 
-   // std::cout << "Reset ephemeris to J2000." << std::endl;
+    // std::cout << "Reset ephemeris to J2000." << std::endl;
     //! Reset ephemeris to J2000.
     bodySettings[ centralBodyName ]->rotationModelSettings->resetOriginalFrame( "J2000" );
 
@@ -384,7 +384,7 @@ int main()
     }
     //!--------------------------------------------------------------
 
-   // std::cout << "Create Earth object" << std::endl;
+    // std::cout << "Create Earth object" << std::endl;
     //! Create Earth object
     tudat::simulation_setup::NamedBodyMap bodyMap = createBodies( bodySettings );
 
@@ -700,7 +700,7 @@ int main()
     ///////////////////////          CREATE LIST OF DEPENDENT VARIABLES        ////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-   // std::cout << "Creating list of dependent variables" << std::endl;
+    // std::cout << "Creating list of dependent variables" << std::endl;
 
     //! Create vector that will contian the list of dependent variables to save/output.
     //!     The file that prints out the text saying what is saved has been modified
@@ -878,18 +878,8 @@ int main()
     ///////////////////////             CREATE TERMINATION SETTINGS            ////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-   // std::cout << "Create Termination Settings" << std::endl;
-    /*
-    vehicleSystems->setInitialLat( initialLat_rad );
-    vehicleSystems->setInitialLon( initialLon_rad );
-    vehicleSystems->setInitialCoordinates( std::make_pair( vehicleSystems->getInitialLat( ), vehicleSystems->getInitialLon( ) ) );
-    vehicleSystems->setTargetLat( targetLat_rad );
-    vehicleSystems->setTargetLon( targetLon_rad );
-    vehicleSystems->setTargetCoordinates( std::make_pair( vehicleSystems->getTargetLat( ), vehicleSystems->getTargetLon( ) ) );
-    vehicleSystems->setInitialDistanceToTarget( initialDistanceToTarget_rad );
-    vehicleSystems->setFinalDistanceToTarget( finalDistanceToTarget_rad );
-    vehicleSystems->setStartingEpoch( simulationStartEpoch );
-*/
+    // std::cout << "Create Termination Settings" << std::endl;
+
     //! Define CUSTOM termination settings.
     // std::shared_ptr< PropagationTerminationSettings > customTermination =
     //         std::make_shared< PropagationCustomTerminationSettings >(
@@ -961,26 +951,49 @@ int main()
     //                 centralBodyName) , tudat::mathematical_constants::PI / 2.0 , false );
 
 
-    std::vector< std::shared_ptr< propagators::PropagationTerminationSettings > > terminationSettingsList;
+    std::vector< std::shared_ptr< propagators::PropagationTerminationSettings > > terminationSettingsList_Ascent;
     // terminationSettingsList.push_back( customTermination );
     //terminationSettingsList.push_back( thrustTerminationSettings );
-    terminationSettingsList.push_back( d_to_go_TerminationSettings );
-    terminationSettingsList.push_back( d_traveled_TerminationSettings );
+    terminationSettingsList_Ascent.push_back( d_to_go_TerminationSettings );
+    terminationSettingsList_Ascent.push_back( d_traveled_TerminationSettings );
     //terminationSettingsList.push_back( mass_TerminationSettings );
     //terminationSettingsList.push_back( E_hat_TerminationSettings );
-    //  terminationSettingsList.push_back( q_dyn_TerminationSettings );
+     terminationSettingsList_Ascent.push_back( q_dyn_TerminationSettings );
     //terminationSettingsList.push_back( q_dot_TerminationSettings );
     //    terminationSettingsList.push_back( height_UP_TerminationSettings );
-    terminationSettingsList.push_back( height_DN_TerminationSettings );
+    terminationSettingsList_Ascent.push_back( height_DN_TerminationSettings );
     // terminationSettingsList.push_back( flight_path_angle_TerminationSettings );
 
     // PropagationHybridTerminationSettings( terminationSettingsList,
     //                                       true,
     //                                       false );
 
-    std::shared_ptr< PropagationTerminationSettings > terminationSettings = std::make_shared<
-            propagators::PropagationHybridTerminationSettings >( terminationSettingsList, true );
 
+
+    std::shared_ptr< PropagationTerminationSettings > terminationSettings_Ascent = std::make_shared<
+            propagators::PropagationHybridTerminationSettings >( terminationSettingsList_Ascent, true );
+
+
+
+
+    std::vector< std::shared_ptr< propagators::PropagationTerminationSettings > > terminationSettingsList_Descent;
+    // terminationSettingsList_Descent.push_back( customTermination );
+    //terminationSettingsList_Descent.push_back( thrustTerminationSettings );
+    terminationSettingsList_Descent.push_back( d_to_go_TerminationSettings );
+    terminationSettingsList_Descent.push_back( d_traveled_TerminationSettings );
+    //terminationSettingsList_Descent.push_back( mass_TerminationSettings );
+    //terminationSettingsList_Descent.push_back( E_hat_TerminationSettings );
+     terminationSettingsList_Descent.push_back( q_dyn_TerminationSettings );
+    //terminationSettingsList_Descent.push_back( q_dot_TerminationSettings );
+    //    terminationSettingsList_Descent.push_back( height_UP_TerminationSettings );
+    terminationSettingsList_Descent.push_back( height_DN_TerminationSettings );
+    // terminationSettingsList_Descent.push_back( flight_path_angle_TerminationSettings );
+
+
+
+
+    std::shared_ptr< PropagationTerminationSettings > terminationSettings_Descent = std::make_shared<
+            propagators::PropagationHybridTerminationSettings >( terminationSettingsList_Descent, true );
 
     ///////////////////////             CREATE MASS RATE SETTINGS              ////////////////////////////////////////////
     //std::cout << "Create mass rate models" << std::endl;
@@ -1005,40 +1018,41 @@ int main()
     //! Declare and initialize mass propagation settings.
     std::shared_ptr< SingleArcPropagatorSettings< double > > massPropagatorSettings_Ascent =
             std::make_shared< MassPropagatorSettings< double > >(
-                bodiesWithMassToPropagate, massRateModels, initialBodyMasses_Ascent, terminationSettings, dependentVariablesToSave );
+                bodiesWithMassToPropagate, massRateModels, initialBodyMasses_Ascent, terminationSettings_Ascent, dependentVariablesToSave );
 
 
 
 
 
     //! Create object to compute the problem fitness.
-    problem prob{ Space4ErrBody( bounds,
-                                 problem_name,
-                                 vehicleName,
-                                 parameterList_Ascent,
-                                 parameterBounds_Ascent,
-                                 parameterList_Descent,
-                                 parameterBounds_Descent,
-                                 vehicleParameterValues,
-                                 aeroCoeffFileList,
-                                 simulation_settingsValues,
-                                 initialConditionsValues,
-                                 terminationConditionsValues,
-                                 output_settingsValues,
-                                 outputSubFolder,
-                                 EntryState_spherical,
-                                 bodiesWithMassToPropagate,
-                                 centralBodies,
-                                 bodiesToIntegrate,
-                                 Bounds_Ascent,
-                                 Bounds_Descent,
-                                 bodyMap,
-                                 accelerationsMap,
-                                 earthRotationalEphemeris,
-                                 dependentVariablesToSave,
-                                 terminationSettings,
-                                 massRateModels,
-                                 massPropagatorSettings_Ascent) };
+    pagmo::problem prob{ Space4ErrBodyProblem( bounds,
+                                               problem_name,
+                                               vehicleName,
+                                               parameterList_Ascent,
+                                               parameterBounds_Ascent,
+                                               parameterList_Descent,
+                                               parameterBounds_Descent,
+                                               vehicleParameterValues,
+                                               aeroCoeffFileList,
+                                               simulation_settingsValues,
+                                               initialConditionsValues,
+                                               terminationConditionsValues,
+                                               output_settingsValues,
+                                               outputSubFolder,
+                                               EntryState_spherical,
+                                               bodiesWithMassToPropagate,
+                                               centralBodies,
+                                               bodiesToIntegrate,
+                                               Bounds_Ascent,
+                                               Bounds_Descent,
+                                               bodyMap,
+                                               accelerationsMap,
+                                               earthRotationalEphemeris,
+                                               dependentVariablesToSave,
+                                               terminationSettings_Ascent,
+                                               terminationSettings_Descent,
+                                               massRateModels,
+                                               massPropagatorSettings_Ascent) };
 
     //! Retrieve algorithm. Three options available in the following function:
     //!        getMultiObjectiveAlgorithm

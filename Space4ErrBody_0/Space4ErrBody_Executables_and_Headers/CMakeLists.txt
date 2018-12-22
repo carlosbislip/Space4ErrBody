@@ -9,7 +9,7 @@
 
 # Set the header files.
 set(SPACE4ERRBODY_HEADERS
-    "${CMAKE_CURRENT_SOURCE_DIR}/Space4ErrBody.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Space4ErrBodyProblem.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/getAlgorithm.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/applicationOutput_tudat.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/applicationOutput_pagmo.h"
@@ -22,7 +22,7 @@ set(SPACE4ERRBODY_HEADERS
     )
 
 set(SPACE4ERRBODY_SOURCES
-    "${CMAKE_CURRENT_SOURCE_DIR}/Space4ErrBody.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Space4ErrBodyProblem.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/getGamma.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/getCoefficients.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/getCurrentBodyFixedThrustDirection.cpp"

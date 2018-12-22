@@ -1,4 +1,4 @@
-#include "Space4ErrBody.h"
+#include "Space4ErrBodyProblem.h"
 #include "StopOrNot.h"
 #include "getStuff.h"
 #include "bislipVariables.h"

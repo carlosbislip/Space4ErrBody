@@ -70,7 +70,7 @@
 #include <Tudat/Astrodynamics/SystemModels/vehicleSystems.h>
 
 //! Mine
-#include "Space4ErrBody.h"
+#include "Space4ErrBodyProblem.h"
 #include "applicationOutput_tudat.h"
 #include "getStuff.h"
 #include "updateGuidance.h"
@@ -78,7 +78,7 @@
 //#include "updateGuidance_val.h"
 #include "StopOrNot.h"
 
-Space4ErrBody::Space4ErrBody(
+Space4ErrBodyProblem::Space4ErrBodyProblem(
         const std::vector< std::vector< double > > &bounds,
         const std::string &problem_name,
         const std::string &vehicleName,
@@ -103,7 +103,8 @@ Space4ErrBody::Space4ErrBody(
         const tudat::basic_astrodynamics::AccelerationMap &accelerationsMap,
         const std::shared_ptr< tudat::ephemerides::RotationalEphemeris > &earthRotationalEphemeris,
         const std::shared_ptr< tudat::propagators::DependentVariableSaveSettings > &dependentVariablesToSave,
-        const std::shared_ptr< tudat::propagators::PropagationTerminationSettings > &terminationSettings,
+        const std::shared_ptr< tudat::propagators::PropagationTerminationSettings > &terminationSettings_Ascent,
+        const std::shared_ptr< tudat::propagators::PropagationTerminationSettings > &terminationSettings_Descent,
         const std::map< std::string, std::shared_ptr< tudat::basic_astrodynamics::MassRateModel > > &massRateModels,
         const std::shared_ptr< tudat::propagators::SingleArcPropagatorSettings< double > > &massPropagatorSettings_Ascent ):
     problemBounds_( bounds ),
@@ -130,24 +131,25 @@ Space4ErrBody::Space4ErrBody(
     accelerationsMap_( accelerationsMap ),
     earthRotationalEphemeris_( earthRotationalEphemeris ),
     dependentVariablesToSave_( dependentVariablesToSave ),
-    terminationSettings_( terminationSettings ),
+    terminationSettings_Ascent_( terminationSettings_Ascent ),
+    terminationSettings_Descent_( terminationSettings_Descent ),
     massRateModels_( massRateModels ),
     massPropagatorSettings_Ascent_( massPropagatorSettings_Ascent )
 { }
 
 //! Descriptive name of the problem
-std::string Space4ErrBody::get_name() const
+std::string Space4ErrBodyProblem::get_name() const
 {
     return problem_name_;
 }
 
 //! Get bounds
-std::pair<std::vector<double>, std::vector<double> > Space4ErrBody::get_bounds() const
+std::pair<std::vector<double>, std::vector<double> > Space4ErrBodyProblem::get_bounds() const
 {
     return { problemBounds_[ 0 ], problemBounds_[ 1 ] };
 }
 
-std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  const
+std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &x )  const
 {
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -584,7 +586,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
               accelerationsMap_,
               bodiesToIntegrate_,
               systemInitialState_Ascent,
-              terminationSettings_,
+              terminationSettings_Ascent_,
               cowell,
               dependentVariablesToSave_ );
 
@@ -595,7 +597,7 @@ std::vector<double> Space4ErrBody::fitness( const std::vector< double > &x )  co
 
     //! Declare and initialize propagation settings for both mass and translational dynamics.
     std::shared_ptr< PropagatorSettings< double > > propagatorSettings_Ascent =
-            std::make_shared< MultiTypePropagatorSettings< double > >( propagatorSettingsVector_Ascent, terminationSettings_, dependentVariablesToSave_ );
+            std::make_shared< MultiTypePropagatorSettings< double > >( propagatorSettingsVector_Ascent, terminationSettings_Ascent_, dependentVariablesToSave_ );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////           CREATE INTEGRATION SETTINGS: ASCENT           ///////////////////////////////////////

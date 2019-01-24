@@ -260,18 +260,18 @@ for p = 1:numel(compilation)
         set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
         set (gca,'Fontsize',15)
         title(strcat('Mass through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
-        ylim([25000 60000])
+        ylim([25 125])
         max_tof = max([compilation(p).evolutions.max_tof]);
         xlim([0 max_tof])
         xlabel('Propagation Time (s)') % x-axis label
-        ylabel('Mass (kg)') % y-axis label
-        set(gca,'YTick', 25000:5000:60000);
+        ylabel('Mass (x10^3 kg)') % y-axis label
+        set(gca,'YTick', 25:25:125);
         set(gca,'XTick', 0:200:max_tof);
         hold on
         
         for ii = 1:numel(compilation(p).evolutions(k).trajectories)
             plot(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
-                compilation(p).evolutions(k).trajectories(ii).individual.mass);
+                compilation(p).evolutions(k).trajectories(ii).individual.mass/1e3);
         end
         
         %plot([0 max_tof],(25)*[1 1],'k','LineWidth',2)

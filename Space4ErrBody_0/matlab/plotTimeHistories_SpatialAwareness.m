@@ -82,7 +82,7 @@ end
 %% Time History: Distance To Go - per Evolution
 for p = 1:numel(compilation)
     
-    for k = 1:numel(compilation(p).evolutions)
+    for k = numel(compilation(p).evolutions):numel(compilation(p).evolutions)
         fig_num = p*100 + 723000 + k*1;
         figure(fig_num)
         set(figure(fig_num),'units','pixels','position',[0,0,1200,600])

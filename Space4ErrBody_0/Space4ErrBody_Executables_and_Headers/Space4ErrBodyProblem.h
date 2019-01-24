@@ -38,33 +38,30 @@ struct Space4ErrBodyProblem {
 
     //! Constructor.
     Space4ErrBodyProblem( const std::vector< std::vector< double > > &bounds,
-                   const std::string &problem_name,
-                   const std::string &vehicleName,
-                   const std::vector< std::string > &parameterList_Ascent,
-                   const std::vector< double > &parameterBounds_Ascent,
-                   const std::vector< std::string > &parameterList_Descent,
-                   const std::vector< double > &parameterBounds_Descent,
-                   const std::vector< double > &vehicleParameterValues,
-                   const std::vector< std::string > &aeroCoeffFileList,
-                   const std::vector< double > &simulation_settingsValues,
-                   const std::vector< double > &initialConditionsValues,
-                   const std::vector< double > &terminationConditionsValues,
-                   const std::vector< double > &output_settingsValues,
-                   const std::string &outputSubFolder,
-                   const Eigen::Vector6d &EntryState_spherical,
-                   const std::vector< std::string > &bodiesWithMassToPropagate,
-                   const std::vector< std::string > &centralBodies,
-                   const std::vector< std::string > &bodiesToIntegrate,
-                   const std::map< std::string, std::pair < double, double > > &Bounds_Ascent,
-                   const std::map< std::string, std::pair < double, double > > &Bounds_Descent,
-                   const tudat::simulation_setup::NamedBodyMap& bodyMap,
-                   const tudat::basic_astrodynamics::AccelerationMap &accelerationsMap,
-                   const std::shared_ptr< tudat::ephemerides::RotationalEphemeris > &earthRotationalEphemeris,
-                   const std::shared_ptr< tudat::propagators::DependentVariableSaveSettings > &dependentVariablesToSave,
+                          const std::string &problem_name,
+                          const std::string &vehicleName,
+                          const std::vector< std::string > &parameterList_Ascent,
+                          const std::vector< double > &parameterBounds_Ascent,
+                          const std::vector< std::string > &parameterList_Descent,
+                          const std::vector< double > &parameterBounds_Descent,
+                          const std::vector< double > &vehicleParameterValues,
+                          const std::vector< std::string > &aeroCoeffFileList,
+                          const std::vector< double > &simulation_settingsValues,
+                          const std::vector< double > &initialConditionsValues,
+                          const std::vector< double > &terminationConditionsValues,
+                          const std::vector< double > &output_settingsValues,
+                          const std::string &outputSubFolder,
+                          const Eigen::Vector6d &initialState_spherical,
+                          const std::vector< std::string > &centralBodies,
+                          const std::vector< std::string > &bodiesToIntegrate,
+                          const std::map< bislip::variables::OptimizationParameter, std::pair < double, double > > &Bounds_Ascent,
+                          const std::map< bislip::variables::OptimizationParameter, std::pair < double, double > > &Bounds_Descent,
+                          const tudat::simulation_setup::NamedBodyMap& bodyMap,
+                          const tudat::basic_astrodynamics::AccelerationMap &accelerationsMap,
+                          const std::shared_ptr< tudat::ephemerides::RotationalEphemeris > &earthRotationalEphemeris,
+                          const std::shared_ptr< tudat::propagators::DependentVariableSaveSettings > &dependentVariablesToSave,
                           const std::shared_ptr< tudat::propagators::PropagationTerminationSettings > &terminationSettings_Ascent,
-                          const std::shared_ptr< tudat::propagators::PropagationTerminationSettings > &terminationSettings_Descent,
-                   const std::map< std::string, std::shared_ptr< tudat::basic_astrodynamics::MassRateModel > > &massRateModels,
-                   const std::shared_ptr< tudat::propagators::SingleArcPropagatorSettings< double > > &massPropagatorSettings_Ascent);
+                          const std::shared_ptr< tudat::propagators::PropagationTerminationSettings > &terminationSettings_Descent);
 
     //! Calculate the fitness as a function of the parameter vector input_data
     std::vector< double > fitness( const std::vector< double >  &x ) const;
@@ -78,7 +75,7 @@ struct Space4ErrBodyProblem {
 
     std::vector< double >::size_type get_nobj() const
     {
-        return 11u;
+        return 4u;
     }
     std::vector< double >::size_type get_nec() const
     {
@@ -108,20 +105,20 @@ private:
     const std::vector< double > terminationConditionsValues_;
     const std::vector< double > output_settingsValues_;
     const std::string outputSubFolder_;
-    const Eigen::Vector6d EntryState_spherical_;
-    const std::vector< std::string > bodiesWithMassToPropagate_;
+    const Eigen::Vector6d initialState_spherical_;
+  //  const std::vector< std::string > bodiesWithMassToPropagate_;
     const std::vector< std::string > centralBodies_;
     const std::vector< std::string > bodiesToIntegrate_;
-    const std::map< std::string, std::pair < double, double > > Bounds_Ascent_;
-    const std::map< std::string, std::pair < double, double > > Bounds_Descent_;
+    const std::map< bislip::variables::OptimizationParameter, std::pair < double, double > > Bounds_Ascent_;
+    const std::map< bislip::variables::OptimizationParameter, std::pair < double, double > > Bounds_Descent_;
     const tudat::simulation_setup::NamedBodyMap bodyMap_;
     const tudat::basic_astrodynamics::AccelerationMap accelerationsMap_;
     const std::shared_ptr< tudat::ephemerides::RotationalEphemeris > earthRotationalEphemeris_;
     const std::shared_ptr< tudat::propagators::DependentVariableSaveSettings > dependentVariablesToSave_;
     const std::shared_ptr< tudat::propagators::PropagationTerminationSettings > terminationSettings_Ascent_;
     const std::shared_ptr< tudat::propagators::PropagationTerminationSettings > terminationSettings_Descent_;
-    const std::map< std::string, std::shared_ptr< tudat::basic_astrodynamics::MassRateModel > > massRateModels_;
-    const std::shared_ptr< tudat::propagators::SingleArcPropagatorSettings< double > > massPropagatorSettings_Ascent_;
+   // const std::map< std::string, std::shared_ptr< tudat::basic_astrodynamics::MassRateModel > > massRateModels_;
+   // const std::shared_ptr< tudat::propagators::SingleArcPropagatorSettings< double > > massPropagatorSettings_Ascent_;
 };
 
 //PAGMO_REGISTER_PROBLEM(pagmo::Space4ErrBody)

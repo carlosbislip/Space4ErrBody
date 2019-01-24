@@ -11,6 +11,6 @@ Eigen::Vector3d MyGuidance::getCurrentBodyFixedThrustDirection(  )
                     bodyMap_.at( vehicleName_ )->getFlightConditions( ) );
     }
 
-    return bislip::variables::computeBodyFixedThrustDirection( FlightConditions_, bodyMap_.at( vehicleName_ )->getVehicleSystems( ) );
+    return bislip::variables::computeBodyFixedThrustDirection( FlightConditions_, bodyMap_.at( vehicleName_ )->getBislipSystems( ) );
 }
 } // namespace bislip

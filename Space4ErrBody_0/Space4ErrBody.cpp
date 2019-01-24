@@ -10,6 +10,7 @@
 #include "Space4ErrBody_Executables_and_Headers/saveOptimizationResults.h"
 #include "Space4ErrBody_Executables_and_Headers/getStuff.h"
 #include "Space4ErrBody_Executables_and_Headers/bislipVariables.h"
+//#include "Space4ErrBody_Executables_and_Headers/bislipSystems.h"
 #include "Space4ErrBody_Executables_and_Headers/updateGuidance.h"
 
 //#include "Space4ErrBody_Executables_and_Headers_testing/getConditions.h"
@@ -20,6 +21,7 @@
 #include <Tudat/InputOutput/basicInputOutput.h>
 #include <Tudat/SimulationSetup/tudatSimulationHeader.h>
 #include <Tudat/SimulationSetup/PropagationSetup/propagationOutputSettings.h>
+#include <Tudat/SimulationSetup/EnvironmentSetup/createAerodynamicControlSurfaces.h>
 
 using namespace tudat::ephemerides;
 using namespace tudat::interpolators;
@@ -91,7 +93,7 @@ int main()
 
     //! Determine number of Ascent parameters to vary based of size of parameterBounds_Ascent vector.
     const unsigned long nodesAscent = simulation_settingsValues[ 3 ];
-    const int N = ( parameterList_Ascent.size() - 3 ) * nodesAscent - 1;
+    const int N = ( parameterList_Ascent.size() - 4 ) * nodesAscent - 1;
     const int M = parameterBounds_Ascent.size();
 
     //! Determine number of Descent parameters to vary based of size of parameterBounds_Descent vector.
@@ -100,7 +102,7 @@ int main()
     const int MM = parameterBounds_Descent.size();
 
     //! Create vector containing decision vector bounds.
-    std::vector< std::vector< double > > bounds( 2, std::vector< double >( N + 3 + NN + 1, 0.0 ) );
+    std::vector< std::vector< double > > bounds( 2, std::vector< double >( N + 4 + NN + 1, 0.0 ) );
     //!---------------------------------------   ^ for lb/up  (rows)       ^ for # of parameters
 
     //! Loop to build the bounds matrix.
@@ -125,20 +127,24 @@ int main()
 
     }
 
-    bounds[ 0 ][ N ] = parameterBounds_Ascent[ M - 6 ];
-    bounds[ 1 ][ N ] = parameterBounds_Ascent[ M - 5 ];
+    bounds[ 0 ][ N ] = parameterBounds_Ascent[ M - 8 ];
+    bounds[ 1 ][ N ] = parameterBounds_Ascent[ M - 7 ];
+    bounds[ 0 ][ N + 1 ] = parameterBounds_Ascent[ M - 6 ];
+    bounds[ 1 ][ N + 1 ] = parameterBounds_Ascent[ M - 5 ];
+    bounds[ 0 ][ N + 2 ] = parameterBounds_Ascent[ M - 4 ];
+    bounds[ 1 ][ N + 2 ] = parameterBounds_Ascent[ M - 3 ];
+    bounds[ 0 ][ N + 3 ] = parameterBounds_Ascent[ M - 2 ];
+    bounds[ 1 ][ N + 3 ] = parameterBounds_Ascent[ M - 1 ];
 
-    bounds[ 0 ][ N + 1 ] = parameterBounds_Ascent[ M - 4 ];
-    bounds[ 1 ][ N + 1 ] = parameterBounds_Ascent[ M - 3 ];
-    bounds[ 0 ][ N + 2 ] = parameterBounds_Ascent[ M - 2 ];
-    bounds[ 1 ][ N + 2 ] = parameterBounds_Ascent[ M - 1 ];
 
-    std::cout << "bounds[ 0 ][ " << N << " ] = " << parameterBounds_Ascent[ M - 6 ] << std::endl;
-    std::cout << "bounds[ 1 ][ " << N << " ] = " << parameterBounds_Ascent[ M - 5 ] << std::endl;
-    std::cout << "bounds[ 0 ][ " << N +1<< " ] = " << parameterBounds_Ascent[ M - 4 ] << std::endl;
-    std::cout << "bounds[ 1 ][ " << N +1<< " ] = " << parameterBounds_Ascent[ M - 3 ] << std::endl;
-    std::cout << "bounds[ 0 ][ " << N +2<< " ] = " << parameterBounds_Ascent[ M - 2 ] << std::endl;
-    std::cout << "bounds[ 1 ][ " << N +2<< " ] = " << parameterBounds_Ascent[ M - 1 ] << std::endl;
+    std::cout << "bounds[ 0 ][ " << N << " ] = " << parameterBounds_Ascent[ M - 8 ] << std::endl;
+    std::cout << "bounds[ 1 ][ " << N << " ] = " << parameterBounds_Ascent[ M - 7 ] << std::endl;
+    std::cout << "bounds[ 0 ][ " << N + 1 << " ] = " << parameterBounds_Ascent[ M - 6 ] << std::endl;
+    std::cout << "bounds[ 1 ][ " << N + 1 << " ] = " << parameterBounds_Ascent[ M - 5 ] << std::endl;
+    std::cout << "bounds[ 0 ][ " << N + 2 << " ] = " << parameterBounds_Ascent[ M - 4 ] << std::endl;
+    std::cout << "bounds[ 1 ][ " << N + 2 << " ] = " << parameterBounds_Ascent[ M - 3 ] << std::endl;
+    std::cout << "bounds[ 0 ][ " << N + 3 << " ] = " << parameterBounds_Ascent[ M - 2 ] << std::endl;
+    std::cout << "bounds[ 1 ][ " << N + 3 << " ] = " << parameterBounds_Ascent[ M - 1 ] << std::endl;
 
 
     for( int i = 0; i < NN ; i++ )
@@ -152,16 +158,16 @@ int main()
             p += 2;
         }
 
-        bounds[ 0 ][ ( N + 3 ) + i ] = parameterBounds_Descent[ p ];
-        bounds[ 1 ][ ( N + 3 ) + i ] = parameterBounds_Descent[ p + 1 ];
-        std::cout << "bounds[ 0 ][ " << ( N + 3 ) + i << " ] = " << parameterBounds_Descent[ p ] << std::endl;
-        std::cout << "bounds[ 1 ][ " << ( N + 3 ) + i << " ] = " << parameterBounds_Descent[ p + 1 ] << std::endl;
+        bounds[ 0 ][ ( N + 4 ) + i ] = parameterBounds_Descent[ p ];
+        bounds[ 1 ][ ( N + 4 ) + i ] = parameterBounds_Descent[ p + 1 ];
+        std::cout << "bounds[ 0 ][ " << ( N + 4 ) + i << " ] = " << parameterBounds_Descent[ p ] << std::endl;
+        std::cout << "bounds[ 1 ][ " << ( N + 4 ) + i << " ] = " << parameterBounds_Descent[ p + 1 ] << std::endl;
     }
 
-    bounds[ 0 ][ N + NN + 3 ] = parameterBounds_Descent[ MM - 2 ];
-    bounds[ 1 ][ N + NN + 3 ] = parameterBounds_Descent[ MM - 1 ];
-    std::cout << "bounds[ 0 ][ " << ( N + 3 ) + NN << " ] = " << parameterBounds_Descent[ MM - 2 ] << std::endl;
-    std::cout << "bounds[ 1 ][ " << ( N + 3 ) + NN << " ] = " << parameterBounds_Descent[ MM - 1 ] << std::endl;
+    bounds[ 0 ][ N + NN + 4 ] = parameterBounds_Descent[ MM - 2 ];
+    bounds[ 1 ][ N + NN + 4 ] = parameterBounds_Descent[ MM - 1 ];
+    std::cout << "bounds[ 0 ][ " << ( N + 4 ) + NN << " ] = " << parameterBounds_Descent[ MM - 2 ] << std::endl;
+    std::cout << "bounds[ 1 ][ " << ( N + 4 ) + NN << " ] = " << parameterBounds_Descent[ MM - 1 ] << std::endl;
 
     std::cout << "N = " << N << std::endl;
     std::cout << "M = " << M << std::endl;
@@ -279,7 +285,7 @@ int main()
     //! Declare data maps of strings and pairs to store parameter bounds.
     //!     Strings are used for the parameter names.
     //!     Pairs are used for lower and upper bounds.
-    std::map< std::string, std::pair < double, double > > Bounds_Ascent, Bounds_Descent;
+    std::map< bislip::variables::OptimizationParameter, std::pair < double, double > > Bounds_Ascent, Bounds_Descent;
 
     //! Declare and initialize counter.
     //!     Information is extracted directly from vectors created from input data, which requires the counter for the upper bound value.
@@ -288,7 +294,16 @@ int main()
     //! Loop to populate the data map with pairs associated to string values related to Ascent phase.
     for( unsigned long i = 0; i < parameterList_Ascent.size(); i++)
     {
-        Bounds_Ascent[ parameterList_Ascent[ i ] ] = std::make_pair( parameterBounds_Ascent[ p ], parameterBounds_Ascent[ p + 1 ] );
+        if ( parameterList_Ascent[ i ] == "Angle of Attack" ) { Bounds_Ascent[ bislip::variables::OptimizationParameter::AngleOfAttack ] = std::make_pair( parameterBounds_Ascent[ p ], parameterBounds_Ascent[ p + 1 ] ); }
+        if ( parameterList_Ascent[ i ] == "Bank Angle" ) { Bounds_Ascent[ bislip::variables::OptimizationParameter::BankAngle ] = std::make_pair( parameterBounds_Ascent[ p ], parameterBounds_Ascent[ p + 1 ] ); }
+        if ( parameterList_Ascent[ i ] == "Thrust Elevation Angle" ) { Bounds_Ascent[ bislip::variables::OptimizationParameter::ThrustElevationAngle ] = std::make_pair( parameterBounds_Ascent[ p ], parameterBounds_Ascent[ p + 1 ] ); }
+        if ( parameterList_Ascent[ i ] == "Thrust Azimuth Angle" ) { Bounds_Ascent[ bislip::variables::OptimizationParameter::ThrustAzimuthAngle ] = std::make_pair( parameterBounds_Ascent[ p ], parameterBounds_Ascent[ p + 1 ] ); }
+        if ( parameterList_Ascent[ i ] == "Throttle Setting" ) { Bounds_Ascent[ bislip::variables::OptimizationParameter::ThrottleSetting ] = std::make_pair( parameterBounds_Ascent[ p ], parameterBounds_Ascent[ p + 1 ] ); }
+        if ( parameterList_Ascent[ i ] == "Node Interval" ) { Bounds_Ascent[ bislip::variables::OptimizationParameter::NodeInterval ] = std::make_pair( parameterBounds_Ascent[ p ], parameterBounds_Ascent[ p + 1 ] ); }
+        if ( parameterList_Ascent[ i ] == "Initial Velocity" ) { Bounds_Ascent[ bislip::variables::OptimizationParameter::InitialVelocity ] = std::make_pair( parameterBounds_Ascent[ p ], parameterBounds_Ascent[ p + 1 ] ); }
+        if ( parameterList_Ascent[ i ] == "Maximum Velocity" ) { Bounds_Ascent[ bislip::variables::OptimizationParameter::MaximumVelocity ] = std::make_pair( parameterBounds_Ascent[ p ], parameterBounds_Ascent[ p + 1 ] ); }
+        if ( parameterList_Ascent[ i ] == "Maximum Height" ) { Bounds_Ascent[ bislip::variables::OptimizationParameter::MaximumHeight ] = std::make_pair( parameterBounds_Ascent[ p ], parameterBounds_Ascent[ p + 1 ] ); }
+        if ( parameterList_Ascent[ i ] == "Additional Mass" ) { Bounds_Ascent[ bislip::variables::OptimizationParameter::AdditionalMass ] = std::make_pair( parameterBounds_Ascent[ p ], parameterBounds_Ascent[ p + 1 ] ); }
         p += 2;
     }
 
@@ -298,12 +313,18 @@ int main()
     //! Loop to populate the data map with pairs associated to string values related to Descent phase.
     for( unsigned long i = 0; i < parameterList_Descent.size(); i++)
     {
-        Bounds_Descent[ parameterList_Descent[ i ] ] = std::make_pair( parameterBounds_Descent[ p ], parameterBounds_Descent[ p + 1 ] );
+        if ( parameterList_Descent[ i ] == "Angle of Attack" ) { Bounds_Descent[ bislip::variables::OptimizationParameter::AngleOfAttack ] = std::make_pair( parameterBounds_Descent[ p ], parameterBounds_Descent[ p + 1 ] ); }
+        if ( parameterList_Descent[ i ] == "Bank Angle" ) { Bounds_Descent[ bislip::variables::OptimizationParameter::BankAngle ] = std::make_pair( parameterBounds_Descent[ p ], parameterBounds_Descent[ p + 1 ] ); }
+        if ( parameterList_Descent[ i ] == "Thrust Elevation Angle" ) { Bounds_Descent[ bislip::variables::OptimizationParameter::ThrustElevationAngle ] = std::make_pair( parameterBounds_Descent[ p ], parameterBounds_Descent[ p + 1 ] ); }
+        if ( parameterList_Descent[ i ] == "Thrust Azimuth Angle" ) { Bounds_Descent[ bislip::variables::OptimizationParameter::ThrustAzimuthAngle ] = std::make_pair( parameterBounds_Descent[ p ], parameterBounds_Descent[ p + 1 ] ); }
+        if ( parameterList_Descent[ i ] == "Throttle Setting" ) { Bounds_Descent[ bislip::variables::OptimizationParameter::ThrottleSetting ] = std::make_pair( parameterBounds_Descent[ p ], parameterBounds_Descent[ p + 1 ] ); }
+        if ( parameterList_Descent[ i ] == "Node Interval" ) { Bounds_Descent[ bislip::variables::OptimizationParameter::NodeInterval ] = std::make_pair( parameterBounds_Descent[ p ], parameterBounds_Descent[ p + 1 ] ); }
+        if ( parameterList_Descent[ i ] == "Initial Velocity" ) { Bounds_Descent[ bislip::variables::OptimizationParameter::InitialVelocity ] = std::make_pair( parameterBounds_Descent[ p ], parameterBounds_Descent[ p + 1 ] ); }
+        if ( parameterList_Descent[ i ] == "Maximum Velocity" ) { Bounds_Descent[ bislip::variables::OptimizationParameter::MaximumVelocity ] = std::make_pair( parameterBounds_Descent[ p ], parameterBounds_Descent[ p + 1 ] ); }
+        if ( parameterList_Descent[ i ] == "Maximum Height" ) { Bounds_Descent[ bislip::variables::OptimizationParameter::MaximumHeight ] = std::make_pair( parameterBounds_Descent[ p ], parameterBounds_Descent[ p + 1 ] ); }
+        if ( parameterList_Descent[ i ] == "Additional Mass" ) { Bounds_Descent[ bislip::variables::OptimizationParameter::AdditionalMass ] = std::make_pair( parameterBounds_Descent[ p ], parameterBounds_Descent[ p + 1 ] ); }
         p += 2;
     }
-
-
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            CREATE ENVIRONMENT            //////////////////////////////////////////////////////
@@ -401,10 +422,10 @@ int main()
     //! Assign coefficient file names.
     //const std::string dragCoefficients = aeroCoeffFileList_[0];
     //const std::string liftCoefficients = aeroCoeffFileList_[1];
-    const std::string dragControlSurfaceForceCoefficients = "HORUS_CD_CS.txt";
-    const std::string liftControlSurfaceForceCoefficients = "HORUS_CL_CS.txt";
+    //const std::string dragControlSurfaceForceCoefficients = "HORUS_CD_CS.txt";
+    //const std::string liftControlSurfaceForceCoefficients = "HORUS_CL_CS.txt";
     //const std::string momentCoefficients = aeroCoeffFileList_[2];
-    const std::string controlSurfaceMomentCoefficients = "HORUS_CM_CS.txt";
+    //const std::string controlSurfaceMomentCoefficients = "HORUS_CM_CS.txt";
 
     ///////// Start: Vehicle Aerodynamics Section
 
@@ -416,10 +437,10 @@ int main()
     independentVariableNames.push_back( aerodynamics::mach_number_dependent );
 
     // Define physical meaning of independent variables for control surface increments, in this case Mach number, angle of attack and control surface deflection
-    //std::vector< aerodynamics::AerodynamicCoefficientsIndependentVariables > controlSurfaceIndependentVariableNames;
-    //controlSurfaceIndependentVariableNames.push_back( aerodynamics::angle_of_attack_dependent );
-    //controlSurfaceIndependentVariableNames.push_back( aerodynamics::mach_number_dependent );
-    //controlSurfaceIndependentVariableNames.push_back( aerodynamics::control_surface_deflection_dependent );
+    std::vector< aerodynamics::AerodynamicCoefficientsIndependentVariables > controlSurfaceIndependentVariableNames;
+    controlSurfaceIndependentVariableNames.push_back( aerodynamics::angle_of_attack_dependent );
+    controlSurfaceIndependentVariableNames.push_back( aerodynamics::mach_number_dependent );
+    controlSurfaceIndependentVariableNames.push_back( aerodynamics::control_surface_deflection_dependent );
 
 
     //! Define list of files for force coefficients. Entry denotes direction.
@@ -427,22 +448,51 @@ int main()
     //!     1 : y-direction (C ~S~/C ~Y~)
     //!     2 : z-direction (C ~L~/C ~Z~)
     std::map< int, std::string > forceCoefficientFiles;
-    //std::map< int, std::string > controlSurfaceForceCoefficientFiles;
+    std::map< int, std::string > forceCoefficientFiles_CS_B;
+    std::map< int, std::string > forceCoefficientFiles_CS_EL;
+    std::map< int, std::string > forceCoefficientFiles_CS_ER;
     std::map< int, std::string > momentCoefficientFiles;
-    //std::map< int, std::string > controlSurfaceMomentCoefficientFiles;
+    std::map< int, std::string > momentCoefficientFiles_CS_B;
+    std::map< int, std::string > momentCoefficientFiles_CS_EL;
+    std::map< int, std::string > momentCoefficientFiles_CS_ER;
 
+    std::string BODYFLAP = "BodyFlap";
     std::string ELEVON_L = "ElevonLeft";
     std::string ELEVON_R = "ElevonRight";
-    std::string BODYFLAP = "BodyFlap";
+
+    // Define list of files for force coefficients.
+    forceCoefficientFiles[ 0 ] = aeroCoeffFileList[ 0 ]; // Set drag coefficient file
+    forceCoefficientFiles[ 2 ] = aeroCoeffFileList[ 1 ]; // Set lift coefficient file
+
+    // Define list of files for moment coefficients.
+    momentCoefficientFiles[ 1 ] = aeroCoeffFileList[ 2 ]; // Set pitch moment coefficient file
+
+    // Define list of files for force coefficients for control surfaces ( Bodyflap )
+    forceCoefficientFiles_CS_B[ 0 ] = aeroCoeffFileList[ 3 ];
+    forceCoefficientFiles_CS_B[ 2 ] = aeroCoeffFileList[ 4 ];
+
+    // Define list of files for moment coefficients for control surfaces ( Bodyflap )
+    momentCoefficientFiles_CS_B[ 1 ] = aeroCoeffFileList[ 5 ];
 
 
-    forceCoefficientFiles[ 0 ] = aeroCoeffFileList[0]; // Set drag coefficient file
-    forceCoefficientFiles[ 2 ] = aeroCoeffFileList[1]; // Set lift coefficient file
+    // Define list of files for force coefficients for control surfaces ( Elevon - Left )
+    forceCoefficientFiles_CS_EL[ 0 ] = aeroCoeffFileList[ 6 ];
+    forceCoefficientFiles_CS_EL[ 2 ] = aeroCoeffFileList[ 7 ];
 
-    momentCoefficientFiles[ 1 ] = aeroCoeffFileList[2]; // Set pitch moment coefficient file
-    // controlSurfaceForceCoefficientFiles[ 0 ] = dragControlSurfaceForceCoefficients; // Set drag coefficient increment file
-    //controlSurfaceForceCoefficientFiles[ 2 ] = liftControlSurfaceForceCoefficients; // Set lift coefficient increment file
-    //controlSurfaceMomentCoefficientFiles[ 1 ] = controlSurfaceMomentCoefficients; // Set pitch moment coefficient increment file
+    // Define list of files for moment coefficients for control surfaces ( Elevon - Left )
+    momentCoefficientFiles_CS_EL[ 1 ] = aeroCoeffFileList[ 8 ];
+
+    // Define list of files for force coefficients for control surfaces ( Elevon - Right )
+    forceCoefficientFiles_CS_ER[ 0 ] = aeroCoeffFileList[ 9 ];
+    forceCoefficientFiles_CS_ER[ 2 ] = aeroCoeffFileList[ 10 ];
+
+    // Define list of files for moment coefficients for control surfaces ( Elevon - Right )
+    momentCoefficientFiles_CS_ER[ 1 ] = aeroCoeffFileList[ 11 ];
+
+
+    // forceCoefficientFiles_CS_B[ 0 ] = dragControlSurfaceForceCoefficients; // Set drag coefficient increment file
+    //forceCoefficientFiles_CS_B[ 2 ] = liftControlSurfaceForceCoefficients; // Set lift coefficient increment file
+    //momentCoefficientFiles_CS_B[ 1 ] = controlSurfaceMomentCoefficients; // Set pitch moment coefficient increment file
 
     //       std::shared_ptr< ControlSurfaceIncrementAerodynamicInterface > controlSurfaceInterface =
     //              std::make_shared< CustomControlSurfaceIncrementAerodynamicInterface >(
@@ -471,14 +521,23 @@ int main()
                 areCoefficientsInNegativeAxisDirection );
 
     // Add settings for control surface increments to main aerodynamic coefficients
-    // aerodynamicCoefficientSettings->setControlSurfaceSettings(
-    //             readTabulatedControlIncrementAerodynamicCoefficientsFromFiles(
-    //                 controlSurfaceForceCoefficientFiles,
-    //                 controlSurfaceMomentCoefficientFiles,
-    //                 controlSurfaceIndependentVariableNames, ELEVON_L ) );
-
-
-
+    aerodynamicCoefficientSettings->setControlSurfaceSettings(
+                readTabulatedControlIncrementAerodynamicCoefficientsFromFiles(
+                    forceCoefficientFiles_CS_B,
+                    momentCoefficientFiles_CS_B,
+                    controlSurfaceIndependentVariableNames), BODYFLAP );
+    /*
+     aerodynamicCoefficientSettings->setControlSurfaceSettings(
+                 readTabulatedControlIncrementAerodynamicCoefficientsFromFiles(
+                     forceCoefficientFiles_CS_EL,
+                     momentCoefficientFiles_CS_EL,
+                     controlSurfaceIndependentVariableNames), ELEVON_L );
+     aerodynamicCoefficientSettings->setControlSurfaceSettings(
+                 readTabulatedControlIncrementAerodynamicCoefficientsFromFiles(
+                     forceCoefficientFiles_CS_ER,
+                     momentCoefficientFiles_CS_ER,
+                     controlSurfaceIndependentVariableNames), ELEVON_R );
+*/
     //bodyMap.at( vehicleName )->getFlightConditions( )->getAerodynamicAngleCalculator( )->setOrientationAngleFunctions(
     //            boost::lambda::constant( constantAngleOfAttack ) );
 
@@ -488,38 +547,45 @@ int main()
     bodyMap[ vehicleName ] = std::make_shared< simulation_setup::Body >( );
 
     //! Set body Mass.
-    bodyMap.at( vehicleName )->setConstantBodyMass( initialMass_Ascent );
+    //bodyMap.at( vehicleName )->setConstantBodyMass( initialMass_Ascent );
 
     //! Create vehicle systems and initialize by setting the landing (dry) Mass.
     std::shared_ptr< system_models::VehicleSystems > vehicleSystems = std::make_shared<system_models::VehicleSystems >( landingMass );
+    std::shared_ptr< system_models::BislipSystems > bislipSystems = std::make_shared<system_models::BislipSystems >( landingMass );
 
     //!
     bodyMap.at( vehicleName )->setVehicleSystems( vehicleSystems );
+    bodyMap.at( vehicleName )->setBislipSystems( bislipSystems );
+
+    //vehicleSystems->setInitialMass( initialMass_Ascent );
 
     //! Set nose radius.
     vehicleSystems->setNoseRadius( R_N );
 
     //! Set wing sweep angle.
-    vehicleSystems->setWingSweepAngle( lambda );
+    bislipSystems->setWingSweepAngle( lambda );
 
     //! Set wall emmisivity.
     vehicleSystems->setWallEmissivity( epsilon );
 
     //! Set local body angle.
-    vehicleSystems->setLocalBodyAngle( phi );
+    bislipSystems->setLocalBodyAngle( phi );
 
     //! Set transition length.
-    vehicleSystems->setTransitionDistance( x_T );
+    bislipSystems->setTransitionDistance( x_T );
 
-    vehicleSystems->setInitialLat( initialLat_rad );
-    vehicleSystems->setInitialLon( initialLon_rad );
-    vehicleSystems->setInitialCoordinates( std::make_pair( vehicleSystems->getInitialLat( ), vehicleSystems->getInitialLon( ) ) );
-    vehicleSystems->setTargetLat( targetLat_rad );
-    vehicleSystems->setTargetLon( targetLon_rad );
-    vehicleSystems->setTargetCoordinates( std::make_pair( vehicleSystems->getTargetLat( ), vehicleSystems->getTargetLon( ) ) );
-    vehicleSystems->setInitialDistanceToTarget( initialDistanceToTarget_rad );
-    vehicleSystems->setFinalDistanceToTarget( finalDistanceToTarget_rad );
-    vehicleSystems->setStartingEpoch( simulationStartEpoch );
+    bislipSystems->setInitialLat( initialLat_rad );
+    bislipSystems->setInitialLon( initialLon_rad );
+    bislipSystems->setInitialCoordinates( std::make_pair( bislipSystems->getInitialLat( ), bislipSystems->getInitialLon( ) ) );
+    bislipSystems->setTargetLat( targetLat_rad );
+    bislipSystems->setTargetLon( targetLon_rad );
+    bislipSystems->setTargetCoordinates( std::make_pair( bislipSystems->getTargetLat( ), bislipSystems->getTargetLon( ) ) );
+    bislipSystems->setInitialDistanceToTarget( initialDistanceToTarget_rad );
+    bislipSystems->setFinalDistanceToTarget( finalDistanceToTarget_rad );
+    bislipSystems->setStartingEpoch( simulationStartEpoch );
+    bislipSystems->setReferenceArea( S_ref );
+
+    vehicleSystems->setCurrentControlSurfaceDeflection( BODYFLAP, 0 );
 
 
     //! Set vehicle aerodynamic coefficients.
@@ -572,29 +638,27 @@ int main()
     //double V_i = a * Mach_i;
     //double V_DN = 0.99 * sqrt( mu / ( R_E + h_UP ) );
 
-    //! Set spherical elements for vehicle's initial state.
-    //! ARTBITRARILY CHOSEN to be in Earth-Fixed frame.
-    Eigen::Vector6d EntryState_spherical;
-    EntryState_spherical( tudat::orbital_element_conversions::SphericalOrbitalStateElementIndices::radiusIndex )       = radius_Earth + h_i;
-    EntryState_spherical( tudat::orbital_element_conversions::SphericalOrbitalStateElementIndices::latitudeIndex )     = initialLat_rad;
-    EntryState_spherical( tudat::orbital_element_conversions::SphericalOrbitalStateElementIndices::longitudeIndex )    = initialLon_rad;
-    EntryState_spherical( tudat::orbital_element_conversions::SphericalOrbitalStateElementIndices::speedIndex )        = 0.0;
-    EntryState_spherical( tudat::orbital_element_conversions::SphericalOrbitalStateElementIndices::flightPathIndex )   = initialFlightPathAngle_rad;
-    EntryState_spherical( tudat::orbital_element_conversions::SphericalOrbitalStateElementIndices::headingAngleIndex ) = bislip::variables::computeHeadingToTarget( initialLat_rad,initialLon_rad,targetLat_rad,targetLon_rad );
+    //! Set spherical elements for vehicle's initial state. Arbitrarily chosen to be in Earth-Fixed frame.
+    //!     Transformation to Inertial Frame is done within fitness function, as the initial velocity is a
+    //!     decision variable.
+    Eigen::Vector6d initialState_spherical;
+    initialState_spherical( tudat::orbital_element_conversions::SphericalOrbitalStateElementIndices::radiusIndex )       = radius_Earth + h_i;
+    initialState_spherical( tudat::orbital_element_conversions::SphericalOrbitalStateElementIndices::latitudeIndex )     = initialLat_rad;
+    initialState_spherical( tudat::orbital_element_conversions::SphericalOrbitalStateElementIndices::longitudeIndex )    = initialLon_rad;
+    initialState_spherical( tudat::orbital_element_conversions::SphericalOrbitalStateElementIndices::speedIndex )        = 0.0;
+    initialState_spherical( tudat::orbital_element_conversions::SphericalOrbitalStateElementIndices::flightPathIndex )   = initialFlightPathAngle_rad;
+    initialState_spherical( tudat::orbital_element_conversions::SphericalOrbitalStateElementIndices::headingAngleIndex ) = bislip::variables::computeHeadingToTarget( initialLat_rad,initialLon_rad,targetLat_rad,targetLon_rad );
 
     //! Create Earth's rotational ephemeris.
     std::shared_ptr< ephemerides::RotationalEphemeris > earthRotationalEphemeris =
             bodyMap.at( centralBodyName )->getRotationalEphemeris( );
 
 
-
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             CREATE ACCELERATIONS            ///////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    std::cout << "Setting Accelerations" << std::endl;
+    //std::cout << "Setting Accelerations" << std::endl;
 
     //! Declare acceleration data map.
     SelectedAccelerationMap accelerationSettingsMap;
@@ -649,8 +713,8 @@ int main()
     //! Pass engine capabilities to vehicle systems.
     //vehicleSystems->setMaxThrust( maxThrust );
     //vehicleSystems->setSpecificImpulse( specificImpulse );
-    vehicleSystems->setMaxThrust( maxThrust );
-    vehicleSystems->setSpecificImpulse( specificImpulse );
+    bislipSystems->setMaxThrust( maxThrust );
+    bislipSystems->setSpecificImpulse( specificImpulse );
 
     //! Define thrust acceleration settings.
     //!     The vehicle acts this force on itself.
@@ -691,7 +755,7 @@ int main()
     //! Define constant orientation
     //double constantAngleOfAttack = unit_conversions::convertDegreesToRadians( 10 );
     //double constantBankAngle = unit_conversions::convertDegreesToRadians( 0 );
-    //double constantSideSlipeAngle = unit_conversions::convertDegreesToRadians( 0 );
+    //double constantSideSlipeAn    gle = unit_conversions::convertDegreesToRadians( 0 );
     //bodyMap.at( vehicleName )->getFlightConditions( )->getAerodynamicAngleCalculator( )->setOrientationAngleFunctions(
     //            [ = ]( ){ return constantAngleOfAttack; }, [ = ]( ){ return constantSideSlipeAngle; }, [ = ]( ){ return constantBankAngle; } );
     //std::cout << "Creating vehicle: Guidance is set" << std::endl;
@@ -719,16 +783,6 @@ int main()
                     body_fixed_relative_spherical_position,
                     vehicleName,
                     centralBodyName ) );
-    //dep_varList.push_back(
-    //            std::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
-    //                vehicleName,
-    //                latitude_angle,
-    //                centralBodyName) );
-    //dep_varList.push_back(
-    //            std::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
-    //                vehicleName,
-    //                longitude_angle,
-    //                centralBodyName) );
     dep_varList.push_back(
                 std::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
                     vehicleName,
@@ -868,6 +922,11 @@ int main()
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     bending_moment,
                     vehicleName ) );
+    dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    equilibrium_glide_limit,
+                    vehicleName ) );
+
 
 
     //! Create and initialize object with list of dependent variables
@@ -892,19 +951,19 @@ int main()
                     thrust_acceleration,
                     vehicleName,
                     vehicleName,
-                    true ),vehicleSystems->getMaxThrust(), false );
+                    true ),bislipSystems->getMaxThrust(), false );
 
     std::shared_ptr< PropagationTerminationSettings > d_to_go_TerminationSettings =
             std::make_shared< tudat::propagators::PropagationDependentVariableTerminationSettings >(
                 std::make_shared< tudat::propagators::SingleDependentVariableSaveSettings >(
                     angular_distance_to_go,
-                    vehicleName),vehicleSystems->getFinalDistanceToTarget(), true );
+                    vehicleName),bislipSystems->getFinalDistanceToTarget(), true );
 
     std::shared_ptr< PropagationTerminationSettings > d_traveled_TerminationSettings =
             std::make_shared< tudat::propagators::PropagationDependentVariableTerminationSettings >(
                 std::make_shared< tudat::propagators::SingleDependentVariableSaveSettings >(
                     angular_distance_traveled,
-                    vehicleName),vehicleSystems->getInitialDistanceToTarget(), false );
+                    vehicleName),bislipSystems->getInitialDistanceToTarget(), false );
 
     std::shared_ptr< PropagationTerminationSettings > mass_TerminationSettings =
             std::make_shared< tudat::propagators::PropagationDependentVariableTerminationSettings >(
@@ -931,71 +990,84 @@ int main()
                     local_aerodynamic_heat_rate_dependent_variable,
                     vehicleName,
                     centralBodyName), constraint_HeatingRate , false );
+
     // std::shared_ptr< PropagationTerminationSettings > height_UP_TerminationSettings =
     //         std::make_shared< tudat::propagators::PropagationDependentVariableTerminationSettings >(
     //             std::make_shared< SingleDependentVariableSaveSettings >(
     //                 altitude_dependent_variable,
     //                 vehicleName,
     //                 centralBodyName), h_UP , false );
+
     std::shared_ptr< PropagationTerminationSettings > height_DN_TerminationSettings =
             std::make_shared< tudat::propagators::PropagationDependentVariableTerminationSettings >(
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     altitude_dependent_variable,
                     vehicleName,
                     centralBodyName), h_DN , true );
-    // std::shared_ptr< PropagationTerminationSettings > flight_path_angle_TerminationSettings =
-    //         std::make_shared< tudat::propagators::PropagationDependentVariableTerminationSettings >(
-    //             std::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
-    //                 vehicleName,
-    //                 flight_path_angle,
-    //                 centralBodyName) , tudat::mathematical_constants::PI / 2.0 , false );
 
+    std::shared_ptr< PropagationTerminationSettings > pos_flight_path_angle_TerminationSettings =
+            std::make_shared< tudat::propagators::PropagationDependentVariableTerminationSettings >(
+                std::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
+                    vehicleName,
+                    reference_frames::AerodynamicsReferenceFrameAngles::flight_path_angle,
+                    centralBodyName) , unit_conversions::convertDegreesToRadians( 0.0 ) , false );
 
+    std::shared_ptr< PropagationTerminationSettings > neg_flight_path_angle_TerminationSettings =
+            std::make_shared< tudat::propagators::PropagationDependentVariableTerminationSettings >(
+                std::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
+                    vehicleName,
+                    reference_frames::AerodynamicsReferenceFrameAngles::flight_path_angle,
+                    centralBodyName) , unit_conversions::convertDegreesToRadians( 0.0 ) , true );
+
+    std::shared_ptr< PropagationTerminationSettings > total_aero_g_load_TerminationSettings =
+            std::make_shared< tudat::propagators::PropagationDependentVariableTerminationSettings >(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    total_aerodynamic_g_load_variable,
+                    vehicleName,
+                    centralBodyName), constraint_MechanicalLoad*1.5 , false );
+
+    //! Create list of terminations setting for ASCENT.
     std::vector< std::shared_ptr< propagators::PropagationTerminationSettings > > terminationSettingsList_Ascent;
     // terminationSettingsList.push_back( customTermination );
     //terminationSettingsList.push_back( thrustTerminationSettings );
-    terminationSettingsList_Ascent.push_back( d_to_go_TerminationSettings );
-    terminationSettingsList_Ascent.push_back( d_traveled_TerminationSettings );
-    //terminationSettingsList.push_back( mass_TerminationSettings );
+    //terminationSettingsList_Ascent.push_back( d_to_go_TerminationSettings );
+    //terminationSettingsList_Ascent.push_back( d_traveled_TerminationSettings );
+    //terminationSettingsList_Ascent.push_back( total_aero_g_load_TerminationSettings );
     //terminationSettingsList.push_back( E_hat_TerminationSettings );
-     terminationSettingsList_Ascent.push_back( q_dyn_TerminationSettings );
+    // terminationSettingsList_Ascent.push_back( q_dyn_TerminationSettings );
     //terminationSettingsList.push_back( q_dot_TerminationSettings );
     //    terminationSettingsList.push_back( height_UP_TerminationSettings );
-    terminationSettingsList_Ascent.push_back( height_DN_TerminationSettings );
-    // terminationSettingsList.push_back( flight_path_angle_TerminationSettings );
+    //terminationSettingsList_Ascent.push_back( height_DN_TerminationSettings );
+    terminationSettingsList_Ascent.push_back( neg_flight_path_angle_TerminationSettings );
 
-    // PropagationHybridTerminationSettings( terminationSettingsList,
-    //                                       true,
-    //                                       false );
-
-
-
+    //! Finalize terminations setting for ASCENT.
     std::shared_ptr< PropagationTerminationSettings > terminationSettings_Ascent = std::make_shared<
             propagators::PropagationHybridTerminationSettings >( terminationSettingsList_Ascent, true );
 
-
-
-
+    //! Create list of terminations setting for DESCENT.
     std::vector< std::shared_ptr< propagators::PropagationTerminationSettings > > terminationSettingsList_Descent;
     // terminationSettingsList_Descent.push_back( customTermination );
     //terminationSettingsList_Descent.push_back( thrustTerminationSettings );
     terminationSettingsList_Descent.push_back( d_to_go_TerminationSettings );
     terminationSettingsList_Descent.push_back( d_traveled_TerminationSettings );
+    //terminationSettingsList_Descent.push_back( total_aero_g_load_TerminationSettings );
     //terminationSettingsList_Descent.push_back( mass_TerminationSettings );
     //terminationSettingsList_Descent.push_back( E_hat_TerminationSettings );
-     terminationSettingsList_Descent.push_back( q_dyn_TerminationSettings );
+    //terminationSettingsList_Descent.push_back( q_dyn_TerminationSettings );
     //terminationSettingsList_Descent.push_back( q_dot_TerminationSettings );
     //    terminationSettingsList_Descent.push_back( height_UP_TerminationSettings );
     terminationSettingsList_Descent.push_back( height_DN_TerminationSettings );
-    // terminationSettingsList_Descent.push_back( flight_path_angle_TerminationSettings );
+    //terminationSettingsList_Descent.push_back( pos_flight_path_angle_TerminationSettings );
 
-
-
-
+    //! Finalize terminations setting for DESCENT.
     std::shared_ptr< PropagationTerminationSettings > terminationSettings_Descent = std::make_shared<
             propagators::PropagationHybridTerminationSettings >( terminationSettingsList_Descent, true );
 
-    ///////////////////////             CREATE MASS RATE SETTINGS              ////////////////////////////////////////////
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////             CREATE MASS RATE SETTINGS: ASCENT            //////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /*
     //std::cout << "Create mass rate models" << std::endl;
 
     //! Declare and initialize mass rate model settings.
@@ -1020,8 +1092,10 @@ int main()
             std::make_shared< MassPropagatorSettings< double > >(
                 bodiesWithMassToPropagate, massRateModels, initialBodyMasses_Ascent, terminationSettings_Ascent, dependentVariablesToSave );
 
-
-
+*/
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////             CREATE PAGMO PROBLEM TO COMPUTE FITNESS            ////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
     //! Create object to compute the problem fitness.
@@ -1039,8 +1113,7 @@ int main()
                                                terminationConditionsValues,
                                                output_settingsValues,
                                                outputSubFolder,
-                                               EntryState_spherical,
-                                               bodiesWithMassToPropagate,
+                                               initialState_spherical,
                                                centralBodies,
                                                bodiesToIntegrate,
                                                Bounds_Ascent,
@@ -1050,9 +1123,7 @@ int main()
                                                earthRotationalEphemeris,
                                                dependentVariablesToSave,
                                                terminationSettings_Ascent,
-                                               terminationSettings_Descent,
-                                               massRateModels,
-                                               massPropagatorSettings_Ascent) };
+                                               terminationSettings_Descent ) };
 
     //! Retrieve algorithm. Three options available in the following function:
     //!        getMultiObjectiveAlgorithm
@@ -1155,10 +1226,13 @@ int main()
     std::cout << std::setw(30) << vehicleParameterList[14] << "      " <<  vehicleParameterValues[14] << std::endl;
     std::cout << std::setw(30) << vehicleParameterList[15] << "      " <<  vehicleParameterValues[15] << std::endl;
     std::cout << "--------------------------------------------------------" << std::endl;
-    std::cout << "Aerodynamic Coefficients" << std::endl;
-    std::cout << "Coefficient File: " << "      " <<  aeroCoeffFileList[0] << std::endl;
-    std::cout << "Coefficient File: " << "      " <<  aeroCoeffFileList[1] << std::endl;
-    std::cout << "Coefficient File: " << "      " <<  aeroCoeffFileList[2] << std::endl;
+    std::cout << "Aerodynamic Coefficients File Names" << std::endl;
+    for( int i = 0; i < int( aeroCoeffFileList.size() ) ; i++)
+    {
+        std::cout << "File " << i + 1 << ":      " <<  aeroCoeffFileList[ i ] << std::endl;
+    }
+    //  std::cout << "Coefficient File: " << "      " <<  aeroCoeffFileList[1] << std::endl;
+    //  std::cout << "Coefficient File: " << "      " <<  aeroCoeffFileList[2] << std::endl;
     std::cout << "--------------------------------------------------------" << std::endl;
     std::cout << "Optimizations Settings" << std::endl;
     for( int i = 0; i < int( optimization_settingsList.size() ); i++)
@@ -1206,9 +1280,9 @@ int main()
                      std::setw(17) << bounds[ 1 ][ i ] << std::endl;
     }
 
-    ////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////             EVALUATE PAGMO PROBLEM                             ////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
     //! Create an island with populationSize individuals

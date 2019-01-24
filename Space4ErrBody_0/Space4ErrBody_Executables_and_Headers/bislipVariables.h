@@ -7,18 +7,20 @@
 #include <iomanip>
 #include <utility>
 
+#include <Tudat/SimulationSetup/PropagationSetup/dynamicsSimulator.h>
 #include <Tudat/Mathematics/Interpolators/oneDimensionalInterpolator.h>
 #include <Tudat/Mathematics/Interpolators/createInterpolator.h>
 #include <Tudat/Astrodynamics/Aerodynamics/flightConditions.h>
 #include <Tudat/Astrodynamics/SystemModels/vehicleSystems.h>
-#include <Tudat/Mathematics/Interpolators/createInterpolator.h>
-
+#include <Tudat/Astrodynamics/SystemModels/bislipSystems.h>
+#include <Tudat/Astrodynamics/SystemModels/bislipOptimizationParameters.h>
 
 namespace bislip {
 
 namespace variables {
 
-enum GuidanceParameter
+/*
+enum OptimizationParameter
 {
     AngleOfAttack,
     BankAngle,
@@ -26,7 +28,7 @@ enum GuidanceParameter
     ThrustAzimuthAngle,
     ThrottleSetting
 };
-
+*/
 /*
 typedef std::map< double, Eigen::VectorXd > MyMap;
 MyMap dependentVariableHistoryMap;
@@ -47,6 +49,8 @@ transform(dependentVariableHistoryMap.begin(), dependentVariableHistoryMap.end()
 */
 
 std::string getCurrentDateTime ( const bool useLocalTime = false );
+
+unsigned int millis_since_midnight ( );
 
 std::vector< std::string > getDataString ( const std::string &filename );
 
@@ -85,50 +89,67 @@ std::vector< double > HermiteDerivatives (
         const Eigen::VectorXd &y);
 
 std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > createOneDimensionalHermiteInterpolator (
-            const Eigen::VectorXd &parameterValues,
-            const Eigen::VectorXd &normalizedSpecificEnergy,
-            const std::map< double, double > &mapped_data,
-            const std::shared_ptr< tudat::interpolators::InterpolatorSettings > &interpolatorSettings );
+        const Eigen::VectorXd &parameterValues,
+        const Eigen::VectorXd &normalizedSpecificEnergy,
+        const std::map< double, double > &mapped_data,
+        const std::shared_ptr< tudat::interpolators::InterpolatorSettings > &interpolatorSettings );
 
-std::string passGuidanceParameter (
-        const std::string &parameter);
+//std::string passOptimizationParameter (
+//        const std::string &parameter);
+
+bislip::variables::OptimizationParameter passOptimizationParameter (
+        const bislip::variables::OptimizationParameter &parameter);
 
 std::string passDirection (
         const std::string &direction);
 
 std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > chooseGuidanceInterpolator (
-//        const double &flight_path_angle,
-        const std::string &parameter,
-        const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems);
+        const bislip::variables::OptimizationParameter &parameter,
+        const std::shared_ptr< tudat::system_models::BislipSystems > &bislipSystems);
 
 std::pair < double, double > chooseGuidanceBounds (
-//        const double &flight_path_angle,
-        const std::string &parameter,
-        const std::shared_ptr<tudat::system_models::VehicleSystems> &vehicleSystems);
+        const bislip::variables::OptimizationParameter &parameter,
+        const std::shared_ptr< tudat::system_models::BislipSystems > &bislipSystems);
 
 double evaluateGuidanceInterpolator (
-//        const double &flightpathangle,
-        const std::string &parameter,
-        const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems,
+        const bislip::variables::OptimizationParameter &parameter,
+        const std::shared_ptr< tudat::system_models::BislipSystems > &bislipSystems,
         const double &height,
         const double &airspeed,
         const double &E_max);
 
+Eigen::Vector6d computeCurrentCoefficients (
+        const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions,
+        const std::shared_ptr< tudat::aerodynamics::AerodynamicCoefficientInterface > &coefficientInterface,
+        const std::shared_ptr< tudat::system_models::BislipSystems > &bislipSystems);
+
 Eigen::Vector3d computeBodyFixedThrustDirection (
         const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions,
-        const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems);
+        const std::shared_ptr< tudat::system_models::BislipSystems > &bislipSystems);
 
 double computeThrustMagnitude (
         const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions,
-        const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems);
+        const std::shared_ptr< tudat::system_models::BislipSystems > &bislipSystems);
 
 Eigen::Vector3d computeBodyFixedThrustVector (
         const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions,
-        const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems);
+        const std::shared_ptr< tudat::system_models::BislipSystems > &bislipSystems);
 
 bool determineEngineStatus (
         const double &currentMass,
         const double &landingMass);
+
+double getBodyFlapDeflection( const double &del_C_m_b );
+
+Eigen::Vector2d getGravs (
+        const double &r,
+        const double &latitude);
+
+double computeEquilibriumGlideLimit (
+        const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions,
+        const std::shared_ptr< tudat::aerodynamics::AerodynamicCoefficientInterface > &coefficientInterface,
+        const std::shared_ptr< tudat::system_models::BislipSystems > &bislipSystems,
+        const double &currentMass );
 
 double computeHeatingRate (
         const double &airdensity,
@@ -143,7 +164,8 @@ double computeStagnationHeatFlux (
 
 double computeFlatPlateHeatFlux (
         const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions,
-        const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems);
+        const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems,
+        const std::shared_ptr< tudat::system_models::BislipSystems > &bislipSystems);
 
 double computeStagnationHeat (
         const double &airdensity,

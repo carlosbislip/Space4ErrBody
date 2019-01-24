@@ -10,6 +10,7 @@
 #include <Tudat/SimulationSetup/tudatSimulationHeader.h>
 
 namespace bislip {
+namespace variables {
 
 double getGamma ( const double A, const double B, const double phi );
 
@@ -44,5 +45,5 @@ double getRoot_Schroder (
 bool getSorting(const std::tuple<double, double> &a, const std::tuple<double, double> &b);
 
 }
-
+}
 #endif // GET_STUFF_H

@@ -3,22 +3,29 @@
 #include <cmath>
 #include <sstream>
 #include <utility>
-#include <string>
-#include <iostream>
 #include <fstream>
 #include <iomanip>
 #include <vector>
+
+#include <stdio.h>      // for sprintf()
+
+#include <iostream>     // for console output
+#include <string>       // for std::string
+
+#include <boost/date_time/posix_time/posix_time.hpp>
+
+
 
 #include <Tudat/Mathematics/Interpolators/oneDimensionalInterpolator.h>
 #include <Tudat/Mathematics/Interpolators/createInterpolator.h>
 #include <Tudat/Astrodynamics/Aerodynamics/aerodynamics.h>
 #include <Tudat/Astrodynamics/Aerodynamics/flightConditions.h>
 #include <Tudat/Astrodynamics/SystemModels/vehicleSystems.h>
+#include <Tudat/Astrodynamics/SystemModels/bislipSystems.h>
+#include <Tudat/Astrodynamics/SystemModels/bislipOptimizationParameters.h>
 #include <Tudat/Astrodynamics/BasicAstrodynamics/physicalConstants.h>
 #include <Tudat/Astrodynamics/Aerodynamics/equilibriumWallTemperature.h>
 #include <Tudat/SimulationSetup/PropagationSetup/dynamicsSimulator.h>
-
-
 
 #include "updateGuidance.h"
 
@@ -70,11 +77,73 @@ std::string getCurrentDateTime( bool useLocalTime ) {
         currentDateTime << "0" << ptmNow->tm_sec;
     else
         currentDateTime << ptmNow->tm_sec;
+    /*
+    // Get current time from the clock, using microseconds resolution
+        const boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time();
 
+        // Get the time offset in current day
+        const boost::posix_time::time_duration td = now.time_of_day();
+
+        //
+        // Extract hours, minutes, seconds and milliseconds.
+        //
+        // Since there is no direct accessor ".milliseconds()",
+        // milliseconds are computed _by difference_ between total milliseconds
+        // (for which there is an accessor), and the hours/minutes/seconds
+        // values previously fetched.
+        //
+        const long hours        = td.hours();
+        const long minutes      = td.minutes();
+        const long seconds      = td.seconds();
+        const long milliseconds = td.total_milliseconds() -
+                                  ((hours * 3600 + minutes * 60 + seconds) * 1000);
+
+        //
+        // Format like this:
+        //
+        //      hh:mm:ss.SSS
+        //
+        // e.g. 02:15:40:321
+        //
+        //      ^          ^
+        //      |          |
+        //      123456789*12
+        //      ---------10-     --> 12 chars + \0 --> 13 chars should suffice
+        //
+        //
+        char buf[40];
+        sprintf(buf, "%02ld:%02ld:%02ld.%03ld",
+            hours, minutes, seconds, milliseconds);
+*/
     //std::cout << "Got time: " << currentDateTime.str() << std::endl;
 
-    return currentDateTime.str();
+
+    //unsigned int derp = millis_since_midnight ( );
+
+    //    return currentDateTime.str();
+
+    return std::to_string( millis_since_midnight ( ) );
 }
+
+
+unsigned int millis_since_midnight ( )
+{
+    // current time
+    std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+
+    // get midnight
+    time_t tnow = std::chrono::system_clock::to_time_t(now);
+    tm *date = std::localtime(&tnow);
+    date->tm_hour = 0;
+    date->tm_min = 0;
+    date->tm_sec = 0;
+    auto midnight = std::chrono::system_clock::from_time_t(std::mktime(date));
+
+    // number of milliseconds between midnight and now, ie current time in millis
+    // The same technique can be used for time since epoch
+    return std::chrono::duration_cast<std::chrono::milliseconds>(now - midnight).count();
+}
+
 
 std::vector< std::string > getDataString ( const std::string &filename )
 {
@@ -218,79 +287,83 @@ std::vector< double > HermiteDerivatives( const Eigen::VectorXd &mappedNormalize
 }
 
 std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > createOneDimensionalHermiteInterpolator (
-            const Eigen::VectorXd &parameterValues,
-            const Eigen::VectorXd &mappedNormalizedSpecificEnergy,
-            const std::map< double, double > &mapped_data,
-            const std::shared_ptr< tudat::interpolators::InterpolatorSettings > &interpolatorSettings )
+        const Eigen::VectorXd &parameterValues,
+        const Eigen::VectorXd &mappedNormalizedSpecificEnergy,
+        const std::map< double, double > &mapped_data,
+        const std::shared_ptr< tudat::interpolators::InterpolatorSettings > &interpolatorSettings )
 {
-   return tudat::interpolators::createOneDimensionalInterpolator< double, double >(
-               mapped_data,
-               interpolatorSettings,
-               std::make_pair( parameterValues( 0 ), parameterValues( parameterValues.size() - 1 ) ),
-               bislip::variables::HermiteDerivatives( mappedNormalizedSpecificEnergy, parameterValues ) );
+    return tudat::interpolators::createOneDimensionalInterpolator< double, double >(
+                mapped_data,
+                interpolatorSettings,
+                std::make_pair( parameterValues( 0 ), parameterValues( parameterValues.size() - 1 ) ),
+                bislip::variables::HermiteDerivatives( mappedNormalizedSpecificEnergy, parameterValues ) );
 }
 
-std::string passGuidanceParameter (
-        const std::string &parameter)
+//std::string passOptimizationParameter (
+//        const std::string &parameter)
+//{
+//    return parameter;
+///}
+
+bislip::variables::OptimizationParameter passOptimizationParameter (
+        const bislip::variables::OptimizationParameter &parameter)
 {
     return parameter;
 }
 
-std::string passDirection (
-        const std::string &direction)
+std::string passString (
+        const std::string &string)
 {
-    return direction;
+    return string;
 }
 
-
 std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > chooseGuidanceInterpolator(
-       // const double &flight_path_angle,
-        const std::string &parameter,
-        const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems)
+        const bislip::variables::OptimizationParameter &parameter,
+        const std::shared_ptr< tudat::system_models::BislipSystems > &bislipSystems)
 {
     std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > interpolator;
 
-        if ( parameter == "Angle of Attack") { interpolator = vehicleSystems->getAngleOfAttackInterpolator(); }
-        if ( parameter == "Bank Angle") { interpolator = vehicleSystems->getBankAngleInterpolator(); }
-        if ( parameter == "Thrust Elevation Angle") { interpolator = vehicleSystems->getThrustElevationAngleInterpolator(); }
-        if ( parameter == "Thrust Azimuth Angle") { interpolator = vehicleSystems->getThrustAzimuthAngleInterpolator(); }
-        if ( parameter == "Throttle Setting") { interpolator = vehicleSystems->getThrottleInterpolator(); }
+    if ( parameter == bislip::variables::OptimizationParameter::AngleOfAttack ) { interpolator = bislipSystems->getAngleOfAttackInterpolator(); }
+    if ( parameter == bislip::variables::OptimizationParameter::BankAngle ) { interpolator = bislipSystems->getBankAngleInterpolator(); }
+    if ( parameter == bislip::variables::OptimizationParameter::ThrustElevationAngle ) { interpolator = bislipSystems->getThrustElevationAngleInterpolator(); }
+    if ( parameter == bislip::variables::OptimizationParameter::ThrustAzimuthAngle ) { interpolator = bislipSystems->getThrustAzimuthAngleInterpolator(); }
+    if ( parameter == bislip::variables::OptimizationParameter::ThrottleSetting ) { interpolator = bislipSystems->getThrottleInterpolator(); }
 
     return interpolator;
 }
 
+
 std::pair < double, double > chooseGuidanceBounds (
-        //const double &flight_path_angle,
-        const std::string &parameter,
-        const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems)
+        const bislip::variables::OptimizationParameter &parameter,
+        const std::shared_ptr< tudat::system_models::BislipSystems > &bislipSystems)
 {
     std::pair < double, double > bounds;
 
-        if ( parameter == "Angle of Attack" ) { bounds = vehicleSystems->getParameterBounds( parameter ); }
-        if ( parameter == "Bank Angle" ) { bounds = vehicleSystems->getParameterBounds( parameter ); }
-        if ( parameter == "Thrust Elevation Angle" ) { bounds = vehicleSystems->getParameterBounds( parameter ); }
-        if ( parameter == "Thrust Azimuth Angle" ) {  bounds = vehicleSystems->getParameterBounds( parameter ); }
-        if ( parameter == "Throttle Setting" ) { bounds = vehicleSystems->getParameterBounds( parameter ); }
+    if ( parameter == AngleOfAttack ) { bounds = bislipSystems->getParameterBounds( parameter ); }
+    if ( parameter == BankAngle ) { bounds = bislipSystems->getParameterBounds( parameter ); }
+    if ( parameter == ThrustElevationAngle ) { bounds = bislipSystems->getParameterBounds( parameter ); }
+    if ( parameter == ThrustAzimuthAngle ) {  bounds = bislipSystems->getParameterBounds( parameter ); }
+    if ( parameter == ThrottleSetting ) { bounds = bislipSystems->getParameterBounds( parameter ); }
 
     return bounds;
 }
 
 double evaluateGuidanceInterpolator (
-       // const double &flightpathangle,
-        const std::string &parameter,
-        const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems,
+        const bislip::variables::OptimizationParameter &parameter,
+        const std::shared_ptr< tudat::system_models::BislipSystems > &bislipSystems,
         const double &height,
         const double &airspeed,
         const double &E_max)
 {
     //! Select parameter interpolator.
-    std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > interpolator = bislip::variables::chooseGuidanceInterpolator( parameter, vehicleSystems );
-
-    //! Select parameter bounds.
-    std::pair < double, double > bounds =  bislip::variables::chooseGuidanceBounds( parameter, vehicleSystems );
+    //std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > interpolator = bislip::variables::chooseGuidanceInterpolator( parameter, vehicleSystems );
 
     //! Evaluate interpolator.
-    double evaluation = interpolator->interpolate( bislip::variables::computeNormalizedSpecificEnergy( height, airspeed, E_max ) );
+    //double evaluation = interpolator->interpolate( bislip::variables::computeNormalizedSpecificEnergy( height, airspeed, E_max ) );
+    double evaluation = ( bislip::variables::chooseGuidanceInterpolator( parameter, bislipSystems ) )->interpolate( bislip::variables::computeNormalizedSpecificEnergy( height, airspeed, E_max ) );
+
+    //! Select parameter bounds.
+    std::pair < double, double > bounds =  bislip::variables::chooseGuidanceBounds( parameter, bislipSystems );
 
     //! Impose bounds.
     if ( evaluation < bounds.first ){ evaluation = bounds.first; }
@@ -299,56 +372,83 @@ double evaluateGuidanceInterpolator (
     return evaluation;
 }
 
+Eigen::Vector6d computeCurrentCoefficients (
+        const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions,
+        const std::shared_ptr< tudat::aerodynamics::AerodynamicCoefficientInterface > &coefficientInterface,
+        const std::shared_ptr< tudat::system_models::BislipSystems > &bislipSystems)
+{
+    double angleOfAttack = tudat::unit_conversions::convertDegreesToRadians(
+                bislip::variables::evaluateGuidanceInterpolator (
+                    bislip::variables::OptimizationParameter::AngleOfAttack,
+                    bislipSystems,
+                    flightConditions->getCurrentAltitude(),
+                    flightConditions->getCurrentAirspeed(),
+                    bislipSystems->getE_max() ) );
+
+    //! Define input to aerodynamic coefficients: take care of order of input (this depends on how the coefficients are created)!
+    std::vector< double > coefficient_input;
+    coefficient_input.push_back( angleOfAttack );
+    coefficient_input.push_back( flightConditions->getCurrentMachNumber() );
+
+    // Update and retrieve current aerodynamic coefficients
+    coefficientInterface->updateCurrentCoefficients( coefficient_input );
+
+    return coefficientInterface->getCurrentAerodynamicCoefficients( );
+}
+
 Eigen::Vector3d computeBodyFixedThrustDirection (
         const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions,
-        const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems)
+        const std::shared_ptr< tudat::system_models::BislipSystems > &bislipSystems)
 {
     // std::cout << "Computing Body Fixed Thrust Direction" << std::endl;
-    const double eps_T =  evaluateGuidanceInterpolator (
-               // flightConditions->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::flight_path_angle ),
-                "Thrust Elevation Angle",
-                vehicleSystems,
-                flightConditions->getCurrentAltitude(),
-                flightConditions->getCurrentAirspeed(),
-                vehicleSystems->getE_max() );
+    double eps_T = tudat::unit_conversions::convertDegreesToRadians(
+                evaluateGuidanceInterpolator (
+                    ThrustElevationAngle,
+                    bislipSystems,
+                    flightConditions->getCurrentAltitude(),
+                    flightConditions->getCurrentAirspeed(),
+                    bislipSystems->getE_max() ) );
 
-    const double phi_T = evaluateGuidanceInterpolator (
-                //flightConditions->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::flight_path_angle ),
-                "Thrust Azimuth Angle",
-                vehicleSystems,
-                flightConditions->getCurrentAltitude(),
-                flightConditions->getCurrentAirspeed(),
-                vehicleSystems->getE_max() );
+    double phi_T = tudat::unit_conversions::convertDegreesToRadians(
+                evaluateGuidanceInterpolator (
+                    ThrustAzimuthAngle,
+                    bislipSystems,
+                    flightConditions->getCurrentAltitude(),
+                    flightConditions->getCurrentAirspeed(),
+                    bislipSystems->getE_max() ) );
 
     Eigen::Vector3d bodyFixedThrustDirection;
-    bodyFixedThrustDirection( 0 ) = std::cos( tudat::unit_conversions::convertDegreesToRadians( eps_T ) ) * std::cos( tudat::unit_conversions::convertDegreesToRadians( phi_T ) );
-    bodyFixedThrustDirection( 1 ) = std::cos( tudat::unit_conversions::convertDegreesToRadians( eps_T ) ) * std::sin( tudat::unit_conversions::convertDegreesToRadians( phi_T ) );
-    bodyFixedThrustDirection( 2 ) = std::sin( tudat::unit_conversions::convertDegreesToRadians( eps_T ) );
+    bodyFixedThrustDirection( 0 ) = std::cos( eps_T ) * std::cos( phi_T );
+    bodyFixedThrustDirection( 1 ) = std::cos( eps_T ) * std::sin( phi_T );
+    bodyFixedThrustDirection( 2 ) = std::sin( eps_T );
 
     return bodyFixedThrustDirection;
 }
 
 double computeThrustMagnitude (
         const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions,
-        const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems)
+        const std::shared_ptr< tudat::system_models::BislipSystems > &bislipSystems)
 {
     const double throttle = bislip::variables::evaluateGuidanceInterpolator (
                 //flightConditions->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::flight_path_angle ),
-                "Throttle Setting",
-                vehicleSystems,
+                ThrottleSetting,
+                bislipSystems,
                 flightConditions->getCurrentAltitude(),
                 flightConditions->getCurrentAirspeed(),
-                vehicleSystems->getE_max() );
+                bislipSystems->getE_max() );
 
-    return throttle * vehicleSystems->getMaxThrust();
+    return throttle * bislipSystems->getMaxThrust();
 }
 
 Eigen::Vector3d computeBodyFixedThrustVector (
         const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions,
-        const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems)
+        const std::shared_ptr< tudat::system_models::BislipSystems > &bislipSystems)
+
+//const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions,
+// const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems)
 {
-    const Eigen::Vector3d BodyFixedThrustDirection = bislip::variables::computeBodyFixedThrustDirection( flightConditions, vehicleSystems );
-    const double thrustMagnitude = bislip::variables::computeThrustMagnitude( flightConditions, vehicleSystems );
+    const Eigen::Vector3d BodyFixedThrustDirection = bislip::variables::computeBodyFixedThrustDirection( flightConditions, bislipSystems );
+    const double thrustMagnitude = bislip::variables::computeThrustMagnitude( flightConditions, bislipSystems );
 
     Eigen::Vector3d BodyFixedThrustVector;
 
@@ -366,6 +466,76 @@ bool determineEngineStatus (
     bool currentEngineStatus = true;
     if ( currentMass <= landingMass ){ currentEngineStatus = false; }
     return currentEngineStatus;
+}
+
+Eigen::Vector2d getGravs (
+        const double &r,
+        const double &latitude )
+{
+    const double R_E = 6.378137e6;
+    const double mu = 3.986004418e14;
+    const double J2 = 1082.626523e-6;
+    const double J3 = 2.532153e-7;
+    const double J4 = 1.6109876e-7;
+
+    const double s_latitude = std::sin( latitude );
+    const double c_latitude = std::cos( latitude );
+
+    const double g_n_pre = -3 * ( mu / ( r * r ) ) * pow( R_E / r , 2 ) * s_latitude * c_latitude;
+    const double g_n_sub_1 = J2;
+    const double g_n_sub_2 = ( J3 / 2 ) * ( R_E / r ) * ( 1 / std::sin( latitude) ) * ( 5 * pow ( s_latitude , 2 ) - 1 );
+    const double g_n_sub_3 = ( 5 * J4 / 6 ) * pow( R_E / r , 2) * ( 7 * pow ( s_latitude , 2 ) - 3 );
+    const double g_n = g_n_pre * ( g_n_sub_1 + g_n_sub_2 + g_n_sub_3 );
+
+    const double g_d_pre = ( mu / ( r * r ) );
+    const double g_d_sub_1 = -( 3 * J2 / 2 ) * pow( R_E / r , 2 ) * ( 3 * pow  (s_latitude , 2 ) - 1 );
+    const double g_d_sub_2 = -2 * J3  * pow( R_E / r , 3 ) * ( s_latitude ) * ( 5 * pow ( s_latitude , 2 ) - 3 );
+    const double g_d_sub_3 = -( 5 * J4 / 8 ) * pow( R_E / r , 4 ) * ( 35 * pow ( s_latitude , 4 ) - 30 * pow ( s_latitude , 2 ) + 3 );
+    const double g_d = g_d_pre * ( 1 + g_d_sub_1 + g_d_sub_2 + g_d_sub_3 );
+
+    Eigen::Vector2d gravs ( 2 );
+    gravs << g_n, g_d;
+
+    return gravs;
+}
+
+double computeEquilibriumGlideLimit (
+        const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions,
+        const std::shared_ptr< tudat::aerodynamics::AerodynamicCoefficientInterface > &coefficientInterface,
+        const std::shared_ptr< tudat::system_models::BislipSystems > &bislipSystems,
+        const double &currentMass )
+{
+    const double currentFlightPathAngle = flightConditions->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::flight_path_angle );
+    const double currentLatitude = flightConditions->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::latitude_angle );
+    const double currentHeading = flightConditions->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::heading_angle );
+    const double currentAltitude = flightConditions->getCurrentAltitude( );
+    const double currentAirspeed = flightConditions->getCurrentAirspeed();
+    const double currentDensity = flightConditions->getCurrentDensity( );
+    const double surfaceArea = bislipSystems->getReferenceArea( );
+    //const double currentMass = bodyMap.at( vehicleName )->getBodyMass( );
+    const double q_dyn = ( 0.5 ) * currentDensity * currentAirspeed * currentAirspeed;
+
+    const double omega = 7.292115*1E-5;
+
+    Eigen::Vector6d currentCoefficients = computeCurrentCoefficients ( flightConditions, coefficientInterface, bislipSystems );
+
+    const double currentLift = q_dyn * surfaceArea * currentCoefficients[ 2 ];
+
+   // Eigen::Vector2d gravs ( 2 );
+    //gravs = bislip::variables::getGravs( currentAltitude, currentLatitude );
+
+    Eigen::Vector2d gravs = bislip::variables::getGravs( currentAltitude, currentLatitude );
+
+    return std::acos( ( currentMass / currentLift ) * ( gravs( 1 ) * std::cos ( currentFlightPathAngle) - gravs( 0 ) * std::sin( currentFlightPathAngle) * std::cos( currentHeading ) )
+            - omega * omega * currentAltitude * std::cos( currentLatitude ) * ( std::cos( currentLatitude ) * std::cos( currentFlightPathAngle )  + std::sin( currentFlightPathAngle ) * std::sin( currentLatitude ) * std::cos( currentHeading ) )
+            - ( currentAirspeed * currentAirspeed / currentAltitude ) * std::cos( currentFlightPathAngle ) - 2.0 * currentMass * omega * currentAirspeed * std::cos( currentLatitude ) * std::sin( currentHeading ) );
+}
+
+double getBodyFlapDeflection( const double &del_C_m_b )
+{
+    double bodyflap = del_C_m_b;
+
+    return bodyflap;
 }
 
 double computeHeatingRate (
@@ -448,15 +618,16 @@ double computeFlatPlateHeat (const double &airdensity,
 
 double computeFlatPlateHeatFlux (
         const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions,
-        const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems)
+        const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems,
+        const std::shared_ptr< tudat::system_models::BislipSystems > &bislipSystems)
 {
     const double airDensity = flightConditions->getCurrentDensity( );
     const double airSpeed = flightConditions->getCurrentAirspeed( );
     const double airTemperature = flightConditions->getCurrentFreestreamTemperature( );
     const double machNumber = flightConditions->getCurrentMachNumber( );
     const double wallEmissivity = vehicleSystems->getWallEmissivity( );
-    const double phi = vehicleSystems->getLocalBodyAngle( );
-    const double x_T = vehicleSystems->getTransitionDistance( );
+    const double phi = bislipSystems->getLocalBodyAngle( );
+    const double x_T = bislipSystems->getTransitionDistance( );
 
     const double sin_phi_term = std::pow( std::sin( phi ), 1.6 ) ;
     const double cos_phi = std::cos( phi );
@@ -517,7 +688,7 @@ double computePenalty (
         {  for ( long i = startIterator; i < endIterator + 1; i++ )
             {
                 if ( dependentVariable_TimeHistory( i ) < dependentVariable_TimeHistory( i - 1 ) ) { dependentVariable_Violation( i ) = dependentVariable_TimeHistory( i - 1 ) - dependentVariable_TimeHistory( i ); }
-             //   std::cout << "dependentVariable_Violation( " << i << " ): " << dependentVariable_Violation( i ) << std::endl;
+                //   std::cout << "dependentVariable_Violation( " << i << " ): " << dependentVariable_Violation( i ) << std::endl;
 
             }
         }
@@ -526,7 +697,7 @@ double computePenalty (
             for ( long i = startIterator + 1; i < endIterator; i++ )
             {
                 if ( dependentVariable_TimeHistory( i ) > dependentVariable_TimeHistory( i - 1 ) ) { dependentVariable_Violation( i ) = dependentVariable_TimeHistory( i ) - dependentVariable_TimeHistory( i - 1 ); }
-             //   std::cout << "dependentVariable_Violation( " << i << " ): " << dependentVariable_Violation( i ) << std::endl;
+                //   std::cout << "dependentVariable_Violation( " << i << " ): " << dependentVariable_Violation( i ) << std::endl;
 
             }
         }
@@ -537,7 +708,7 @@ double computePenalty (
         {
             if ( dependentVariable_TimeHistory ( i ) > constraint ) { dependentVariable_Violation( i ) = dependentVariable_TimeHistory( i ) - constraint; }
 
-           // std::cout << "dependentVariable_Violation( " << i << " ): " << dependentVariable_Violation( i ) << std::endl;
+            // std::cout << "dependentVariable_Violation( " << i << " ): " << dependentVariable_Violation( i ) << std::endl;
         }
     }
     double penalty = 0;

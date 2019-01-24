@@ -138,18 +138,18 @@ for p = 1:numel(compilation)
         set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
         set (gca,'Fontsize',15)
         title(strcat('Dynamic Pressure through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
-        % ylim([-90 90])
+        ylim([0 100])
         max_tof = max([compilation(p).evolutions.max_tof]);
         xlim([0 max_tof])
         xlabel('Propagation Time (s)') % x-axis label
-        ylabel('Dynamic Pressure (Pa)') % y-axis label
+        ylabel('Dynamic Pressure (kPa)') % y-axis label
         %set(gca,'YTick', -90:30:90);
         set(gca,'XTick', 0:200:max_tof);
         hold on
         
         for ii = 1:numel(compilation(p).evolutions(k).trajectories)
             plot(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
-                compilation(p).evolutions(k).trajectories(ii).individual.dynamic_pressure);
+                compilation(p).evolutions(k).trajectories(ii).individual.dynamic_pressure/1e3);
         end
         
         %plot([0 max_tof],(6371 + 25)*[1 1],'k','LineWidth',2)

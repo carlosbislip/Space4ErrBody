@@ -27,11 +27,11 @@ bool StopOrNot( const tudat::simulation_setup::NamedBodyMap& bodyMap,
     const double lon_c_rad =  FlightConditions->getAerodynamicAngleCalculator( )->getAerodynamicAngle( tudat::reference_frames::longitude_angle );
 
     //! Extract initial coordinates
-    const double lat_i_rad = bodyMap.at( vehicleName )->getVehicleSystems()->getInitialCoordinates().first;
-    const double lon_i_rad = bodyMap.at( vehicleName )->getVehicleSystems()->getInitialCoordinates().second;
+    const double lat_i_rad = bodyMap.at( vehicleName )->getBislipSystems()->getInitialCoordinates().first;
+    const double lon_i_rad = bodyMap.at( vehicleName )->getBislipSystems()->getInitialCoordinates().second;
 
     //! Extract Final distance to target
-    const double final_d_to_target_rad = bodyMap.at( vehicleName )->getVehicleSystems()->getFinalDistanceToTarget();
+    const double final_d_to_target_rad = bodyMap.at( vehicleName )->getBislipSystems()->getFinalDistanceToTarget();
     const double h_UP = terminationConditionsValues[ 3 ];
     const double h_DN = terminationConditionsValues[ 4 ];
     const double V_max = terminationConditionsValues[ 5 ];
@@ -40,8 +40,8 @@ bool StopOrNot( const tudat::simulation_setup::NamedBodyMap& bodyMap,
     const double q_dyn_max = terminationConditionsValues[ 8 ];
 
     //! Extract and convert target coordinates
-    const double lat_f_rad = tudat::unit_conversions::convertDegreesToRadians( bodyMap.at( vehicleName )->getVehicleSystems()->getTargetCoordinates().first );
-    const double lon_f_rad = tudat::unit_conversions::convertDegreesToRadians( bodyMap.at( vehicleName )->getVehicleSystems()->getTargetCoordinates().second );
+    const double lat_f_rad = tudat::unit_conversions::convertDegreesToRadians( bodyMap.at( vehicleName )->getBislipSystems()->getTargetCoordinates().first );
+    const double lon_f_rad = tudat::unit_conversions::convertDegreesToRadians( bodyMap.at( vehicleName )->getBislipSystems()->getTargetCoordinates().second );
 
     //! Calculate current Distance to target.
     const double current_d_to_target_rad = bislip::variables::computeAngularDistance( lat_c_rad , lon_c_rad , lat_f_rad , lon_f_rad );
@@ -50,7 +50,7 @@ bool StopOrNot( const tudat::simulation_setup::NamedBodyMap& bodyMap,
     const double total_d_traveled_rad = bislip::variables::computeAngularDistance( lat_i_rad , lon_i_rad , lat_c_rad , lon_c_rad );
 
     //! Extract Initial distance to target
-    const double initial_d_to_target_rad = bodyMap.at( vehicleName )->getVehicleSystems()->getInitialDistanceToTarget();
+    const double initial_d_to_target_rad = bodyMap.at( vehicleName )->getBislipSystems()->getInitialDistanceToTarget();
 
     //! Extract current altitude
     const double current_height = FlightConditions->getCurrentAltitude();
@@ -68,16 +68,16 @@ bool StopOrNot( const tudat::simulation_setup::NamedBodyMap& bodyMap,
     const double currentMass = bodyMap.at( vehicleName )->getBodyMass( );
 
     //! Calculate current normalized specific energy.
-    const double E_hat = bislip::variables::computeNormalizedSpecificEnergy( current_height, current_V, bodyMap.at( vehicleName )->getVehicleSystems()->getE_max() );
+    const double E_hat = bislip::variables::computeNormalizedSpecificEnergy( current_height, current_V, bodyMap.at( vehicleName )->getBislipSystems()->getE_max() );
 
     //! Evaluate current throttle setting and thrust elevation angle.
     double throttle = bislip::variables::evaluateGuidanceInterpolator(
                     //current_gamma,
-                    "Throttle Setting",
-                    bodyMap.at( vehicleName )->getVehicleSystems(),
+                    bislip::variables::OptimizationParameter::ThrottleSetting,
+                    bodyMap.at( vehicleName )->getBislipSystems(),
                     current_height,
                     current_V,
-                    bodyMap.at( vehicleName )->getVehicleSystems()->getE_max() );
+                    bodyMap.at( vehicleName )->getBislipSystems()->getE_max() );
 
     const double finalMass =  bodyMap.at( vehicleName )->getVehicleSystems()->getDryMass();
     const double current_rho = FlightConditions->getCurrentDensity( );

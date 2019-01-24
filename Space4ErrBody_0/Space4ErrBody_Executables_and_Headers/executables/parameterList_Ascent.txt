@@ -7,3 +7,4 @@ Throttle Setting
 Initial Velocity
 Maximum Velocity
 Maximum Height
+Additional Mass

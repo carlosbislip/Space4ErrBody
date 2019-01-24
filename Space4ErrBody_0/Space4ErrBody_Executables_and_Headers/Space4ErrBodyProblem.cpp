@@ -67,7 +67,6 @@
 #include <Tudat/Mathematics/Interpolators/interpolator.h>
 #include <Tudat/Mathematics/Interpolators/oneDimensionalInterpolator.h>
 #include <Tudat/Mathematics/Interpolators/cubicSplineInterpolator.h>
-#include <Tudat/Astrodynamics/SystemModels/vehicleSystems.h>
 
 //! Mine
 #include "Space4ErrBodyProblem.h"
@@ -75,7 +74,6 @@
 #include "getStuff.h"
 #include "updateGuidance.h"
 #include "bislipVariables.h"
-//#include "updateGuidance_val.h"
 #include "StopOrNot.h"
 
 Space4ErrBodyProblem::Space4ErrBodyProblem(
@@ -93,20 +91,17 @@ Space4ErrBodyProblem::Space4ErrBodyProblem(
         const std::vector< double > &terminationConditionsValues,
         const std::vector< double > &output_settingsValues,
         const std::string &outputSubFolder,
-        const Eigen::Vector6d &EntryState_spherical,
-        const std::vector< std::string > &bodiesWithMassToPropagate,
+        const Eigen::Vector6d &initialState_spherical,
         const std::vector< std::string > &centralBodies,
         const std::vector< std::string > &bodiesToIntegrate,
-        const std::map< std::string, std::pair < double, double > > &Bounds_Ascent,
-        const std::map< std::string, std::pair < double, double > > &Bounds_Descent,
+        const std::map< bislip::variables::OptimizationParameter, std::pair < double, double > > &Bounds_Ascent,
+        const std::map< bislip::variables::OptimizationParameter, std::pair < double, double > > &Bounds_Descent,
         const tudat::simulation_setup::NamedBodyMap& bodyMap,
         const tudat::basic_astrodynamics::AccelerationMap &accelerationsMap,
         const std::shared_ptr< tudat::ephemerides::RotationalEphemeris > &earthRotationalEphemeris,
         const std::shared_ptr< tudat::propagators::DependentVariableSaveSettings > &dependentVariablesToSave,
         const std::shared_ptr< tudat::propagators::PropagationTerminationSettings > &terminationSettings_Ascent,
-        const std::shared_ptr< tudat::propagators::PropagationTerminationSettings > &terminationSettings_Descent,
-        const std::map< std::string, std::shared_ptr< tudat::basic_astrodynamics::MassRateModel > > &massRateModels,
-        const std::shared_ptr< tudat::propagators::SingleArcPropagatorSettings< double > > &massPropagatorSettings_Ascent ):
+        const std::shared_ptr< tudat::propagators::PropagationTerminationSettings > &terminationSettings_Descent ):
     problemBounds_( bounds ),
     problem_name_( problem_name ),
     vehicleName_( vehicleName ),
@@ -121,8 +116,8 @@ Space4ErrBodyProblem::Space4ErrBodyProblem(
     terminationConditionsValues_( terminationConditionsValues ),
     output_settingsValues_( output_settingsValues ),
     outputSubFolder_( outputSubFolder ),
-    EntryState_spherical_( EntryState_spherical) ,
-    bodiesWithMassToPropagate_( bodiesWithMassToPropagate ),
+    initialState_spherical_( initialState_spherical) ,
+   // bodiesWithMassToPropagate_( bodiesWithMassToPropagate ),
     centralBodies_( centralBodies ),
     bodiesToIntegrate_( bodiesToIntegrate ),
     Bounds_Ascent_( Bounds_Ascent ),
@@ -132,9 +127,9 @@ Space4ErrBodyProblem::Space4ErrBodyProblem(
     earthRotationalEphemeris_( earthRotationalEphemeris ),
     dependentVariablesToSave_( dependentVariablesToSave ),
     terminationSettings_Ascent_( terminationSettings_Ascent ),
-    terminationSettings_Descent_( terminationSettings_Descent ),
-    massRateModels_( massRateModels ),
-    massPropagatorSettings_Ascent_( massPropagatorSettings_Ascent )
+    terminationSettings_Descent_( terminationSettings_Descent )
+    //massRateModels_( massRateModels ),
+    //massPropagatorSettings_Ascent_( massPropagatorSettings_Ascent )
 { }
 
 //! Descriptive name of the problem
@@ -192,8 +187,8 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
     const double fixedStepSize = simulation_settingsValues_[ 2 ];
 
     //! Declare and initialize number of control nodes.
-    const unsigned long nodes_Ascent = simulation_settingsValues_[ 3 ];
-    const unsigned long nodes_Descent = simulation_settingsValues_[ 4 ];
+    const unsigned long nodesAscent = simulation_settingsValues_[ 3 ];
+    const unsigned long nodesDescent = simulation_settingsValues_[ 4 ];
 
     //! Declare and initialize position vector of moment reference center
     const Eigen::Vector3d R_mrc( vehicleParameterValues_[ 3 ], vehicleParameterValues_[ 4 ], vehicleParameterValues_[ 5 ] ); // m
@@ -207,12 +202,8 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
     //! Declare and initialize initial mass
     const double initialMass_Ascent = vehicleParameterValues_[ 12 ]; // kg
 
-      //! Declare and initialize starting height
+    //! Declare and initialize starting height
     const double h_i = initialConditionsValues_[ 2 ]; // m
-
-
-    //! Declare and initialize initial flight-path angle
-    const double gamma_i_deg = initialConditionsValues_[ 4 ]; // deg
 
     //! Declare and initialize starting position coordinates.
     const double initialLat_deg = initialConditionsValues_[ 0 ];
@@ -224,9 +215,7 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
 
     //! Declare and initialize various termination conditions
     const double finalDistanceToTarget_deg = terminationConditionsValues_[ 2 ];
-    //const double h_UP = terminationConditionsValues_[ 3 ];
     const double h_DN = terminationConditionsValues_[ 4 ];
-    //const double V_UP = terminationConditionsValues_[ 5 ];
     const double constraint_MechanicalLoad = terminationConditionsValues_[ 6 ];
     const double constraint_HeatingRate = terminationConditionsValues_[ 7 ];
     const double constraint_DynamicPressure = terminationConditionsValues_[ 8 ];
@@ -251,25 +240,25 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
     ///////////////////////            CREATE NODAL STRUCTURE             /////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  //  std::cout << "Creating nodal structure" << std::endl;
+    //  std::cout << "Creating nodal structure" << std::endl;
 
     //! Declare and allocate vectors of interest for Ascent phase.
-    Eigen::VectorXd xn_interval_Ascent( nodes_Ascent - 1 );
-    Eigen::VectorXd xn_Ascent( nodes_Ascent );
-    Eigen::VectorXd alpha_deg_Ascent( nodes_Ascent );
-    Eigen::VectorXd sigma_deg_Ascent( nodes_Ascent );
-    Eigen::VectorXd eps_T_deg_Ascent( nodes_Ascent );
-    Eigen::VectorXd phi_T_deg_Ascent( nodes_Ascent );
-    Eigen::VectorXd throttle_Ascent( nodes_Ascent );
+    Eigen::VectorXd xn_interval_Ascent( nodesAscent - 1 );
+    Eigen::VectorXd xn_Ascent( nodesAscent );
+    Eigen::VectorXd alpha_deg_Ascent( nodesAscent );
+    Eigen::VectorXd sigma_deg_Ascent( nodesAscent );
+    Eigen::VectorXd eps_T_deg_Ascent( nodesAscent );
+    Eigen::VectorXd phi_T_deg_Ascent( nodesAscent );
+    Eigen::VectorXd throttle_Ascent( nodesAscent );
 
     //! Declare and allocate vectors of interest for Descent phase.
-    Eigen::VectorXd xn_interval_Descent( nodes_Descent - 1 );
-    Eigen::VectorXd xn_Descent( nodes_Descent );
-    Eigen::VectorXd alpha_deg_Descent( nodes_Descent );
-    Eigen::VectorXd sigma_deg_Descent( nodes_Descent );
-    Eigen::VectorXd eps_T_deg_Descent( nodes_Descent );
-    Eigen::VectorXd phi_T_deg_Descent( nodes_Descent );
-    Eigen::VectorXd throttle_Descent( nodes_Descent );
+    Eigen::VectorXd xn_interval_Descent( nodesDescent - 1 );
+    Eigen::VectorXd xn_Descent( nodesDescent );
+    Eigen::VectorXd alpha_deg_Descent( nodesDescent );
+    Eigen::VectorXd sigma_deg_Descent( nodesDescent );
+    Eigen::VectorXd eps_T_deg_Descent( nodesDescent );
+    Eigen::VectorXd phi_T_deg_Descent( nodesDescent );
+    Eigen::VectorXd throttle_Descent( nodesDescent );
 
     //! Various parameters
     const double R_E = spice_interface::getAverageRadius( centralBodyName );
@@ -281,68 +270,89 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
     //Eigen::Vector2d gravs = getGravs ( mu, J2, J3, J4, R_E, R_E, 0.0000001 );
     double g0 = tudat::physical_constants::SEA_LEVEL_GRAVITATIONAL_ACCELERATION;
 
-  //  std::cout << "Re-allocate Ascent DVs" << std::endl;
+    //  std::cout << "Re-allocate Ascent DVs" << std::endl;
     //! Re-allocate decision vector values into workable vectors for Ascent phase.
-    for( unsigned int i = 0; i < nodes_Ascent; i++ )
+    for( unsigned int i = 0; i < nodesAscent; i++ )
     {
-        if ( i < ( nodes_Ascent - 1 ) ){ xn_interval_Ascent( i ) = x[ i ]; }
-        alpha_deg_Ascent( i ) = x[ i + 1*nodes_Ascent - 1 ];
-        sigma_deg_Ascent( i ) = x[ i + 2*nodes_Ascent - 1 ];
-        eps_T_deg_Ascent( i ) = x[ i + 3*nodes_Ascent - 1 ];
-        phi_T_deg_Ascent( i ) = x[ i + 4*nodes_Ascent - 1 ];
-        throttle_Ascent( i )  = x[ i + 5*nodes_Ascent - 1 ];
+        if ( i < ( nodesAscent - 1 ) ){ xn_interval_Ascent( i ) = x[ i ]; }
+        alpha_deg_Ascent( i ) = x[ i + 1 * nodesAscent - 1 ];
+        sigma_deg_Ascent( i ) = x[ i + 2 * nodesAscent - 1 ];
+        eps_T_deg_Ascent( i ) = x[ i + 3 * nodesAscent - 1 ];
+        phi_T_deg_Ascent( i ) = x[ i + 4 * nodesAscent - 1 ];
+        throttle_Ascent( i )  = x[ i + 5 * nodesAscent - 1 ];
     }
 
     //! Declare and initialize number of parameters exclusive to Ascent phase.
-    const unsigned long  N = ( parameterList_Ascent_.size() - 3 ) * nodes_Ascent - 1;
+    const unsigned long  N = ( parameterList_Ascent_.size() - 4 ) * nodesAscent - 1;
 
     //! Declare and initialize various parameters common to the entire trajectory.
     //!     Initial velocity.
-    const double V_i = x[ N ];
+    const double initialAirspeed = x[ N ];
+
     //!     Velocity at the maximum height.
-    const double V_UP = x[ N + 1 ];
+    const double upperLimitAirspeed = x[ N + 1 ];
+
     //!     Maximum height.
     const double h_UP = x[ N + 2 ];
 
+    //!     Additional mass.
+    const double additionalMass = x[ N + 3 ];
 
-   // std::cout << "Re-allocate Descent DVs" << std::endl;
+    const double goaldelV = upperLimitAirspeed - initialAirspeed;
+
+    //! Set body Mass.
+    bodyMap_.at( vehicleName_ )->setConstantBodyMass( initialMass_Ascent + additionalMass );
+    bodyMap_.at( vehicleName_ )->getBislipSystems()->setInitialMass( initialMass_Ascent + additionalMass );
+
+    // std::cout << "Re-allocate Descent DVs" << std::endl;
     //! Re-allocate decision vector values into workable vectors for Descent phase.
-    for( unsigned int i = 0; i < nodes_Descent; i++ )
+    for( unsigned int i = 0; i < nodesDescent; i++ )
     {
-        if ( i < ( nodes_Descent - 1) ){ xn_interval_Descent( i ) = x[ ( N + 3 ) + i ]; }
-        alpha_deg_Descent( i ) = x[ ( N + 3 ) + i + 1*nodes_Descent - 1 ];
-        sigma_deg_Descent( i ) = x[ ( N + 3 ) + i + 2*nodes_Descent - 1 ];
-        eps_T_deg_Descent( i ) = x[ ( N + 3 ) + i + 3*nodes_Descent - 1 ];
-        phi_T_deg_Descent( i ) = x[ ( N + 3 ) + i + 4*nodes_Descent - 1 ];
-        throttle_Descent( i )  = x[ ( N + 3 ) + i + 5*nodes_Descent - 1 ];
+        if ( i < ( nodesDescent - 1) ){ xn_interval_Descent( i ) = x[ ( N + 4 ) + i ]; }
+        alpha_deg_Descent( i ) = x[ ( N + 4 ) + i + 1 * nodesDescent - 1 ];
+        sigma_deg_Descent( i ) = x[ ( N + 4 ) + i + 2 * nodesDescent - 1 ];
+        eps_T_deg_Descent( i ) = x[ ( N + 4 ) + i + 3 * nodesDescent - 1 ];
+        phi_T_deg_Descent( i ) = x[ ( N + 4 ) + i + 4 * nodesDescent - 1 ];
+        throttle_Descent( i )  = x[ ( N + 4 ) + i + 5 * nodesDescent - 1 ];
     }
 
     //! Declare and initialize number of parameters exclusive to Descent phase.
-    const unsigned long NN = ( parameterList_Descent_.size() - 1 ) * nodes_Descent - 1;
+    const unsigned long NN = ( parameterList_Descent_.size() - 1 ) * nodesDescent - 1;
 
     //! Declare and initialize last parameter common to the entire trajectory.
     //!     Final velocity.
-    const double V_DN = x[ N + NN + 3 ];
+    const double lowerLimitAirspeed = x[ N + NN + 4 ];
+
+   // std::cout << "lowerLimitAirspeed =  " << lowerLimitAirspeed<< std::endl;
 
     //std::cout << "Create vector of node locations for ascent" << std::endl;
     //! Create vector of node locations for Ascent phase.
-    //!     This vector starts from zero, where it's last element is the sum of
-    //!     all intervals.
     xn_Ascent( 0 ) = 0;
-    for( unsigned int i = 0; i < nodes_Ascent - 1; i++ )
+    for( unsigned int i = 0; i < nodesAscent - 1; i++ )
     {
         xn_Ascent( i + 1 )        = xn_Ascent( i ) + xn_interval_Ascent( i ) / xn_interval_Ascent.sum();
     }
 
     // std::cout << "Create vector of node locations for descent" << std::endl;
     //! Create vector of node locations for Descent phase.
-    //!     This vector starts from the sum of all intervals, where it's last element
-    //!     is zero.
-    xn_Descent( 0 ) = xn_Ascent( xn_Ascent.size() - 1 ) ;//xn_interval_Descent.sum();
-    for( unsigned int i = 0; i < nodes_Descent - 1; i++ )
+    xn_Descent( 0 ) = 0;//xn_Ascent( xn_Ascent.size() - 1 ) ;//xn_interval_Descent.sum();
+    for( unsigned int i = 0; i < nodesDescent - 1; i++ )
     {
-        xn_Descent( i + 1 )        = xn_Descent( i ) - xn_interval_Descent( i ) / xn_interval_Descent.sum();
+        xn_Descent( i + 1 )        = xn_Descent( i ) + xn_interval_Descent( i ) / xn_interval_Descent.sum();
     }
+
+    //std::cout << "x =  " << std::endl;
+    //for( int i = 0; i < int( x.size( ) ); i++ )
+    //{
+    //    std::cout << i << "   " << x[i] << std::endl;
+   // }
+    //std::cout << "-------" << std::endl;
+   // std::cout << "xn_Ascent =  " << xn_Ascent<< std::endl;
+   // std::cout << "-------" << std::endl;
+   // std::cout << "xn_interval_Descent =  " << xn_interval_Descent << std::endl;
+   // std::cout << "-------" << std::endl;
+   // std::cout << "xn_Descent =  " << xn_Descent<< std::endl;
+   // std::cout << "-------" << std::endl;
 
 
     // xn_Descent = xn_Descent.reverse().eval();
@@ -375,11 +385,11 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
     std::cout << "-------" << std::endl;
     std::cout << "sigma_deg_Descent =  " << sigma_deg_Descent << std::endl;
     std::cout << "-------" << std::endl;
-    std::cout << "V_i =  " << V_i << std::endl;
+    std::cout << "initialAirspeed =  " << initialAirspeed << std::endl;
     std::cout << "-------" << std::endl;
-    std::cout << "V_UP =  " << V_UP << std::endl;
+    std::cout << "upperLimitAirspeed =  " << upperLimitAirspeed << std::endl;
     std::cout << "-------" << std::endl;
-    std::cout << "V_DN =  " << V_DN << std::endl;
+    std::cout << "lowerLimitAirspeed =  " << lowerLimitAirspeed << std::endl;
     std::cout << "-------" << std::endl;
     std::cout << "h_UP =  " << h_UP << std::endl;
     std::cout << "-------" << std::endl;
@@ -388,14 +398,14 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
     ///////////////////////            COMPLETE KNOWN STATES            ///////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-     Eigen::Vector6d initialStateAscent = EntryState_spherical_;
-     initialStateAscent( 3 ) = V_i;
+    Eigen::Vector6d initialStateAscent = initialState_spherical_;
+    initialStateAscent( 3 ) = initialAirspeed;
 
     //! Two things are being done here
     //!     Converting state vector from spherical to Cartesian elements
     //!     Transforming state vector from Earth-Fixed frame to Inertial frame.
-    const Eigen::Vector6d systemInitialState_Ascent = transformStateToGlobalFrame(
-                convertSphericalOrbitalToCartesianState( initialStateAscent ),
+    const Eigen::Vector6d systemInitialState_Ascent = tudat::ephemerides::transformStateToGlobalFrame(
+                tudat::orbital_element_conversions::convertSphericalOrbitalToCartesianState( initialStateAscent ),
                 simulationStartEpoch,
                 earthRotationalEphemeris_ );
 
@@ -403,39 +413,44 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
     ///////////////////////            CREATE INTERPOLATORS             ///////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-   // std::cout << "Creating interpolators" << std::endl;
+    // std::cout << "Creating interpolators" << std::endl;
 
     //! Calculate initial, maximum, and final specific energy levels.
-    const double E_i = bislip::variables::computeSpecificEnergy( h_i, V_i );
-    const double E_max = bislip::variables::computeSpecificEnergy( h_UP, V_UP );
-    const double E_f = bislip::variables::computeSpecificEnergy( h_DN, V_DN );
+    const double E_i = bislip::variables::computeSpecificEnergy( h_i, initialAirspeed );
+    const double E_max = bislip::variables::computeSpecificEnergy( h_UP, upperLimitAirspeed );
+    const double E_f = bislip::variables::computeSpecificEnergy( h_DN, lowerLimitAirspeed );
 
     //! Set maximum Energy level.
     //vehicleSystems->setE_max( E_max );
-    bodyMap_.at( vehicleName_ )->getVehicleSystems()->setE_max( E_max );
+    bodyMap_.at( vehicleName_ )->getBislipSystems()->setE_max( E_max );
 
     //! Normalize initial, maximum, and final specific energy levels.
-    const double E_hat_i = bislip::variables::computeNormalizedSpecificEnergy( h_i, V_i, E_max );
-    const double E_hat_max = bislip::variables::computeNormalizedSpecificEnergy( h_UP, V_UP, E_max );
-    //const double E_hat_f = bislip::variables::computeNormalizedSpecificEnergy( h_DN, V_DN, E_max );
+    //const double E_hat_i = bislip::variables::computeNormalizedSpecificEnergy( h_i, initialAirspeed, E_max );
+    const double E_hat_max = bislip::variables::computeNormalizedSpecificEnergy( h_UP, upperLimitAirspeed, E_max );
+    //const double E_hat_f = bislip::variables::computeNormalizedSpecificEnergy( h_DN, lowerLimitAirspeed, E_max );
 
     //! Map normalized specific energy levels to control node locations.
     Eigen::VectorXd E_mapped_Ascent( xn_Ascent.size() );
     Eigen::VectorXd E_mapped_Descent( xn_Descent.size() );
     E_mapped_Ascent = ( ( E_max - E_i ) * xn_Ascent.array() + E_i ) / E_max;
     E_mapped_Descent = ( ( E_max - E_f ) * xn_Descent.array() + E_f ) / E_max;
+
+    //E_mapped_Ascent = ( ( E_max - E_i ) * xn_Ascent.array() + E_i ) ;
+    //E_mapped_Descent = ( ( E_max - E_f ) * xn_Descent.array() + E_f ) ;
     //E_mapped_Descent = E_mapped_Descent.reverse().eval();
     //std::cout << "xn_Ascent=  " << xn_Ascent<< std::endl;
     //std::cout << "xn_Descent=  " << xn_Descent<< std::endl;
-    //std::cout << "E_mapped_Ascent=  " << E_mapped_Ascent<< std::endl;
-    //std::cout << "E_mapped_Descent=  " << E_mapped_Descent<< std::endl;
+   // std::cout << "E_mapped_Ascent = " << E_mapped_Ascent<< std::endl;
+   // std::cout << "-------" << std::endl;
+   // std::cout << "E_mapped_Descent = " << E_mapped_Descent<< std::endl;
+   // std::cout << "-------" << std::endl;
 
     //! Declare data maps used for decision vector values related to Ascent phase.
     std::map< double, double > map_alpha_deg_Ascent, map_eps_T_deg_Ascent, map_phi_T_deg_Ascent, map_throttle_Ascent, map_sigma_deg_Ascent;
     std::map< double, Eigen::VectorXd > map_DV_mapped_Ascent;
     Eigen::VectorXd DV_mapped_Ascent ( 6 );
 
-   // std::cout << "Mapping Ascent DVs" << std::endl;
+    // std::cout << "Mapping Ascent DVs" << std::endl;
     //! Associate decision vector values to mapped normalized specific energy levels within data maps.
     for ( unsigned int i = 0; i < E_mapped_Ascent.size( ); ++i )
     {
@@ -453,7 +468,7 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
     std::map< double, Eigen::VectorXd > map_DV_mapped_Descent;
     Eigen::VectorXd DV_mapped_Descent ( 6 );
 
-   // std::cout << "Mapping Descent DVs" << std::endl;
+    // std::cout << "Mapping Descent DVs" << std::endl;
     //! Associate decision vector values to mapped normalized specific energy levels within data maps.
     for ( unsigned int i = 0; i < E_mapped_Descent.size( ); ++i )
     {
@@ -466,18 +481,6 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
         map_DV_mapped_Descent[ E_mapped_Descent( i ) ] = DV_mapped_Descent;
     }
 
-    //! Calculate first derivatives for Hermite Spline Interpolation according to https://doi.org/10.1016/j.cam.2017.09.049.
-    //std::vector< double > alpha_deg_Ascent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, alpha_deg_Ascent, E_mapped_Ascent.size() );
-    //std::vector< double > sigma_deg_Ascent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, sigma_deg_Ascent );
- //   std::vector< double > eps_T_deg_Ascent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, eps_T_deg_Ascent );
-  //  std::vector< double > phi_T_deg_Ascent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, phi_T_deg_Ascent );
-   // std::vector< double > throttle_Ascent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, throttle_Ascent );
- //   std::vector< double > alpha_deg_Descent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Descent, alpha_deg_Descent );
-  //  std::vector< double > sigma_deg_Descent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, sigma_deg_Descent );
-   // std::vector< double > eps_T_deg_Descent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, eps_T_deg_Descent );
-   // std::vector< double > phi_T_deg_Descent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, phi_T_deg_Descent );
-   // std::vector< double > throttle_Descent_derivatives = bislip::variables::HermiteDerivatives( E_mapped_Ascent, throttle_Descent );
-
     //! Declare and initialize interpolator settings.
     std::shared_ptr< interpolators::InterpolatorSettings > interpolatorSettings = std::make_shared< interpolators::InterpolatorSettings >( hermite_spline_interpolator );
 
@@ -489,13 +492,6 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
     interpolator_eps_T_deg_Ascent = bislip::variables::createOneDimensionalHermiteInterpolator( eps_T_deg_Ascent, E_mapped_Ascent, map_eps_T_deg_Ascent, interpolatorSettings );
     interpolator_phi_T_deg_Ascent = bislip::variables::createOneDimensionalHermiteInterpolator( phi_T_deg_Ascent, E_mapped_Ascent, map_phi_T_deg_Ascent, interpolatorSettings );
     interpolator_throttle_Ascent = bislip::variables::createOneDimensionalHermiteInterpolator( throttle_Ascent, E_mapped_Ascent, map_throttle_Ascent, interpolatorSettings );
-
-
-    //interpolator_alpha_deg_Ascent = interpolators::createOneDimensionalInterpolator< double, double >( map_alpha_deg_Ascent, interpolatorSettings, std::make_pair( alpha_deg_Ascent( 0 ), alpha_deg_Ascent( E_mapped_Ascent.size() - 1 ) ), alpha_deg_Ascent_derivatives );
-    //interpolator_sigma_deg_Ascent = interpolators::createOneDimensionalInterpolator< double, double >( map_sigma_deg_Ascent, interpolatorSettings, std::make_pair( sigma_deg_Ascent( 0 ), sigma_deg_Ascent( E_mapped_Ascent.size() - 1 ) ), sigma_deg_Ascent_derivatives );
-    //interpolator_eps_T_deg_Ascent = interpolators::createOneDimensionalInterpolator< double, double >( map_eps_T_deg_Ascent, interpolatorSettings, std::make_pair( eps_T_deg_Ascent( 0 ), eps_T_deg_Ascent( E_mapped_Ascent.size() - 1 ) ), eps_T_deg_Ascent_derivatives );
-    //interpolator_phi_T_deg_Ascent = interpolators::createOneDimensionalInterpolator< double, double >( map_phi_T_deg_Ascent, interpolatorSettings, std::make_pair( phi_T_deg_Ascent( 0 ), phi_T_deg_Ascent( E_mapped_Ascent.size() - 1 ) ), phi_T_deg_Ascent_derivatives );
-    //interpolator_throttle_Ascent = interpolators::createOneDimensionalInterpolator< double, double >( map_throttle_Ascent, interpolatorSettings, std::make_pair( throttle_Ascent( 0 ), throttle_Ascent( E_mapped_Ascent.size() - 1 ) ), throttle_Ascent_derivatives );
 
     //std::cout << "Creating Descent Interpolators" << std::endl;
     //! Declare and initialize interpolators for Descent phase.
@@ -531,7 +527,7 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
 
         interpolators_Ascent[ eval ] = interpolated_values_Ascent;
 
-        eval = pp * E_mapped_Descent( 0 ) / 1000;
+        eval = pp * E_mapped_Descent( E_mapped_Descent.size() - 1 ) / 1000;
         interpolated_values_Descent( 0 ) = interpolator_alpha_deg_Descent->interpolate( eval );
         interpolated_values_Descent( 1 ) = interpolator_sigma_deg_Descent->interpolate( eval );
         interpolated_values_Descent( 2 ) = interpolator_eps_T_deg_Descent->interpolate( eval );
@@ -573,11 +569,41 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
                             std::numeric_limits< double >::digits10,
                             std::numeric_limits< double >::digits10,
                             "," );
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////             CREATE MASS RATE SETTINGS: ASCENT            //////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    //std::cout << "Create mass rate models" << std::endl;
+
+    //! Declare and initialize mass rate model settings.
+    std::shared_ptr< MassRateModelSettings > massRateModelSettings =
+            std::make_shared< FromThrustMassModelSettings >( true );
+
+    //! Declare and initialize mass rate model settings.
+    std::map< std::string, std::shared_ptr< MassRateModel > > massRateModels;
+    massRateModels[ vehicleName_ ] = createMassRateModel(
+                vehicleName_, massRateModelSettings, bodyMap_, accelerationsMap_ );
+
+    //! Create settings for propagating the mass of the vehicle.
+    std::vector< std::string > bodiesWithMassToPropagate;
+    bodiesWithMassToPropagate.push_back( vehicleName_ );
+
+    //! Declare and initialize starting mass of vehicle.
+    Eigen::VectorXd initialBodyMasses_Ascent( 1 );
+    initialBodyMasses_Ascent( 0 ) = initialMass_Ascent + additionalMass;
+
+    //! Declare and initialize mass propagation settings.
+    std::shared_ptr< SingleArcPropagatorSettings< double > > massPropagatorSettings_Ascent =
+            std::make_shared< MassPropagatorSettings< double > >(
+                bodiesWithMassToPropagate, massRateModels, initialBodyMasses_Ascent, terminationSettings_Ascent_, dependentVariablesToSave_ );
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////           CREATE PROPAGATION SETTINGS: ASCENT              ////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-   // std::cout << "Create Propagation Settings - Ascent" << std::endl;
+    // std::cout << "Create Propagation Settings - Ascent" << std::endl;
 
     //! Create translational propagation settings.
     std::shared_ptr< TranslationalStatePropagatorSettings< double > > translationalPropagatorSettings_Ascent =
@@ -593,7 +619,7 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
     //! Declare and initialize list of propagation settings.
     std::vector< std::shared_ptr< SingleArcPropagatorSettings< double > > > propagatorSettingsVector_Ascent;
     propagatorSettingsVector_Ascent.push_back( translationalPropagatorSettings_Ascent );
-    propagatorSettingsVector_Ascent.push_back( massPropagatorSettings_Ascent_ );
+    propagatorSettingsVector_Ascent.push_back( massPropagatorSettings_Ascent );
 
     //! Declare and initialize propagation settings for both mass and translational dynamics.
     std::shared_ptr< PropagatorSettings< double > > propagatorSettings_Ascent =
@@ -603,7 +629,7 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
     ///////////////////////           CREATE INTEGRATION SETTINGS: ASCENT           ///////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-   // std::cout << "Create Integration Settings: Ascent" << std::endl;
+    // std::cout << "Create Integration Settings: Ascent" << std::endl;
 
     //! Declare and initialize integrator settings.
     std::shared_ptr< IntegratorSettings<  > > integratorSettings_Ascent =
@@ -618,22 +644,22 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
 
     //std::cout << "Pass Ascent Interpolators to vehicle systems" << std::endl;
     //! Pass Ascent phase interpolators to vehicle systems.
-    bodyMap_.at( vehicleName_ )->getVehicleSystems()->setAngleOfAttackInterpolator( interpolator_alpha_deg_Ascent );
-    bodyMap_.at( vehicleName_ )->getVehicleSystems()->setBankAngleInterpolator( interpolator_sigma_deg_Ascent );
-    bodyMap_.at( vehicleName_ )->getVehicleSystems()->setThrustElevationAngleInterpolator( interpolator_eps_T_deg_Ascent );
-    bodyMap_.at( vehicleName_ )->getVehicleSystems()->setThrustAzimuthAngleInterpolator( interpolator_phi_T_deg_Ascent );
-    bodyMap_.at( vehicleName_ )->getVehicleSystems()->setThrottleInterpolator( interpolator_throttle_Ascent );
+    bodyMap_.at( vehicleName_ )->getBislipSystems()->setAngleOfAttackInterpolator( interpolator_alpha_deg_Ascent );
+    bodyMap_.at( vehicleName_ )->getBislipSystems()->setBankAngleInterpolator( interpolator_sigma_deg_Ascent );
+    bodyMap_.at( vehicleName_ )->getBislipSystems()->setThrustElevationAngleInterpolator( interpolator_eps_T_deg_Ascent );
+    bodyMap_.at( vehicleName_ )->getBislipSystems()->setThrustAzimuthAngleInterpolator( interpolator_phi_T_deg_Ascent );
+    bodyMap_.at( vehicleName_ )->getBislipSystems()->setThrottleInterpolator( interpolator_throttle_Ascent );
 
-//    std::cout << "Pass Ascent Bounds to vehicle systems" << std::endl;
+    //    std::cout << "Pass Ascent Bounds to vehicle systems" << std::endl;
 
     //! Pass parameter bounds to vehicle systems.
-    bodyMap_.at( vehicleName_ )->getVehicleSystems()->setParameterBounds( Bounds_Ascent_ );
+    bodyMap_.at( vehicleName_ )->getBislipSystems()->setParameterBounds( Bounds_Ascent_ );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////          PROPAGATE TRAJECTORY: ASCENT         /////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-   // std::cout << "Starting Ascent propagation" << std::endl;
+    // std::cout << "Starting Ascent propagation" << std::endl;
 
     //! Propagate trajectory.
     SingleArcDynamicsSimulator< double > ascentSimulation(
@@ -672,11 +698,9 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
               accelerationsMap_,
               bodiesToIntegrate_,
               systemInitialState_Descent,
-              terminationSettings_,
+              terminationSettings_Descent_,
               cowell,
               dependentVariablesToSave_ );
-
-
 
     //! Declare and initialize starting mass of vehicle.
     Eigen::VectorXd initialBodyMasses_Descent( 1 );
@@ -685,7 +709,7 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
     //! Declare and initialize mass propagation settings.
     std::shared_ptr< SingleArcPropagatorSettings< double > > massPropagatorSettings_Descent =
             std::make_shared< MassPropagatorSettings< double > >(
-                bodiesWithMassToPropagate_, massRateModels_, initialBodyMasses_Descent, terminationSettings_, dependentVariablesToSave_ );
+                bodiesWithMassToPropagate, massRateModels, initialBodyMasses_Descent, terminationSettings_Descent_, dependentVariablesToSave_ );
 
     //! Declare and initialize list of propagation settings.
     std::vector< std::shared_ptr< SingleArcPropagatorSettings< double > > > propagatorSettingsVector_Descent;
@@ -694,7 +718,7 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
 
     //! Declare and initialize propagation settings for both mass and translational dynamics.
     std::shared_ptr< PropagatorSettings< double > > propagatorSettings_Descent =
-            std::make_shared< MultiTypePropagatorSettings< double > >( propagatorSettingsVector_Descent, terminationSettings_, dependentVariablesToSave_ );
+            std::make_shared< MultiTypePropagatorSettings< double > >( propagatorSettingsVector_Descent, terminationSettings_Descent_, dependentVariablesToSave_ );
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -709,28 +733,27 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
               simulationEndEpoch_Ascent,
               fixedStepSize, 1, false );
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////           ASSIGN INTERPOLATORS & BOUNDS: DESCENT           ////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //std::cout << "Pass Descent Interpolators to vehicle systems" << std::endl;
     //! Pass Descent phase interpolators to vehicle systems.
-    bodyMap_.at( vehicleName_ )->getVehicleSystems()->setAngleOfAttackInterpolator( interpolator_alpha_deg_Descent );
-    bodyMap_.at( vehicleName_ )->getVehicleSystems()->setBankAngleInterpolator( interpolator_sigma_deg_Descent );
-    bodyMap_.at( vehicleName_ )->getVehicleSystems()->setThrustElevationAngleInterpolator( interpolator_eps_T_deg_Descent );
-    bodyMap_.at( vehicleName_ )->getVehicleSystems()->setThrustAzimuthAngleInterpolator( interpolator_phi_T_deg_Descent );
-    bodyMap_.at( vehicleName_ )->getVehicleSystems()->setThrottleInterpolator( interpolator_throttle_Descent );
+    bodyMap_.at( vehicleName_ )->getBislipSystems()->setAngleOfAttackInterpolator( interpolator_alpha_deg_Descent );
+    bodyMap_.at( vehicleName_ )->getBislipSystems()->setBankAngleInterpolator( interpolator_sigma_deg_Descent );
+    bodyMap_.at( vehicleName_ )->getBislipSystems()->setThrustElevationAngleInterpolator( interpolator_eps_T_deg_Descent );
+    bodyMap_.at( vehicleName_ )->getBislipSystems()->setThrustAzimuthAngleInterpolator( interpolator_phi_T_deg_Descent );
+    bodyMap_.at( vehicleName_ )->getBislipSystems()->setThrottleInterpolator( interpolator_throttle_Descent );
 
     //std::cout << "Pass Descent Bounds to vehicle systems" << std::endl;
 
-    bodyMap_.at( vehicleName_ )->getVehicleSystems()->setParameterBounds( Bounds_Descent_ );
+    bodyMap_.at( vehicleName_ )->getBislipSystems()->setParameterBounds( Bounds_Descent_ );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////          PROPAGATE TRAJECTORY: DESCENT         ////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-   // std::cout << "Starting Descent propagation" << std::endl;
+    // std::cout << "Starting Descent propagation" << std::endl;
 
     //! Propagate trajectory.
     SingleArcDynamicsSimulator< double > descentSimulation(
@@ -778,13 +801,15 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
     //std::cout << "Cleaning up and extracting Time Histories" << std::endl;
     double h_DN_calc = h_DN;
     double h_UP_calc = h_UP;
-    double V_UP_calc = V_UP;
-    double V_DN_calc = V_DN;
+    double upperLimitAirspeed_calc = upperLimitAirspeed;
+    double lowerLimitAirspeed_calc = lowerLimitAirspeed;
     double tof = simulation_settingsValues_[ 1 ];
     double maximum_NormalizedSpecificEnergy = E_hat_max;
-    double maximum_DynamicPressure = constraint_DynamicPressure;
-    double maximum_MechanicalLoad = constraint_MechanicalLoad;
+    double maximumAirspeed = initialAirspeed;
+    //double maximum_DynamicPressure = constraint_DynamicPressure;
+    //double maximum_MechanicalLoad = constraint_MechanicalLoad;
     double finalMass_Descent = 0;
+    double theoreticaldelV = g0 * bodyMap_.at( vehicleName_ )->getBislipSystems()->getSpecificImpulse() * log( bodyMap_.at( vehicleName_ )->getBislipSystems()->getInitialMass() / bodyMap_.at( vehicleName_ )->getVehicleSystems()->getDryMass() );
 
     //! Retrieve results
     //! Maybe this command would allow the use of certain results to guide
@@ -835,7 +860,7 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
 
     //! Declare number of elements in time history.
     long rowsAscent = dependentVariableTimeHistoryMap_Ascent.size();
-    long rowsDescent = dependentVariableTimeHistoryMap_Descent.size();
+    // long rowsDescent = dependentVariableTimeHistoryMap_Descent.size();
     long columns = ( ( ascentSimulation.getDependentVariableHistory( ).begin() )->second ).size();
 
 
@@ -847,9 +872,9 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
     dependentVariableTimeHistoryMatrix = Eigen::MatrixXd::Zero( dependentVariableTimeHistoryMap.size() , columns );
 
     //    for ( std::map< double, Eigen::VectorXd >::iterator it = dependentVariableTimeHistoryMatrix.begin(); it != dependentVariableTimeHistoryMatrix.end(); ++it )
-    for ( long i = 0; i < dependentVariableTimeHistoryMap.size() - 1; i++ )
+    for ( unsigned long i = 1; i < dependentVariableTimeHistoryMap.size(); i++ )
     {
-        dependentVariableTimeHistoryMatrix.row( i ) = dependentVariableTimeHistoryMap.at( simulationStartEpoch + i * fixedStepSize );
+        dependentVariableTimeHistoryMatrix.row( i - 1 ) = dependentVariableTimeHistoryMap.at( simulationStartEpoch + ( i - 1 ) * fixedStepSize );
     }
 
     //std::cout << "Aqui!!!!" << std::endl;
@@ -875,21 +900,19 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
     const double E_hat_f_calc        = dependentVariableTimeHistoryMatrix( dependentVariableTimeHistoryMatrix.rows() - 1, 29 );
     std::ptrdiff_t ind_maximum_height;
     h_UP_calc                    = dependentVariable_Height.maxCoeff( &ind_maximum_height );
-    V_UP_calc                    = dependentVariable_Airspeed( ind_maximum_height );
+    upperLimitAirspeed_calc                    = dependentVariable_Airspeed( ind_maximum_height );
     h_DN_calc                    = dependentVariableTimeHistoryMatrix( dependentVariableTimeHistoryMatrix.rows() - 1, 11 );
-    V_DN_calc                    = dependentVariableTimeHistoryMatrix( dependentVariableTimeHistoryMatrix.rows() - 1, 13 );
+    lowerLimitAirspeed_calc                    = dependentVariableTimeHistoryMatrix( dependentVariableTimeHistoryMatrix.rows() - 1, 13 );
 
     std::ptrdiff_t index_MaximumNormalizedSpecificEnergy;
     maximum_NormalizedSpecificEnergy  = dependentVariable_NormalizedSpecificEnergy.maxCoeff( &index_MaximumNormalizedSpecificEnergy );
+    std::ptrdiff_t index_MaximumAirspeed;
+    maximumAirspeed  = dependentVariable_Airspeed.maxCoeff( &index_MaximumAirspeed );
+    const double actualdelV = maximumAirspeed - initialAirspeed;
     finalMass_Descent = dependentVariableFinalState_Descent[ 27 ];
 
-    std::ptrdiff_t index_MaximumDynamicPressure;
-    maximum_DynamicPressure               = dependentVariable_DynamicPressure.maxCoeff( &index_MaximumDynamicPressure );
-
-
-
-
-
+    //std::ptrdiff_t index_MaximumDynamicPressure;
+    //maximum_DynamicPressure               = dependentVariable_DynamicPressure.maxCoeff( &index_MaximumDynamicPressure );
 
 
     //std::cout << "lat_f_rad_calc: " << lat_f_rad_calc << std::endl;
@@ -909,6 +932,7 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
     //! Calculate angular distance of final state from target coordinates.
     // const double d_rad = bislip::variables::computeAngularDistance( lat_f_rad_calc, lon_f_rad_calc, vehicleSystems->getTargetLat(), vehicleSystems->getTargetLon() );
     const double d_to_go_deg = unit_conversions::convertRadiansToDegrees( dependentVariableFinalState_Descent[ 35 ] );
+    const double d_travelled_deg = unit_conversions::convertRadiansToDegrees( dependentVariableFinalState_Descent[ 34 ] );
     //const double d_deg = unit_conversions::convertRadiansToDegrees( d_rad );
 
     //! Calculate offset of final state from GOAL state: Earth-Fixed Frame
@@ -929,17 +953,17 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
     //! Calculate offset from maximum elevation.
     const double dif_h_UP = h_UP - h_UP_calc;
 
-    const double dif_V_UP = abs( V_UP - V_UP_calc );
+    const double dif_upperLimitAirspeed = abs( upperLimitAirspeed - upperLimitAirspeed_calc );
 
     //! Calculate offset from final elevation.
     const double dif_h_DN = h_DN - h_DN_calc;
-    const double dif_V_DN = abs( V_DN - V_DN_calc );
+    const double dif_lowerLimitAirspeed = abs( lowerLimitAirspeed - lowerLimitAirspeed_calc );
 
 
-   // std::cout << "Penalty: Flight Path - Ascent" << std::endl;
+    // std::cout << "Penalty: Flight Path - Ascent" << std::endl;
     const double penaltyFlightPathAngleAscent = bislip::variables::computePenalty( ( -1.0 ) * dependentVariable_FlightPathAngle, 1, rowsAscent, 0, fixedStepSize, tof, true ) * fixedStepSize / ( 2 * mathematical_constants::PI );
 
-   // std::cout << "Penalty: Flight Path - Descent" << std::endl;
+    // std::cout << "Penalty: Flight Path - Descent" << std::endl;
     const double penaltyFlightPathAngleDescent = bislip::variables::computePenalty( dependentVariable_FlightPathAngle, rowsAscent, dependentVariable_FlightPathAngle.size(), 0, fixedStepSize, tof, true ) * fixedStepSize / ( 2 * mathematical_constants::PI );
 
     //std::cout << "Penalty: Monotonic - Ascent" << std::endl;
@@ -967,8 +991,10 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
     const double penaltyHeatingRateDescent = bislip::variables::computePenalty( dependentVariable_HeatingRate, rowsAscent, dependentVariable_HeatingRate.size(), constraint_HeatingRate, fixedStepSize, tof, false );
 
     //! Calculate offset of final angular distance to termination condition distance.
-    const double costDistanceToGo                                 = 100 * ( d_to_go_deg - terminationConditionsValues_[ 2 ] ) / terminationConditionsValues_[ 2 ] ;
-    //const double costHeatingRate                                  = ( fixedStepSize * dependentVariable_HeatingRate.sum() ) / ( tof * constraint_HeatingRate );
+    const double costDistanceTravelled                            = 10000.0 * ( bodyMap_.at( vehicleName_ )->getBislipSystems()->getInitialDistanceToTarget( ) - dependentVariableFinalState_Descent[ 34 ] ) / ( bodyMap_.at( vehicleName_ )->getBislipSystems()->getInitialDistanceToTarget( ) );
+
+
+    //     = 1000 * ( d_to_go_deg - finalDistanceToTarget_deg) / finalDistanceToTarget_deg ;
 
     //std::cout << "Cost: Heating Rate - Ascent" << std::endl;
     const double costHeatingRateAscent                            = bislip::variables::computePenalty( dependentVariable_HeatingRate, 1, rowsAscent, constraint_HeatingRate, fixedStepSize, tof, true ) * ( fixedStepSize / ( tof * constraint_HeatingRate ) );
@@ -984,30 +1010,30 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
     //const double penaltyLongitudeDifference = abs( targetLon_deg - targetLon_deg_calc );
     const double penaltyCoordinateOffsets                         = std::sqrt( ( dif_lat_deg * dif_lat_deg ) + ( dif_lon_deg * dif_lon_deg ) ) / initialDistanceToTarget_deg;
 
-    const double penaltyFinalNodeMagnitudeAscent                  = 1000 * ( xn_Ascent( xn_Ascent.size() - 1 ) - 1 );
-    const double penaltyInitialNodeMagnitudeDescent               = 1000 * ( xn_Descent( 0 ) - 1 );
-    const double penaltyFinalNodeMagnitudeDescent                 = 1000 * abs( xn_Descent( xn_Descent.size() - 1 ) );
-    const double penaltyMaximumNormalizedSpecificEnergyAscent     = 1000 * abs( E_mapped_Ascent( E_mapped_Ascent.size() - 1 ) - maximum_NormalizedSpecificEnergy );
+    //const double penaltyFinalNodeMagnitudeAscent                  = 1000 * ( xn_Ascent( xn_Ascent.size() - 1 ) - 1 );
+    //const double penaltyInitialNodeMagnitudeDescent               = 1000 * ( xn_Descent( 0 ) - 1 );
+    //const double penaltyFinalNodeMagnitudeDescent                 = 1000 * abs( xn_Descent( xn_Descent.size() - 1 ) );
+    const double penaltyMaximumNormalizedSpecificEnergyAscent     = 1000.0 * abs( E_mapped_Ascent( E_mapped_Ascent.size() - 1 ) - maximum_NormalizedSpecificEnergy );
     const double penaltyMinimumNormalizedSpecificEnergyDescent    = abs( E_hat_f_calc - E_mapped_Descent( E_mapped_Descent.size() - 1 ) );
 
-    const double penaltyFinalMappedNormalizedSpecificEnergyAscent    = 1000 * ( E_mapped_Ascent( E_mapped_Ascent.size() - 1 ) - 1 );
-    const double penaltyInitialMappedNormalizedSpecificEnergyDescent = 1000 * ( E_mapped_Descent( 0 ) - 1 );
-    const double penaltyFinalMappedNormalizedSpecificEnergyDescent   = abs( E_mapped_Descent(  E_mapped_Descent.size() - 1 ) ) - E_mapped_Descent(  E_mapped_Descent.size() - 1 );
-    const double penaltyMappedNormalizedSpecificEnergyInterface      = abs( E_mapped_Descent( 0 ) - E_mapped_Ascent( E_mapped_Ascent.size() - 1 ) );
+    //const double penaltyFinalMappedNormalizedSpecificEnergyAscent    = 1000 * ( E_mapped_Ascent( E_mapped_Ascent.size() - 1 ) - 1 );
+    //const double penaltyInitialMappedNormalizedSpecificEnergyDescent = 1000 * ( E_mapped_Descent( 0 ) - 1 );
+    //const double penaltyFinalMappedNormalizedSpecificEnergyDescent   = abs( E_mapped_Descent(  E_mapped_Descent.size() - 1 ) ) - E_mapped_Descent(  E_mapped_Descent.size() - 1 );
+    //const double penaltyMappedNormalizedSpecificEnergyInterface      = abs( E_mapped_Descent( 0 ) - E_mapped_Ascent( E_mapped_Ascent.size() - 1 ) );
 
-    const double penaltyNoFlight                                  = 10000.0 * ( 1.0 - maximum_NormalizedSpecificEnergy ) * ( 1.0 - maximum_NormalizedSpecificEnergy );
+    const double penaltyNoFlight                                  = 1000.0 * ( 1.0 - maximum_NormalizedSpecificEnergy ) * ( 1.0 - maximum_NormalizedSpecificEnergy );
+    const double penaltydelV                                      = 1000.0 * abs( goaldelV - actualdelV ) / theoreticaldelV;
 
     //! Assign values to Fitness vector! At the moment these are all 'objective
     //! functions'. To modify this I have change the header file and define how
     //! many are elements are objective function, equality contraints, and
     //! inequality constraints. This vector here must contain them is that exact order: nOF, nEC, nIC.
     std::vector< double > delta;
-    delta.push_back( costDistanceToGo + penaltyCoordinateOffsets );
 
-    delta.push_back( penaltyFinalNodeMagnitudeAscent + penaltyInitialNodeMagnitudeDescent + penaltyFinalNodeMagnitudeDescent + penaltyFinalMappedNormalizedSpecificEnergyAscent + penaltyInitialMappedNormalizedSpecificEnergyDescent + penaltyFinalMappedNormalizedSpecificEnergyDescent + penaltyMappedNormalizedSpecificEnergyInterface );
-    
-
+    /*
     delta.push_back( penaltyNoFlight );
+
+    delta.push_back( costDistanceToGo + penaltyCoordinateOffsets );
 
     delta.push_back( costConsumedMassAscent );
     delta.push_back( penaltyMaximumNormalizedSpecificEnergyAscent + penaltyMonotonicAscent );
@@ -1019,8 +1045,26 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
     delta.push_back( costHeatingRateDescent + penaltyHeatingRateDescent );
     delta.push_back( penaltyFlightPathAngleDescent + penaltyDynamicPressureDescent + penaltyMechanicalLoadDescent );
 
+*/
+
+    delta.push_back( penaltyNoFlight + penaltydelV );
+
+    delta.push_back( costDistanceTravelled + penaltyCoordinateOffsets );
+
+    delta.push_back( costConsumedMassAscent +
+                     penaltyMaximumNormalizedSpecificEnergyAscent +
+                     penaltyMonotonicAscent + costHeatingRateAscent +
+                     penaltyHeatingRateAscent + penaltyFlightPathAngleAscent +
+                     penaltyDynamicPressureAscent + penaltyMechanicalLoadAscent );
+
+    delta.push_back( costConsumedMassDescent +
+                     penaltyMinimumNormalizedSpecificEnergyDescent +
+                     penaltyMonotonicDescent + costHeatingRateDescent +
+                     penaltyHeatingRateDescent + penaltyFlightPathAngleDescent +
+                     penaltyDynamicPressureDescent + penaltyMechanicalLoadDescent );
 
 
+    //delta.push_back( penaltyFinalNodeMagnitudeAscent + penaltyInitialNodeMagnitudeDescent + penaltyFinalNodeMagnitudeDescent + penaltyFinalMappedNormalizedSpecificEnergyAscent + penaltyInitialMappedNormalizedSpecificEnergyDescent + penaltyFinalMappedNormalizedSpecificEnergyDescent + penaltyMappedNormalizedSpecificEnergyInterface );
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////        PRINT SIMULATION OUTPUT TO FILE               //////////////////////////////////////////
@@ -1047,13 +1091,15 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
     {
         std::cout  << delta[ i ] << "  |  " ;
     }
-    std::cout  << delta[ delta.size() - 1 ] << std::endl;
+    //std::cout  << delta[ delta.size() - 1 ] << "  ||  " << rowsAscent << "  ||  " << tof << "  ||  " << " Theoretical delV = " << theoreticaldelV << "  ||  " << " Goal delV = " << goaldelV << "  ||  " << " Actual delV = " << actualdelV << std::endl;
+//    std::cout  << delta[ delta.size() - 1 ] << "  ||  " << rowsAscent << "  ||  " << tof <<  std::endl;
+    std::cout  << delta[ delta.size() - 1 ] << "  ||  " << tof <<  std::endl;
 
     /*
     //! Print results to terminal. Used to gauge progress.
     std::cout << std::fixed << std::setprecision(10) <<
-                 std::setw(15) << " V_i = " <<
-                 std::setw(14) << V_i <<
+                 std::setw(15) << " initialAirspeed = " <<
+                 std::setw(14) << initialAirspeed <<
                  std::setw(33) << " costFinalNodeMagnitudeAscent = " <<
                  std::setw(14) << costFinalNodeMagnitudeAscent<<
                  std::setw(40) << " costFinalMappedNormalizedSpecificEnergyAscent = " <<

@@ -39,7 +39,7 @@ lon_f_deg = -77.4558333333;
 %     plot(lon_f_deg,lat_f_deg,'MarkerSize',20)
 %     plot(lon_f_deg*[1 1],90*[-1 1],'k','LineWidth',2)
 %     plot(180*[-1 1],lat_f_deg*[1 1],'k','LineWidth',2)
-%%
+
 th = 0:pi/50:2*pi;
 xunit = .75 * cos(th) + lon_f_deg;
 yunit = .75 * sin(th) + lat_f_deg;
@@ -289,13 +289,14 @@ end
 %
 %     end
 % end
-
-
+%%
+pp = 1;
+'here';
 %% Plot Trajectories on 3D Earth
 
 for p = 1:numel(compilation)
-    
-    figure(p + 200)
+    fig_num = p + 200 + pp;
+    figure(fig_num)
     hold on
     title(strcat('Trajectory on spherical Earth - 1',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
     %set(figure(p + 200),'units','pixels','position',[0,0,1200,600])
@@ -305,18 +306,53 @@ for p = 1:numel(compilation)
     set (gca,'Fontsize',20)
     set(gca,'XTick',[], 'YTick', [])
     
-    axis('off');
     XTickLabel = [];
     YTickLabel = [];
     plotearth('Maptype','bluemarble',...
         'NEOMap',...
-        '/Users/bislip/Cloud Storage/OneDrive/School/TUDelft/Space Flight/Thesis/tudatBundle.git/tudatApplications/Space4ErrBody.git/Space4ErrBody_1/matlab/additionalfunctions/PlotEarth/PlotEarth/BlueMarble.png',...
+        strcat(mainpath,'additionalfunctions/PlotEarth/PlotEarth/BlueMarble.png'),...'/Users/bislip/Cloud Storage/OneDrive/School/TUDelft/Space Flight/Thesis/tudatBundle.git/tudatApplications/Space4ErrBody.git/Space4ErrBody_0/matlab/additionalfunctions/PlotEarth/PlotEarth/BlueMarble.png',...
         'SampleStep',1,'FullColor',true,'Shape','spheroid',...
-        'viewpoint', [44 -5],p + 200,p + 200);
+        'viewpoint', [44 -5],fig_num,fig_num);
+        axis('off');
+
     
     
     
+        for i = 1:numel(compilation(p).evolutions)
+            for k = 1:numel(compilation(p).evolutions(i).trajectories)
+                color_line3(...
+                    compilation(p).evolutions(i).trajectories(k).individual.x_R,...
+                    compilation(p).evolutions(i).trajectories(k).individual.y_R,...
+                    compilation(p).evolutions(i).trajectories(k).individual.z_R,...
+                    compilation(p).evolutions(i).trajectories(k).individual.time_vector);
+%                 scatter3(...
+%                     compilation(p).evolutions(i).trajectories(k).individual.x_R(1),...
+%                     compilation(p).evolutions(i).trajectories(k).individual.y_R(1),...
+%                     compilation(p).evolutions(i).trajectories(k).individual.z_R(1),'filled')
+%                 scatter3(...
+%                     compilation(p).evolutions(i).trajectories(k).individual.x_R(end),...
+%                     compilation(p).evolutions(i).trajectories(k).individual.y_R(end),...
+%                     compilation(p).evolutions(i).trajectories(k).individual.z_R(end),'filled')
+            end
+       end
+    view([44,-5])
+    axis off
+grid off
+    ax = gca;               % get the current axis
+    ax.Clipping = 'off';
+    hold off
+    saveas(figure(fig_num),strcat(mainpath,'/figures/Trajectories_3D_Map_1_Set',convertCharsToStrings(compilation(p).set),'.png'));
     
+end
+pp = pp + 1;
+% %%
+% for p = 1:numel(compilation)
+% 
+% figure(234234)
+% hold on
+% 
+% 
+%     
 %         for i = 1:numel(compilation(p).evolutions)
 %             for k = 1:numel(compilation(p).evolutions(i).trajectories)
 %                 color_line3(...
@@ -334,15 +370,15 @@ for p = 1:numel(compilation)
 %                     compilation(p).evolutions(i).trajectories(k).individual.z_R(end),'filled')
 %             end
 %         end
-    % view([12,-5])
-    ax = gca;               % get the current axis
-    ax.Clipping = 'off';
-    hold off
-    saveas(figure(fig_num),strcat(mainpath,'/figures/Trajectories_3D_Map_1_Set',convertCharsToStrings(compilation(p).set),'.png'));
-    
-end
-%%
-% %
+%         
+%         view(3)
+% 
+% end
+% 
+% 
+% 
+% 
+% % %
 % %
 % %
 % %

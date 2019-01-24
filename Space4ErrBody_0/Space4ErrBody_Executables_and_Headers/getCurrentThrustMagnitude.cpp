@@ -11,6 +11,6 @@ double MyGuidance::getCurrentThrustMagnitude(  )
                     bodyMap_.at( vehicleName_ )->getFlightConditions( ) );
     }
 
-    return bislip::variables::computeThrustMagnitude( FlightConditions_, bodyMap_.at( vehicleName_ )->getVehicleSystems( ) );
+    return bislip::variables::computeThrustMagnitude( FlightConditions_, bodyMap_.at( vehicleName_ )->getBislipSystems( ) );
 }
 } // namespace bislip

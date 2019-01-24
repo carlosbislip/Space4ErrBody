@@ -1,4 +1,4 @@
-#include "getStuff.h"
+//#include "getStuff.h"
 #include "bislipVariables.h"
 
 #include <Tudat/Astrodynamics/Aerodynamics/aerodynamics.h>
@@ -31,7 +31,7 @@ public:
 
     //double getAoAforCmEqualToZero( const double AoA, const double Mach );
 
-    Eigen::Vector6d getCoefficients( const std::vector< double > &coefficient_input );
+    Eigen::Vector6d getCurrentCoefficients( );
 
     Eigen::Vector3d getCurrentBodyFixedThrustDirection( );
 
@@ -39,7 +39,7 @@ public:
 
     double getCurrentSpecificImpulse( )
     {
-        return bodyMap_.at( vehicleName_ )->getVehicleSystems()->getSpecificImpulse();
+        return bodyMap_.at( vehicleName_ )->getBislipSystems()->getSpecificImpulse();
     }
     bool getCurrentEngineStatus( );
 
@@ -57,6 +57,7 @@ public:
     // std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > interpolator_throttle_;
     std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > FlightConditions_;// = std::dynamic_pointer_cast< tudat::aerodynamics::AtmosphericFlightConditions >( bodyMap_.at( vehicleName_ )->getFlightConditions( ) );
     std::shared_ptr< tudat::system_models::VehicleSystems > vehicleSystems_;
+    std::shared_ptr< tudat::system_models::BislipSystems > bislipSystems_;
     std::shared_ptr< tudat::aerodynamics::AerodynamicCoefficientInterface > coefficientInterface_;
 
     //Eigen::Vector3d currentbodyFixedThrustDirection_;

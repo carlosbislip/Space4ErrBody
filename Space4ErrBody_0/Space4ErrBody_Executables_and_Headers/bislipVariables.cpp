@@ -249,7 +249,9 @@ double computeNormalizedSpecificEnergy (
 }
 
 //! https://doi.org/10.1016/j.cam.2017.09.049
-std::vector< double > HermiteDerivatives( const Eigen::VectorXd &mappedNormalizedSpecificEnergy, const Eigen::VectorXd &y )
+std::vector< double > HermiteDerivatives(
+        const Eigen::VectorXd &mappedNormalizedSpecificEnergy,
+        const Eigen::VectorXd &y )
 {
     long nodes = mappedNormalizedSpecificEnergy.size();
     Eigen::VectorXd h( nodes - 1 ), dely( nodes - 1 ), b( nodes ), x( nodes );
@@ -331,7 +333,6 @@ std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, doubl
 
     return interpolator;
 }
-
 
 std::pair < double, double > chooseGuidanceBounds (
         const bislip::variables::OptimizationParameter &parameter,
@@ -521,14 +522,14 @@ double computeEquilibriumGlideLimit (
 
     const double currentLift = q_dyn * surfaceArea * currentCoefficients[ 2 ];
 
-   // Eigen::Vector2d gravs ( 2 );
+    // Eigen::Vector2d gravs ( 2 );
     //gravs = bislip::variables::getGravs( currentAltitude, currentLatitude );
 
     Eigen::Vector2d gravs = bislip::variables::getGravs( currentAltitude, currentLatitude );
 
     return std::acos( ( currentMass / currentLift ) * ( gravs( 1 ) * std::cos ( currentFlightPathAngle) - gravs( 0 ) * std::sin( currentFlightPathAngle) * std::cos( currentHeading ) )
-            - omega * omega * currentAltitude * std::cos( currentLatitude ) * ( std::cos( currentLatitude ) * std::cos( currentFlightPathAngle )  + std::sin( currentFlightPathAngle ) * std::sin( currentLatitude ) * std::cos( currentHeading ) )
-            - ( currentAirspeed * currentAirspeed / currentAltitude ) * std::cos( currentFlightPathAngle ) - 2.0 * currentMass * omega * currentAirspeed * std::cos( currentLatitude ) * std::sin( currentHeading ) );
+                      - omega * omega * currentAltitude * std::cos( currentLatitude ) * ( std::cos( currentLatitude ) * std::cos( currentFlightPathAngle )  + std::sin( currentFlightPathAngle ) * std::sin( currentLatitude ) * std::cos( currentHeading ) )
+                      - ( currentAirspeed * currentAirspeed / currentAltitude ) * std::cos( currentFlightPathAngle ) - 2.0 * currentMass * omega * currentAirspeed * std::cos( currentLatitude ) * std::sin( currentHeading ) );
 }
 
 double getBodyFlapDeflection( const double &del_C_m_b )
@@ -548,13 +549,14 @@ double computeHeatingRate (
     return C * std::pow( airdensity, N ) * std::pow( airspeed, M );
 }
 
-double computeStagnationHeat (const double &airdensity,
-                              const double &airspeed,
-                              const double &C_s,
-                              const double &N,
-                              const double &M,
-                              const double &adiabaticWallTemperature,
-                              const double &WallTemperature)
+double computeStagnationHeat (
+        const double &airdensity,
+        const double &airspeed,
+        const double &C_s,
+        const double &N,
+        const double &M,
+        const double &adiabaticWallTemperature,
+        const double &WallTemperature)
 {
     double C = C_s * ( 1 - ( WallTemperature / adiabaticWallTemperature ) ) ;
     double q_dot_s = computeHeatingRate ( airdensity, airspeed, C, N, M) ;
@@ -589,12 +591,13 @@ double computeStagnationHeatFlux (
     return tudat::aerodynamics::computeEquilibriumHeatflux( heatTransferFunction, wallEmissivity, adiabaticWallTemperature );
 }
 
-double computeFlatPlateHeat (const double &airdensity,
-                             const double &airspeed,
-                             const double &C_FP_1,
-                             const double &C_FP_2,
-                             const double &adiabaticWallTemperature,
-                             const double &WallTemperature)
+double computeFlatPlateHeat (
+        const double &airdensity,
+        const double &airspeed,
+        const double &C_FP_1,
+        const double &C_FP_2,
+        const double &adiabaticWallTemperature,
+        const double &WallTemperature)
 {
     double C;
     double M;
@@ -677,7 +680,10 @@ double computePenalty (
         const Eigen::VectorXd &dependentVariable_TimeHistory,
         const long &startIterator,
         const long &endIterator,
-        const double &constraint, const double &fixedStepSize, const double &tof, const bool &direct )
+        const double &constraint,
+        const double &fixedStepSize,
+        const double &tof,
+        const bool &direct )
 {
     Eigen::VectorXd dependentVariable_Violation( dependentVariable_TimeHistory.size() );
     dependentVariable_Violation = Eigen::VectorXd::Zero( dependentVariable_TimeHistory.size() );

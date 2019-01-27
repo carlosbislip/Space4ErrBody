@@ -1,14 +1,4 @@
-#include "Space4ErrBodyProblem.h"
 #include "StopOrNot.h"
-#include "getStuff.h"
-#include "bislipVariables.h"
-//##include "updateGuidance.h"
-
-#include <Tudat/SimulationSetup/tudatSimulationHeader.h>
-#include <Tudat/Astrodynamics/BasicAstrodynamics/unitConversions.h>
-#include <Tudat/Astrodynamics/Aerodynamics/flightConditions.h>
-#include <Tudat/Astrodynamics/Aerodynamics/aerodynamics.h>
-#include <Tudat/Astrodynamics/Aerodynamics/aerodynamicGuidance.h>
 
 namespace bislip {
 

@@ -1,6 +1,5 @@
 #include "updateGuidance.h"
 
-
 namespace bislip {
 
 bool MyGuidance::getCurrentEngineStatus( )

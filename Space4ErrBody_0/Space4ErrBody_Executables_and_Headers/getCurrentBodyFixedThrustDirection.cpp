@@ -1,6 +1,5 @@
 #include "updateGuidance.h"
 
-
 namespace bislip {
 
 Eigen::Vector3d MyGuidance::getCurrentBodyFixedThrustDirection(  )

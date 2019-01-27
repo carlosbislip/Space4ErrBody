@@ -7,6 +7,10 @@
 #include <Tudat/Astrodynamics/Aerodynamics/aerodynamics.h>
 #include <Tudat/Astrodynamics/Aerodynamics/aerodynamicGuidance.h>
 
+//#include "Space4ErrBodyProblem.h"
+#include <Tudat/Bislip/Variables/bislipVariables.h>
+
+
 namespace bislip {
 
 bool StopOrNot (const tudat::simulation_setup::NamedBodyMap& bodyMap,

@@ -1,9 +1,6 @@
 #include <iostream>
-
 #include <boost/filesystem.hpp>
-
 #include "applicationOutput_pagmo.h"
-
 #include "Tudat/InputOutput/basicInputOutput.h"
 
 void printPopulationToFile( const std::vector< std::vector< double > >& population,

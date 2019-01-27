@@ -1,13 +1,19 @@
-//#include "getStuff.h"
-#include "bislipVariables.h"
+#ifndef UPDATEGUIDANCE_H
+#define UPDATEGUIDANCE_H
 
+#include <Tudat/SimulationSetup/tudatSimulationHeader.h>
 #include <Tudat/Astrodynamics/Aerodynamics/aerodynamics.h>
 #include <Tudat/Astrodynamics/Aerodynamics/flightConditions.h>
 #include <Tudat/Astrodynamics/Aerodynamics/aerodynamicGuidance.h>
-#include <Tudat/SimulationSetup/tudatSimulationHeader.h>
-#include "Tudat/Mathematics/Interpolators/interpolator.h"
-#include "Tudat/Mathematics/Interpolators/oneDimensionalInterpolator.h"
+#include <Tudat/Mathematics/Interpolators/oneDimensionalInterpolator.h>
+#include <Tudat/Astrodynamics/ReferenceFrames/aerodynamicAngleCalculator.h>
 
+//#include <Tudat/Mathematics/Interpolators/interpolator.h>
+//#include <Tudat/Mathematics/BasicMathematics/mathematicalConstants.h>
+//#include <Tudat/Astrodynamics/BasicAstrodynamics/unitConversions.h>
+
+#include <Tudat/Bislip/Variables/bislipVariables.h>
+//#include <Tudat/Bislip/SystemModels/bislipSystems.h>
 
 namespace bislip {
 
@@ -119,3 +125,6 @@ private:
 
 } // namespace aerodynamics
 //} // namespace tudat
+
+
+#endif // UPDATEGUIDANCE_H

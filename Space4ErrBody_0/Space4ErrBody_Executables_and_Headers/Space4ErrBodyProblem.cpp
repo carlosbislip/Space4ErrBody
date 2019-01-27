@@ -33,48 +33,7 @@
  *    Notes
  *
  */
-
-#include <iostream>
-//#include <iomanip>
-#include <fstream>
-#include <cmath>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <string>
-#include <cstring>
-//#include <stdio.h>
-#include <cstdlib>
-#include <vector>
-#include <algorithm>
-#include <iterator>
-//#include <sstream>
-#include <utility>// std::pair, std::get
-#include <boost/filesystem/operations.hpp>
-#include <chrono>
-#include <thread>
-
-#include <Eigen/Core>
-
-#include <Tudat/SimulationSetup/tudatSimulationHeader.h>
-#include <Tudat/Mathematics/RootFinders/secantRootFinder.h>
-#include <Tudat/Mathematics/BasicMathematics/mathematicalConstants.h>
-#include <Tudat/Astrodynamics/BasicAstrodynamics/unitConversions.h>
-#include <Tudat/Astrodynamics/Aerodynamics/aerodynamics.h>
-#include <Tudat/Astrodynamics/Aerodynamics/nrlmsise00Atmosphere.h>
-#include <Tudat/Astrodynamics/Aerodynamics/flightConditions.h>
-#include <Tudat/Astrodynamics/Aerodynamics/aerodynamicGuidance.h>
-#include <Tudat/Mathematics/Interpolators/createInterpolator.h>
-#include <Tudat/Mathematics/Interpolators/interpolator.h>
-#include <Tudat/Mathematics/Interpolators/oneDimensionalInterpolator.h>
-#include <Tudat/Mathematics/Interpolators/cubicSplineInterpolator.h>
-
-//! Mine
 #include "Space4ErrBodyProblem.h"
-#include "applicationOutput_tudat.h"
-#include "getStuff.h"
-#include "updateGuidance.h"
-#include "bislipVariables.h"
-#include "StopOrNot.h"
 
 Space4ErrBodyProblem::Space4ErrBodyProblem(
         const std::vector< std::vector< double > > &bounds,

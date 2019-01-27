@@ -11,21 +11,62 @@
 #ifndef SPACE4ERRBODY_HPP
 #define SPACE4ERRBODY_HPP
 
-#include <utility>
 #include <vector>
 #include <limits>
+#include <iostream>
+#include <fstream>
+#include <cmath>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <string>
+#include <cstring>
+#include <cstdlib>
+#include <vector>
+#include <algorithm>
+#include <iterator>
+#include <utility>// std::pair, std::get
+#include <chrono>
+#include <thread>
 
+#include <Eigen/Core>
+
+#include <boost/format.hpp>
+#include <boost/filesystem/operations.hpp>
 
 #include "pagmo/island.hpp"
 #include "pagmo/io.hpp"
 #include "pagmo/serialization.hpp"
 #include "pagmo/problem.hpp"
 #include "pagmo/types.hpp"
+#include <pagmo/problem.hpp>
+#include <pagmo/io.hpp>
+#include <pagmo/archipelago.hpp>
 
-#include <Tudat/SimulationSetup/EnvironmentSetup/body.h>
+//#include <Tudat/Astrodynamics/BasicAstrodynamics/unitConversions.h>
+#include <Tudat/Astrodynamics/Aerodynamics/aerodynamics.h>
+#include <Tudat/Astrodynamics/Aerodynamics/nrlmsise00Atmosphere.h>
+#include <Tudat/Astrodynamics/Aerodynamics/flightConditions.h>
+#include <Tudat/Astrodynamics/Aerodynamics/aerodynamicGuidance.h>
+//#include <Tudat/External/SpiceInterface/spiceInterface.h>
+//#include <Tudat/InputOutput/basicInputOutput.h>
+//#include <Tudat/Mathematics/Interpolators/createInterpolator.h>
+#include <Tudat/Mathematics/Interpolators/interpolator.h>
+#include <Tudat/Mathematics/Interpolators/oneDimensionalInterpolator.h>
+#include <Tudat/Mathematics/Interpolators/cubicSplineInterpolator.h>
+#include <Tudat/Mathematics/RootFinders/secantRootFinder.h>
+//#include <Tudat/Mathematics/BasicMathematics/mathematicalConstants.h>
+//#include <Tudat/SimulationSetup/EnvironmentSetup/body.h>
 #include <Tudat/SimulationSetup/tudatSimulationHeader.h>
-#include <Tudat/SimulationSetup/PropagationSetup/propagationTerminationSettings.h>
-#include <Tudat/SimulationSetup/PropagationSetup/propagationSettings.h>
+//#include <Tudat/SimulationSetup/PropagationSetup/propagationTerminationSettings.h>
+//#include <Tudat/SimulationSetup/PropagationSetup/propagationSettings.h>
+//#include <Tudat/SimulationSetup/PropagationSetup/propagationOutputSettings.h>
+#include <Tudat/SimulationSetup/EnvironmentSetup/createAerodynamicControlSurfaces.h>
+
+#include "applicationOutput_tudat.h"
+#include "applicationOutput_pagmo.h"
+#include "saveOptimizationResults.h"
+#include "getAlgorithm.h"
+#include "updateGuidance.h"
 
 using namespace pagmo;
 //using namespace pagmo::problem;

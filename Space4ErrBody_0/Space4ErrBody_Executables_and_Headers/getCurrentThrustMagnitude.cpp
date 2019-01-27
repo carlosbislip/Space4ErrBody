@@ -1,6 +1,5 @@
 #include "updateGuidance.h"
 
-
 namespace bislip {
 
 double MyGuidance::getCurrentThrustMagnitude(  )

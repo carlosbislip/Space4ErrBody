@@ -1,27 +1,4 @@
-
-#include <pagmo/problem.hpp>
-#include <pagmo/io.hpp>
-#include <pagmo/archipelago.hpp>
-
 #include "Space4ErrBody_Executables_and_Headers/Space4ErrBodyProblem.h"
-#include "Space4ErrBody_Executables_and_Headers/getAlgorithm.h"
-#include "Space4ErrBody_Executables_and_Headers/applicationOutput_tudat.h"
-#include "Space4ErrBody_Executables_and_Headers/applicationOutput_pagmo.h"
-#include "Space4ErrBody_Executables_and_Headers/saveOptimizationResults.h"
-#include "Space4ErrBody_Executables_and_Headers/getStuff.h"
-#include "Space4ErrBody_Executables_and_Headers/bislipVariables.h"
-//#include "Space4ErrBody_Executables_and_Headers/bislipSystems.h"
-#include "Space4ErrBody_Executables_and_Headers/updateGuidance.h"
-
-//#include "Space4ErrBody_Executables_and_Headers_testing/getConditions.h"
-//#include "Space4ErrBody_Executables_and_Headers_testing/getOptimizationSettings.h"
-#include <boost/format.hpp>
-
-#include <Tudat/External/SpiceInterface/spiceInterface.h>
-#include <Tudat/InputOutput/basicInputOutput.h>
-#include <Tudat/SimulationSetup/tudatSimulationHeader.h>
-#include <Tudat/SimulationSetup/PropagationSetup/propagationOutputSettings.h>
-#include <Tudat/SimulationSetup/EnvironmentSetup/createAerodynamicControlSurfaces.h>
 
 using namespace tudat::ephemerides;
 using namespace tudat::interpolators;
@@ -942,7 +919,7 @@ int main()
     //! Define CUSTOM termination settings.
     // std::shared_ptr< PropagationTerminationSettings > customTermination =
     //         std::make_shared< PropagationCustomTerminationSettings >(
-    //             boost::bind( &bislip::StopOrNot, bodyMap, vehicleName, vehicleParameterValues_, terminationConditionsValues_ ) );
+    //             boost::bind( &bislip::variables::StopOrNot, bodyMap, vehicleName, vehicleParameterValues_, terminationConditionsValues_ ) );
 
     //! Define dependent variable termination settings.
     std::shared_ptr< PropagationTerminationSettings > thrustTerminationSettings =

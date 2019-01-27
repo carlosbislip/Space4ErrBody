@@ -14,23 +14,16 @@ set(SPACE4ERRBODY_HEADERS
     "${CMAKE_CURRENT_SOURCE_DIR}/applicationOutput_tudat.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/applicationOutput_pagmo.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/saveOptimizationResults.h"
-    #"${CMAKE_CURRENT_SOURCE_DIR}/getStuff.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/bislipVariables.h"
-   #"${CMAKE_CURRENT_SOURCE_DIR}/bislipSystems.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/StopOrNot.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/updateGuidance.h"
-    #"${CMAKE_CURRENT_SOURCE_DIR}/updateGuidance_val.h"
     )
 
 set(SPACE4ERRBODY_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/Space4ErrBodyProblem.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/bislipVariables.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/getCurrentCoefficients.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/getCurrentBodyFixedThrustDirection.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/getCurrentThrustMagnitude.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/getCurrentEngineStatus.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/updateGuidance.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/StopOrNot.cpp"
     #"${CMAKE_CURRENT_SOURCE_DIR}/getEps_T.cpp"
     #"${CMAKE_CURRENT_SOURCE_DIR}/getGamma.cpp"
     # "${CMAKE_CURRENT_SOURCE_DIR}/updateGuidance_val.cpp"

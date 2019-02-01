@@ -1,2 +1,4 @@
 /Space4ErrBody_0/matlab/SimulationOutput/
 *.mat
+*.DS_Store
+.gitignore

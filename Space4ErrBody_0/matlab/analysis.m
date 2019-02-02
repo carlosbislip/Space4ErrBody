@@ -81,7 +81,7 @@ end
 % option = 2   Analyze
 % option = 3   Analyze and plot
 
-option = 1;
+option = 3;
 
 
 switch option

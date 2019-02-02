@@ -79,15 +79,27 @@ switch option
             evolutions(k).trajectories.individual.heating_rate      = nan;
             evolutions(k).trajectories.individual.mass              = nan;
             evolutions(k).trajectories.individual.mass_rate         = nan;
-            evolutions(k).trajectories.individual.throttle_setting          = nan;
-            evolutions(k).trajectories.individual.thrust_elevation_angle      = nan;
-            evolutions(k).trajectories.individual.thrust_azimuth_angle      = nan;
+            evolutions(k).trajectories.individual.evaluated_throttle_setting          = nan;
+            evolutions(k).trajectories.individual.evaluated_thrust_elevation_angle      = nan;
+            evolutions(k).trajectories.individual.evaluated_thrust_azimuth_angle      = nan;
+            evolutions(k).trajectories.individual.evaluated_angle_of_attack      = nan;
+            evolutions(k).trajectories.individual.evaluated_bank_angle      = nan;
             evolutions(k).trajectories.individual.engine_status     = nan;
             evolutions(k).trajectories.individual.distance_traveled = nan;
             evolutions(k).trajectories.individual.distance_to_go    = nan;
             evolutions(k).trajectories.individual.heading_to_target = nan;
             evolutions(k).trajectories.individual.heading_error     = nan;
             evolutions(k).trajectories.individual.q_dot_LE          = nan;
+            evolutions(k).trajectories.individual.body_thrust_x          = nan;
+            evolutions(k).trajectories.individual.body_thrust_y          = nan;
+            evolutions(k).trajectories.individual.body_thrust_z          = nan;
+            evolutions(k).trajectories.individual.bending_moment          = nan;
+            evolutions(k).trajectories.individual.local_gravity_1          = nan;
+            evolutions(k).trajectories.individual.local_gravity_2          = nan;
+            evolutions(k).trajectories.individual.eq_glide_limit          = nan;
+            evolutions(k).trajectories.individual.increment_Cm_bodyflap          = nan;
+            
+            
             evolutions(k).trajectories.individual.acc_aero_x        = nan;
             evolutions(k).trajectories.individual.acc_aero_y        = nan;
             evolutions(k).trajectories.individual.acc_aero_z        = nan;

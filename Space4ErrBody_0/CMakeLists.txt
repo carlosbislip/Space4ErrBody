@@ -11,7 +11,7 @@
 cmake_minimum_required(VERSION 2.6)
 
 # Specify project name.
-project(Space4ErrBody_Optimization_testing)
+project( Space4ErrBody )
 
 # Load UserSettings.txt
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
@@ -62,8 +62,8 @@ endif()
 
 # Set the global macros for setting up targets.
 macro(setup_executable_target target_name CUSTOM_OUTPUT_PATH)
-    set_property(TARGET ${target_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${BINROOT}/Space4ErrBody_Executables_and_Headers/executables")
-    install(TARGETS ${target_name} RUNTIME DESTINATION "${BINROOT}/Space4ErrBody_Executables_and_Headers_testing/executables")
+    set_property(TARGET ${target_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${BINROOT}/Space4ErrBody_Headers/executables")
+    install(TARGETS ${target_name} RUNTIME DESTINATION "${BINROOT}/Space4ErrBody_Headers_testing/executables")
 endmacro(setup_executable_target)
 
 macro(setup_library_target target_name CUSTOM_OUTPUT_PATH)
@@ -240,9 +240,9 @@ include(tudatLinkLibraries)
 #    tudat_statistics tudat_propagators ${TUDAT_APPLICATION_EXTERNAL_INTERFACE_LIBRARIES} tudat_basic_astrodynamics
 #    tudat_root_finders tudat_basic_mathematics tudat_input_output tudat_basics ${TUDAT_APPLICATION_EXTERNAL_LIBRARIES})
 
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Space4ErrBody_Executables_and_Headers")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Space4ErrBody_Headers")
 
 add_executable(Space4ErrBody "${SRCROOT}/Space4ErrBody.cpp")
 setup_executable_target(Space4ErrBody "${SRCROOT}")
-target_link_libraries(Space4ErrBody Space4ErrBody_Executables_and_Headers ${TUDAT_PROPAGATION_LIBRARIES}
+target_link_libraries(Space4ErrBody Space4ErrBody_Headers ${TUDAT_PROPAGATION_LIBRARIES}
     pthread ${Boost_LIBRARIES} )

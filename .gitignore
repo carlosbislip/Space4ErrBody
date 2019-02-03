@@ -1,4 +1,7 @@
 /Space4ErrBody_0/matlab/SimulationOutput/
+/Space4ErrBody_0/matlab/figures/
 *.mat
 *.DS_Store
 .gitignore
+*.a
+/Space4ErrBody_0/Space4ErrBody_Headers/executables/Space4ErrBody

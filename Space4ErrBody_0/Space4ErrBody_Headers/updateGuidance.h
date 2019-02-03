@@ -91,6 +91,9 @@ public:
 
     double getBodyflapCmIncrement( );
 
+    double getBodyFlapDeflection( );
+
+    bool getReversal( const double &angularDistanceToGo_deg, const double &abs_chi_err_deg, const double &reversal_conditional );
 
 
 public:

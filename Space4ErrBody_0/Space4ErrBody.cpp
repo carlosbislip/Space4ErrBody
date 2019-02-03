@@ -456,7 +456,6 @@ int main()
     // Define list of files for moment coefficients for control surfaces ( Bodyflap )
     momentCoefficientFiles_CS_B[ 1 ] = aeroCoeffFileList[ 5 ];
 
-
     // Define list of files for force coefficients for control surfaces ( Elevon - Left )
     forceCoefficientFiles_CS_EL[ 0 ] = aeroCoeffFileList[ 6 ];
     forceCoefficientFiles_CS_EL[ 2 ] = aeroCoeffFileList[ 7 ];
@@ -942,6 +941,13 @@ int main()
                     equilibrium_glide_limit,
                     vehicleName,
                     centralBodyName ) );
+    dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    increment_Cm_bodyflap,
+                    vehicleName,
+                    centralBodyName ) );
+
+
 
     //! Create and initialize object with list of dependent variables
     std::shared_ptr< DependentVariableSaveSettings > dependentVariablesToSave =

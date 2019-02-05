@@ -507,6 +507,16 @@ int main()
                     forceCoefficientFiles_CS_B,
                     momentCoefficientFiles_CS_B,
                     controlSurfaceIndependentVariableNames), BODYFLAP );
+
+
+    //! Declare and initialize interpolator settings.
+    std::shared_ptr< interpolators::InterpolatorSettings > interpolatorSettings = std::make_shared< interpolators::InterpolatorSettings >( multi_linear_interpolator );
+
+    //std::cout << "Creating Ascent Interpolators" << std::endl;
+    //! Declare and initialize interpolators for Ascent phase.
+    std::shared_ptr< OneDimensionalInterpolator< double, double > > interpolator_alpha_deg_Ascent, interpolator_sigma_deg_Ascent, interpolator_eps_T_deg_Ascent, interpolator_phi_T_deg_Ascent, interpolator_throttle_Ascent;
+    interpolator_alpha_deg_Ascent = bislip::Variables::createOneDimensionalHermiteInterpolator( alpha_deg_Ascent, E_mapped_Ascent, map_alpha_deg_Ascent, interpolatorSettings );
+
     /*
      aerodynamicCoefficientSettings->setControlSurfaceSettings(
                  readTabulatedControlIncrementAerodynamicCoefficientsFromFiles(

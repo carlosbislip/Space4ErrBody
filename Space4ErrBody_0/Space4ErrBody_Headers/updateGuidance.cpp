@@ -72,10 +72,20 @@ void MyGuidance::updateGuidance( const double currentTime )
                     bislip::Variables::evaluateGuidanceInterpolator( bislip::Parameters::Optimization::BankAngle, bodyMap_, vehicleName_ ) );
 
         //! Update and retrieve current aerodynamic coefficients
-        Eigen::Vector6d currentCoefficients = getCurrentCoefficients( );
+        //Eigen::Vector6d currentCoefficients = getCurrentCoefficients( );
 
-        double maxBankAngle = tudat::unit_conversions::convertDegreesToRadians(
-                    bislip::Variables::computeEquilibriumGlideLimit( bodyMap_, vehicleName_, centralBodyName_ ) );
+
+        //double  bodyFlapDeflection = getBodyFlapDeflection( );
+        // if ( currentFlightPathAngle > 0 ){ bodyFlap = 0; }
+        // if ( currentFlightPathAngle < 0 ){ bodyFlap = 20; }
+
+        //        double bodyFlapDeflection = tudat::unit_conversions::convertDegreesToRadians( bodyFlap );
+
+        vehicleSystems->setCurrentControlSurfaceDeflection( "BodyFlap", getBodyFlapDeflection( ) );
+
+
+        //double maxBankAngle = tudat::unit_conversions::convertDegreesToRadians(
+        //          bislip::Variables::computeEquilibriumGlideLimit( bodyMap_, vehicleName_, centralBodyName_ ) );
 
         //if ( std::isnan( maxBankAngle ) == false ){ if ( bankAngle > maxBankAngle ){ bankAngle = maxBankAngle; } }
 
@@ -114,14 +124,6 @@ void MyGuidance::updateGuidance( const double currentTime )
 
         currentAngleOfAttack_ = angleOfAttack ;
         currentAngleOfSideslip_ = 0;
-
-        double  bodyFlap = getBodyFlapDeflection( );
-        if ( currentFlightPathAngle > 0 ){ bodyFlap = 0; }
-        if ( currentFlightPathAngle < 0 ){ bodyFlap = 20; }
-
-        double bodyFlapDeflection = tudat::unit_conversions::convertDegreesToRadians( bodyFlap );
-
-        vehicleSystems->setCurrentControlSurfaceDeflection( "BodyFlap", bodyFlapDeflection );
 
     }
 

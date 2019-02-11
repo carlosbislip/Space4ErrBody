@@ -68,6 +68,8 @@ void MyGuidance::updateGuidance( const double currentTime )
         double angleOfAttack = tudat::unit_conversions::convertDegreesToRadians(
                     bislip::Variables::evaluateGuidanceInterpolator( bislip::Parameters::Optimization::AngleOfAttack, bodyMap_, vehicleName_ ) );
 
+        currentAngleOfAttack_ = angleOfAttack ;
+
         double bankAngle = tudat::unit_conversions::convertDegreesToRadians(
                     bislip::Variables::evaluateGuidanceInterpolator( bislip::Parameters::Optimization::BankAngle, bodyMap_, vehicleName_ ) );
 
@@ -122,7 +124,6 @@ void MyGuidance::updateGuidance( const double currentTime )
         bool bankReversal = getReversal( angularDistanceToGo_deg, abs_chi_err_deg, reversal_conditional );
         if ( bankReversal == true ) { currentBankAngle_ = -currentBankAngle_; }
 
-        currentAngleOfAttack_ = angleOfAttack ;
         currentAngleOfSideslip_ = 0;
 
     }

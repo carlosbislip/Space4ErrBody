@@ -4,6 +4,7 @@ Bank Angle
 Thrust Elevation Angle
 Thrust Azimuth Angle
 Throttle Setting
+Initial Launch Heading
 Initial Velocity
 Maximum Velocity
 Maximum Height

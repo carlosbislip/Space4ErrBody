@@ -1,25 +1,27 @@
-function [  ] = plotTimeHistories_SpatialAwareness( compilation, mainpath )
+function [  ] = plotTimeHistories_SpatialAwareness( compilation )
 
 %% Time History: Height - per Evolution
 for p = 1:numel(compilation)
     
     for k = 1:numel(compilation(p).evolutions)
+        % for k = numel(compilation(p).evolutions):numel(compilation(p).evolutions)
         fig_num = p*100 + 823000 + k*1;
         figure(fig_num)
         set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
         set (gca,'Fontsize',15)
         title(strcat('Height through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
-        ylim([0 150])
+        ylim([0 180])
         max_tof = max([compilation(p).evolutions.max_tof]);
         xlim([0 max_tof])
         xlabel('Propagation Time (s)') % x-axis label
         ylabel('Height (km)') % y-axis label
-        set(gca,'YTick', 0:10:150);
+        set(gca,'YTick', 0:10:180);
         set(gca,'XTick', 0:200:max_tof);
         hold on
         
+        % for ii = (numel(compilation(p).evolutions(k).trajectories)-10):numel(compilation(p).evolutions(k).trajectories)
         for ii = 1:numel(compilation(p).evolutions(k).trajectories)
-            plot(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
+            stairs(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
                 compilation(p).evolutions(k).trajectories(ii).individual.height/1e3);
         end
         
@@ -28,14 +30,14 @@ for p = 1:numel(compilation)
         saveas(...
             figure(fig_num),...
             strcat(...
-            mainpath,...
+            compilation(p).mainpath,...
             '/figures/height_v_T_Evolution_',...
             num2str(k - 1),...
             '_Set',...
             convertCharsToStrings(compilation(p).set),...
             '.png'),...
             'png');
-        close(fig_num);
+        %    close(fig_num);
     end
 end
 
@@ -44,6 +46,7 @@ end
 for p = 1:numel(compilation)
     
     for k = 1:numel(compilation(p).evolutions)
+        % for k = numel(compilation(p).evolutions):numel(compilation(p).evolutions)
         fig_num = p*100 + 723000 + k*1;
         figure(fig_num)
         set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
@@ -58,7 +61,8 @@ for p = 1:numel(compilation)
         set(gca,'XTick', 0:200:max_tof);
         hold on
         
-        for ii = 1:numel(compilation(p).evolutions(k).trajectories)
+        for ii = (numel(compilation(p).evolutions(k).trajectories)-10):numel(compilation(p).evolutions(k).trajectories)
+            %for ii = 1:numel(compilation(p).evolutions(k).trajectories)
             plot(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
                 compilation(p).evolutions(k).trajectories(ii).individual.distance_traveled);
         end
@@ -68,21 +72,22 @@ for p = 1:numel(compilation)
         saveas(...
             figure(fig_num),...
             strcat(...
-            mainpath,...
+            compilation(p).mainpath,...
             '/figures/distance_traveled_v_T_Evolution_',...
             num2str(k - 1),...
             '_Set',...
             convertCharsToStrings(compilation(p).set),...
             '.png'),...
             'png');
-        close(fig_num);
+        %      close(fig_num);
     end
 end
 
 %% Time History: Distance To Go - per Evolution
 for p = 1:numel(compilation)
     
-    for k = numel(compilation(p).evolutions):numel(compilation(p).evolutions)
+    for k = 1:numel(compilation(p).evolutions)
+        % for k = numel(compilation(p).evolutions):numel(compilation(p).evolutions)
         fig_num = p*100 + 723000 + k*1;
         figure(fig_num)
         set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
@@ -97,8 +102,9 @@ for p = 1:numel(compilation)
         set(gca,'XTick', 0:200:max_tof);
         hold on
         
-        for ii = 1:numel(compilation(p).evolutions(k).trajectories)
-            plot(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
+        for ii = (numel(compilation(p).evolutions(k).trajectories)-10):numel(compilation(p).evolutions(k).trajectories)
+            %for ii = 1:numel(compilation(p).evolutions(k).trajectories)
+            stairs(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
                 compilation(p).evolutions(k).trajectories(ii).individual.distance_to_go);
         end
         
@@ -107,37 +113,84 @@ for p = 1:numel(compilation)
         saveas(...
             figure(fig_num),...
             strcat(...
-            mainpath,...
+            compilation(p).mainpath,...
             '/figures/distance_to_go_v_T_Evolution_',...
             num2str(k - 1),...
             '_Set',...
             convertCharsToStrings(compilation(p).set),...
             '.png'),...
             'png');
-        close(fig_num);
+        %    close(fig_num);
     end
 end
+
+
+
+%% Time History: Heading Angle - per Evolution
+for p = 1:numel(compilation)
+    
+    for k = 1:numel(compilation(p).evolutions)
+        % for k = numel(compilation(p).evolutions):numel(compilation(p).evolutions)
+        fig_num = p*100 + 783000 + k*1;
+        figure(fig_num)
+        set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
+        set (gca,'Fontsize',15)
+        title(strcat('Heading Angle through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+        ylim([0 360])
+        max_tof = max([compilation(p).evolutions.max_tof]);
+        xlim([0 max_tof])
+        xlabel('Propagation Time (s)') % x-axis label
+        ylabel('Heading Angle (deg)') % y-axis label
+        set(gca,'YTick', 0:30:360);
+        set(gca,'XTick', 0:200:max_tof);
+        hold on
+        
+        %  for ii = (numel(compilation(p).evolutions(k).trajectories)-10):numel(compilation(p).evolutions(k).trajectories)
+        for ii = 1:numel(compilation(p).evolutions(k).trajectories)
+            stairs(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
+                compilation(p).evolutions(k).trajectories(ii).individual.heading_angle);
+        end
+        
+        %plot([0 max_tof],(25)*[1 1],'k','LineWidth',2)
+        hold off
+        saveas(...
+            figure(fig_num),...
+            strcat(...
+            compilation(p).mainpath,...
+            '/figures/heading_angle_v_T_Evolution_',...
+            num2str(k - 1),...
+            '_Set',...
+            convertCharsToStrings(compilation(p).set),...
+            '.png'),...
+            'png');
+        %     close(fig_num);
+    end
+end
+
+
 
 %% Time History: Heading to Target - per Evolution
 for p = 1:numel(compilation)
     
     for k = 1:numel(compilation(p).evolutions)
+        % for k = numel(compilation(p).evolutions):numel(compilation(p).evolutions)
         fig_num = p*100 + 723000 + k*1;
         figure(fig_num)
         set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
         set (gca,'Fontsize',15)
         title(strcat('Heading to Target through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
-        ylim([-180 180])
+        ylim([0 360])
         max_tof = max([compilation(p).evolutions.max_tof]);
         xlim([0 max_tof])
         xlabel('Propagation Time (s)') % x-axis label
         ylabel('Heading to Target (deg)') % y-axis label
-        set(gca,'YTick', -180:30:180);
+        set(gca,'YTick', 0:30:360);
         set(gca,'XTick', 0:200:max_tof);
         hold on
         
+        %  for ii = (numel(compilation(p).evolutions(k).trajectories)-10):numel(compilation(p).evolutions(k).trajectories)
         for ii = 1:numel(compilation(p).evolutions(k).trajectories)
-            plot(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
+            stairs(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
                 compilation(p).evolutions(k).trajectories(ii).individual.heading_to_target);
         end
         
@@ -146,14 +199,14 @@ for p = 1:numel(compilation)
         saveas(...
             figure(fig_num),...
             strcat(...
-            mainpath,...
+            compilation(p).mainpath,...
             '/figures/heading_to_target_v_T_Evolution_',...
             num2str(k - 1),...
             '_Set',...
             convertCharsToStrings(compilation(p).set),...
             '.png'),...
             'png');
-        close(fig_num);
+        %     close(fig_num);
     end
 end
 
@@ -163,22 +216,24 @@ end
 for p = 1:numel(compilation)
     
     for k = 1:numel(compilation(p).evolutions)
-        fig_num = p*100 + 723000 + k*1;
+        % for k = numel(compilation(p).evolutions):numel(compilation(p).evolutions)
+        fig_num = p*100 + 734000 + k*1;
         figure(fig_num)
         set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
         set (gca,'Fontsize',15)
         title(strcat('Heading Error through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
-        ylim([-60 60])
+        ylim([-360 360])
         max_tof = max([compilation(p).evolutions.max_tof]);
         xlim([0 max_tof])
         xlabel('Propagation Time (s)') % x-axis label
         ylabel('Heading Error (deg)') % y-axis label
-        set(gca,'YTick', -60:15:60);
+        set(gca,'YTick', -360:30:360);
         set(gca,'XTick', 0:200:max_tof);
         hold on
         
+        %  for ii = (numel(compilation(p).evolutions(k).trajectories)-10):numel(compilation(p).evolutions(k).trajectories)
         for ii = 1:numel(compilation(p).evolutions(k).trajectories)
-            plot(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
+            stairs(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
                 compilation(p).evolutions(k).trajectories(ii).individual.heading_error);
         end
         
@@ -187,14 +242,14 @@ for p = 1:numel(compilation)
         saveas(...
             figure(fig_num),...
             strcat(...
-            mainpath,...
+            compilation(p).mainpath,...
             '/figures/heading_error_v_T_Evolution_',...
             num2str(k - 1),...
             '_Set',...
             convertCharsToStrings(compilation(p).set),...
             '.png'),...
             'png');
-        close(fig_num);
+        %      close(fig_num);
     end
 end
 
@@ -202,7 +257,7 @@ end
 
 % %% Time History: Radial Distance - per Evolution
 % for p = 1:numel(compilation)
-%     
+%
 %     for k = 1:numel(compilation(p).evolutions)
 %         fig_num = p*100 + 6000 + k*1;
 %         figure(fig_num)
@@ -217,18 +272,18 @@ end
 %         set(gca,'YTick', 6.350e3:0.05e3:6.5e3);
 %         set(gca,'XTick', 0:200:max_tof);
 %         hold on
-%         
+%
 %         for ii = 1:numel(compilation(p).evolutions(k).trajectories)
 %             plot(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
 %                 compilation(p).evolutions(k).trajectories(ii).individual.altitude/1e3);
 %         end
-%         
+%
 %         plot([0 max_tof],(6371 + 25)*[1 1],'k','LineWidth',2)
 %         hold off
 %         saveas(...
 %             figure(fig_num),...
 %             strcat(...
-%             mainpath,...
+%     compilation(p).mainpath,...
 %             '/figures/altitude_T_Evolution_',...
 %             num2str(k - 1),...
 %             '_Set',...

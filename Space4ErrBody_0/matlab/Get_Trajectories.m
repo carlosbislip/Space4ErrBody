@@ -1,4 +1,4 @@
-function [ evolutions ] = Get_Trajectories(evolutions,prop_path,depvar_path,interp_Ascent_path,interp_Descent_path,DV_mapped_Ascent_path,DV_mapped_Descent_path,v_i,gamma_i,pop_i,lon_i_rad,lat_f_deg,lon_f_deg,startEpoch)
+function [ evolutions ] = Get_Trajectories(evolutions,prop_path,depvar_path,interp_Ascent_path,interp_Descent_path,DV_mapped_Ascent_path,DV_mapped_Descent_path,headingErrorDeadbandBounds_path,v_i,gamma_i,pop_i,lon_i_rad,lat_f_deg,lon_f_deg,startEpoch)
 %UNTITLED7 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -27,6 +27,8 @@ for k = 1:(numel(pop_i) + 1)
     interp_Descent_source    = interp_Descent_path(start(k):finish(k),:);
     DV_mapped_Ascent_source  = DV_mapped_Ascent_path(start(k):finish(k),:);
     DV_mapped_Descent_source = DV_mapped_Descent_path(start(k):finish(k),:);
+    headingErrorDeadbandBounds_source = headingErrorDeadbandBounds_path(start(k):finish(k),:);
+    
     for p = 1:population
         
         % Open this file and read in the contents
@@ -49,9 +51,14 @@ for k = 1:(numel(pop_i) + 1)
         DV_mapped_Ascent = dlmread(DV_mapped_Ascent_source{p,:},',');
         fclose(fid);
         
-                fid = fopen(DV_mapped_Descent_source{p,:});
+        fid = fopen(DV_mapped_Descent_source{p,:});
         DV_mapped_Descent = dlmread(DV_mapped_Descent_source{p,:},',');
         fclose(fid);
+        
+        fid = fopen(headingErrorDeadbandBounds_source{p,:});
+        headingErrorDeadbandBounds = dlmread(headingErrorDeadbandBounds_source{p,:},',');
+        fclose(fid);
+        
         
         % analyzed_simulations(k).tof = data(1,1) - data(end,1);
         %data = [2458419.95833333, -1730261.1974541, 3489942.65996152, 5041452.57112492, 1817.13843876246, 7053.76703722487, 474.632964784125]
@@ -184,9 +191,7 @@ for k = 1:(numel(pop_i) + 1)
         evolutions(k).trajectories(p).individual.altitude              = depvar(:,5);
         evolutions(k).trajectories(p).individual.latitude_angle        = rad2deg(depvar(:,6));
         evolutions(k).trajectories(p).individual.longitude_angle       = rad2deg(depvar(:,7));
-        %    evolutions(k).trajectories(pp).individual.latitude_angle  = rad2deg(depvar(:,8));
-        %    evolutions(k).trajectories(pp).individual.longitude_angle = rad2deg(depvar(:,9));
-        evolutions(k).trajectories(p).individual.heading_angle         = rad2deg(depvar(:,8));
+        evolutions(k).trajectories(p).individual.heading_angle         = rad2deg(convertNegativeAnglesToPositive(depvar(:,8)));
         evolutions(k).trajectories(p).individual.flight_path_angle     = rad2deg(depvar(:,9));
         evolutions(k).trajectories(p).individual.angle_of_attack       = rad2deg(depvar(:,10));
         evolutions(k).trajectories(p).individual.angle_of_sideslip     = rad2deg(depvar(:,11));
@@ -221,24 +226,41 @@ for k = 1:(numel(pop_i) + 1)
         evolutions(k).trajectories(p).individual.evaluated_thrust_elevation_angle = depvar(:,33);
         evolutions(k).trajectories(p).individual.evaluated_thrust_azimuth_angle = depvar(:,34);
         evolutions(k).trajectories(p).individual.evaluated_angle_of_attack  = depvar(:,35);
-        evolutions(k).trajectories(p).individual.evaluated_bank_angle    = depvar(:,36);
-        evolutions(k).trajectories(p).individual.engine_status           = depvar(:,37);
-        evolutions(k).trajectories(p).individual.distance_traveled       = rad2deg(depvar(:,38));
-        evolutions(k).trajectories(p).individual.distance_to_go          = rad2deg(depvar(:,39));
-        evolutions(k).trajectories(p).individual.heading_to_target       = rad2deg(depvar(:,40));
-        evolutions(k).trajectories(p).individual.heading_error           = rad2deg(depvar(:,41));
-        evolutions(k).trajectories(p).individual.q_dot_LE                = depvar(:,42);
-        evolutions(k).trajectories(p).individual.body_thrust_x           = depvar(:,43);
-        evolutions(k).trajectories(p).individual.body_thrust_y           = depvar(:,44);
-        evolutions(k).trajectories(p).individual.body_thrust_z           = depvar(:,45);
-        evolutions(k).trajectories(p).individual.bending_moment          = depvar(:,46);
-        evolutions(k).trajectories(p).individual.local_gravity_1         = depvar(:,47);
-        evolutions(k).trajectories(p).individual.local_gravity_2         = depvar(:,48);
-        evolutions(k).trajectories(p).individual.eq_glide_limit          = depvar(:,49);
-        evolutions(k).trajectories(p).individual.increment_Cm_bodyflap   = depvar(:,50);
-%        evolutions(k).trajectories(p).individual.bodyflap_deflection     = depvar(:,51);
-        
-        
+        evolutions(k).trajectories(p).individual.evaluated_bank_angle      = depvar(:,36);
+        evolutions(k).trajectories(p).individual.engine_status             = depvar(:,37);
+        evolutions(k).trajectories(p).individual.distance_traveled         = rad2deg(depvar(:,38));
+        evolutions(k).trajectories(p).individual.distance_to_go            = rad2deg(depvar(:,39));
+        evolutions(k).trajectories(p).individual.heading_to_target         = rad2deg(depvar(:,40));
+        evolutions(k).trajectories(p).individual.heading_error             = rad2deg(depvar(:,41));
+        evolutions(k).trajectories(p).individual.q_dot_LE                  = depvar(:,42);
+        evolutions(k).trajectories(p).individual.body_fixed_thrust_load_x             = depvar(:,43);
+        evolutions(k).trajectories(p).individual.body_fixed_thrust_load_y             = depvar(:,44);
+        evolutions(k).trajectories(p).individual.body_fixed_thrust_load_z             = depvar(:,45);
+        evolutions(k).trajectories(p).individual.bending_moment            = depvar(:,46);
+        evolutions(k).trajectories(p).individual.local_gravity_1           = depvar(:,47);
+        evolutions(k).trajectories(p).individual.local_gravity_2           = depvar(:,48);
+        evolutions(k).trajectories(p).individual.skip_suppression_limit    = depvar(:,49);
+        evolutions(k).trajectories(p).individual.bodyflap_deflection       = rad2deg(depvar(:,50));
+        evolutions(k).trajectories(p).individual.increment_Cm_bodyflap     = depvar(:,51);
+        evolutions(k).trajectories(p).individual.increment_Cm_bodyflap_dif = depvar(:,52);
+        evolutions(k).trajectories(p).individual.body_fixed_total_load_x               = depvar(:,53);
+        evolutions(k).trajectories(p).individual.body_fixed_total_load_y               = depvar(:,54);
+        evolutions(k).trajectories(p).individual.body_fixed_total_load_z               = depvar(:,55);
+        evolutions(k).trajectories(p).individual.body_fixed_total_g_load_x             = depvar(:,56);
+        evolutions(k).trajectories(p).individual.body_fixed_total_g_load_y             = depvar(:,57);
+        evolutions(k).trajectories(p).individual.body_fixed_total_g_load_z             = depvar(:,58);
+        evolutions(k).trajectories(p).individual.body_fixed_total_g_load_mag           = depvar(:,59);
+        evolutions(k).trajectories(p).individual.body_fixed_aero_load_x           = depvar(:,60);
+        evolutions(k).trajectories(p).individual.body_fixed_aero_load_y           = depvar(:,61);
+        evolutions(k).trajectories(p).individual.body_fixed_aero_load_z           = depvar(:,62);
+        evolutions(k).trajectories(p).individual.aero_force_coefficient_C_D           = depvar(:,63);
+        evolutions(k).trajectories(p).individual.aero_force_coefficient_C_S           = depvar(:,64);
+        evolutions(k).trajectories(p).individual.aero_force_coefficient_C_L           = depvar(:,65);
+        evolutions(k).trajectories(p).individual.aero_moment_coefficient_C_l          = depvar(:,66);
+        evolutions(k).trajectories(p).individual.aero_moment_coefficient_C_m          = depvar(:,67);
+        evolutions(k).trajectories(p).individual.aero_moment_coefficient_C_n          = depvar(:,68);
+                evolutions(k).trajectories(p).individual.bank_angle_reversal_trigger          = depvar(:,69);
+
         evolutions(k).trajectories(p).individual.interp_E_mapped_Ascent               = interp_Ascent(:,1);
         evolutions(k).trajectories(p).individual.interp_angle_of_attack_Ascent        = interp_Ascent(:,2);
         evolutions(k).trajectories(p).individual.interp_bank_angle_Ascent             = interp_Ascent(:,3);
@@ -261,7 +283,6 @@ for k = 1:(numel(pop_i) + 1)
         evolutions(k).trajectories(p).individual.DV_throttle_setting_Ascent       = DV_mapped_Ascent(:,6);
         evolutions(k).trajectories(p).individual.DV_node_location_Ascent          = DV_mapped_Ascent(:,7);
 
-        
         evolutions(k).trajectories(p).individual.DV_E_mapped_Descent               = DV_mapped_Descent(:,1);
         evolutions(k).trajectories(p).individual.DV_angle_of_attack_Descent        = DV_mapped_Descent(:,2);
         evolutions(k).trajectories(p).individual.DV_bank_angle_Descent             = DV_mapped_Descent(:,3);
@@ -270,6 +291,11 @@ for k = 1:(numel(pop_i) + 1)
         evolutions(k).trajectories(p).individual.DV_throttle_setting_Descent       = DV_mapped_Descent(:,6);
         evolutions(k).trajectories(p).individual.DV_node_location_Descent          = DV_mapped_Descent(:,7);
         
+        
+        evolutions(k).trajectories(p).individual.headingErrorDeadBand_distance    = headingErrorDeadbandBounds(:,1);
+        evolutions(k).trajectories(p).individual.headingErrorDeadBand_LB          = headingErrorDeadbandBounds(:,3);
+        evolutions(k).trajectories(p).individual.headingErrorDeadBand_UP          = headingErrorDeadbandBounds(:,2);
+
         
         
         lat_c_rad = depvar(:,6); lon_c_rad = depvar(:,7);

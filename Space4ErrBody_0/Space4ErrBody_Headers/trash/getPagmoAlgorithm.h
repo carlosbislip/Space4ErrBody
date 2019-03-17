@@ -1,6 +1,3 @@
-#ifndef GETPAGMOALGO_H
-#define GETPAGMOALGO_H
-
 #include <iostream>
 
 /*
@@ -18,11 +15,9 @@
 #include "pagmo/algorithms/ihs.hpp"
 #include "pagmo/algorithms/xnes.hpp"
 */
-//#include "pagmo/algorithms/nsga2.hpp"
-//#include "pagmo/algorithms/moead.hpp"
-//#include "pagmo/algorithms/ihs.hpp"
-
-#include <pagmo/pagmo.hpp>
+#include "pagmo/algorithms/nsga2.hpp"
+#include "pagmo/algorithms/moead.hpp"
+#include "pagmo/algorithms/ihs.hpp"
 
 pagmo::algorithm getPagmoAlgorithm( const int index )
 {
@@ -55,4 +50,3 @@ pagmo::algorithm getPagmoAlgorithm( const int index )
     return algo;
 }
 
-#endif // GETPAGMOALGO_H

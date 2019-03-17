@@ -1,4 +1,4 @@
-function [prop_Output_files,n_prop_Output_files,depvar_Output_files,n_depvar_Output_files,interp_Ascent_Output_files,interp_Descent_Output_files,DV_mapped_Ascent_Output_files, DV_mapped_Descent_Output_files,pop_files,npop_files,fit_files,nfit_files] = Read_Folder_Content(p,prop_File_Path_List_prefix,depvar_File_Path_List_prefix,interp_Ascent_File_Path_List_prefix,interp_Decent_File_Path_List_prefix,DV_mapped_Ascent_File_Path_List_prefix,DV_mapped_Descent_File_Path_List_prefix,pop_file_path_prefix,fit_file_path_prefix)
+function [prop_Output_files,n_prop_Output_files,depvar_Output_files,n_depvar_Output_files,interp_Ascent_Output_files,interp_Descent_Output_files,DV_mapped_Ascent_Output_files, DV_mapped_Descent_Output_files,headingErrorDeadbandBounds_Output_files,pop_files,npop_files,fit_files,nfit_files] = Read_Folder_Content(p,prop_File_Path_List_prefix,depvar_File_Path_List_prefix,interp_Ascent_File_Path_List_prefix,interp_Decent_File_Path_List_prefix,DV_mapped_Ascent_File_Path_List_prefix,DV_mapped_Descent_File_Path_List_prefix,headingErrorDeadbandBounds_File_Path_List_prefix,pop_file_path_prefix,fit_file_path_prefix)
 %UNTITLED6 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -14,6 +14,10 @@ interp_Descent_Output_files = dir(interp_Decent_File_Path_List_prefix{p});
 
 DV_mapped_Ascent_Output_files = dir(DV_mapped_Ascent_File_Path_List_prefix{p});
 DV_mapped_Descent_Output_files = dir(DV_mapped_Descent_File_Path_List_prefix{p});
+
+
+headingErrorDeadbandBounds_Output_files = DV_mapped_Descent_Output_files;
+headingErrorDeadbandBounds_Output_files(1).name = 'headingErrorDeadbandBounds';
 
 
 pop_files = dir(pop_file_path_prefix{p});

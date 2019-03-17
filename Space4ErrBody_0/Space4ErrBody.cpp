@@ -1,6 +1,7 @@
 #include "Space4ErrBody_Headers/Space4ErrBodyProblem.h"
+
 #include "Space4ErrBody_Headers/getPagmoAlgorithm.h"
-#include "Space4ErrBody_Headers/saveOptimizationResults.h"
+//#include "Space4ErrBody_Headers/saveOptimizationResults.h"
 
 using namespace tudat::ephemerides;
 using namespace tudat::interpolators;
@@ -15,13 +16,14 @@ using namespace tudat::basic_mathematics;
 using namespace tudat::input_output;
 using namespace tudat::unit_conversions;
 using namespace tudat;
-using namespace tudat_applications;
+//using namespace tudat_applications;
 using namespace pagmo;
 using namespace bislip;
 using namespace bislip::Variables;
 using namespace bislip::Parameters;
+using namespace bislip::Utilities;
 using namespace boost;
-using namespace tudat_pagmo_applications;
+//using namespace tudat_pagmo_applications;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////            Main Program                  //////////////////////////////////////////////////////
@@ -52,8 +54,10 @@ int main()
     const std::vector< double > initialConditionsValues        = bislip::Variables::getDataNumeri ( primary[ 14 ] );
     const std::vector< std::string > terminationConditionsList = bislip::Variables::getDataString ( primary[ 15 ] );
     const std::vector< double > terminationConditionsValues    = bislip::Variables::getDataNumeri ( primary[ 16 ] );
+    const std::vector< double > headingErrorDeadBand           = bislip::Variables::getDataNumeri ( primary[ 17 ] );
     const std::string problem_name                             = primary.rbegin()[ 1 ];
     const std::string vehicleName                              = primary.rbegin()[ 0 ];
+
 
     //! Set seed for reproducible results.
     pagmo::random_device::set_seed( int( optimization_settingsValues[ 4 ] ) );
@@ -71,18 +75,21 @@ int main()
     //! previously created partial suffix, and the run's time stamp.
     const std::string outputSubFolder = "OUTPUT_" + this_run_settings + "_" + play_time + "/";
 
+
+    const std::string outputPath = bislip::Variables::getOutputPath( );
+
     //! Determine number of Ascent parameters to vary based of size of parameterBounds_Ascent vector.
-    const unsigned long nodesAscent = simulation_settingsValues[ 3 ];
-    const int N = ( parameterList_Ascent.size() - 4 ) * nodesAscent - 1;
+    const unsigned long nodesAscent = simulation_settingsValues.rbegin()[ 1 ];
+    const int N = ( parameterList_Ascent.size() - 5 ) * nodesAscent - 1;
     const int M = parameterBounds_Ascent.size();
 
     //! Determine number of Descent parameters to vary based of size of parameterBounds_Descent vector.
-    const unsigned long nodesDescent = simulation_settingsValues[ 4 ];
+    const unsigned long nodesDescent = simulation_settingsValues.rbegin()[ 0 ];
     const int NN = ( parameterList_Descent.size() - 1 ) * nodesDescent - 1;
     const int MM = parameterBounds_Descent.size();
 
     //! Create vector containing decision vector bounds.
-    std::vector< std::vector< double > > bounds( 2, std::vector< double >( N + 4 + NN + 1, 0.0 ) );
+    std::vector< std::vector< double > > bounds( 2, std::vector< double >( N + 5 + NN + 1, 0.0 ) );
     //!---------------------------------------   ^ for lb/up  (rows)       ^ for # of parameters
 
     //! Loop to build the bounds matrix.
@@ -104,27 +111,30 @@ int main()
         std::cout << "bounds[ 0 ][ " << i << " ] = " << parameterBounds_Ascent[ p ] << std::endl;
         std::cout << "bounds[ 1 ][ " << i << " ] = " << parameterBounds_Ascent[ p + 1 ] << std::endl;
 
-
     }
 
-    bounds[ 0 ][ N ] = parameterBounds_Ascent[ M - 8 ];
-    bounds[ 1 ][ N ] = parameterBounds_Ascent[ M - 7 ];
-    bounds[ 0 ][ N + 1 ] = parameterBounds_Ascent[ M - 6 ];
-    bounds[ 1 ][ N + 1 ] = parameterBounds_Ascent[ M - 5 ];
-    bounds[ 0 ][ N + 2 ] = parameterBounds_Ascent[ M - 4 ];
-    bounds[ 1 ][ N + 2 ] = parameterBounds_Ascent[ M - 3 ];
-    bounds[ 0 ][ N + 3 ] = parameterBounds_Ascent[ M - 2 ];
-    bounds[ 1 ][ N + 3 ] = parameterBounds_Ascent[ M - 1 ];
+    bounds[ 0 ][ N ] = parameterBounds_Ascent[ M - 10 ];
+    bounds[ 1 ][ N ] = parameterBounds_Ascent[ M - 9 ];
+    bounds[ 0 ][ N + 1 ] = parameterBounds_Ascent[ M - 8 ];
+    bounds[ 1 ][ N + 1 ] = parameterBounds_Ascent[ M - 7 ];
+    bounds[ 0 ][ N + 2 ] = parameterBounds_Ascent[ M - 6 ];
+    bounds[ 1 ][ N + 2 ] = parameterBounds_Ascent[ M - 5 ];
+    bounds[ 0 ][ N + 3 ] = parameterBounds_Ascent[ M - 4 ];
+    bounds[ 1 ][ N + 3 ] = parameterBounds_Ascent[ M - 3 ];
+    bounds[ 0 ][ N + 4 ] = parameterBounds_Ascent[ M - 2 ];
+    bounds[ 1 ][ N + 4 ] = parameterBounds_Ascent[ M - 1 ];
 
 
-    std::cout << "bounds[ 0 ][ " << N << " ] = " << parameterBounds_Ascent[ M - 8 ] << std::endl;
-    std::cout << "bounds[ 1 ][ " << N << " ] = " << parameterBounds_Ascent[ M - 7 ] << std::endl;
-    std::cout << "bounds[ 0 ][ " << N + 1 << " ] = " << parameterBounds_Ascent[ M - 6 ] << std::endl;
-    std::cout << "bounds[ 1 ][ " << N + 1 << " ] = " << parameterBounds_Ascent[ M - 5 ] << std::endl;
-    std::cout << "bounds[ 0 ][ " << N + 2 << " ] = " << parameterBounds_Ascent[ M - 4 ] << std::endl;
-    std::cout << "bounds[ 1 ][ " << N + 2 << " ] = " << parameterBounds_Ascent[ M - 3 ] << std::endl;
-    std::cout << "bounds[ 0 ][ " << N + 3 << " ] = " << parameterBounds_Ascent[ M - 2 ] << std::endl;
-    std::cout << "bounds[ 1 ][ " << N + 3 << " ] = " << parameterBounds_Ascent[ M - 1 ] << std::endl;
+    std::cout << "bounds[ 0 ][ " << N << " ] = " << parameterBounds_Ascent[ M - 10 ] << std::endl;
+    std::cout << "bounds[ 1 ][ " << N << " ] = " << parameterBounds_Ascent[ M - 9 ] << std::endl;
+    std::cout << "bounds[ 0 ][ " << N + 1 << " ] = " << parameterBounds_Ascent[ M - 8 ] << std::endl;
+    std::cout << "bounds[ 1 ][ " << N + 1 << " ] = " << parameterBounds_Ascent[ M - 7 ] << std::endl;
+    std::cout << "bounds[ 0 ][ " << N + 2 << " ] = " << parameterBounds_Ascent[ M - 6 ] << std::endl;
+    std::cout << "bounds[ 1 ][ " << N + 2 << " ] = " << parameterBounds_Ascent[ M - 5 ] << std::endl;
+    std::cout << "bounds[ 0 ][ " << N + 3 << " ] = " << parameterBounds_Ascent[ M - 4 ] << std::endl;
+    std::cout << "bounds[ 1 ][ " << N + 3 << " ] = " << parameterBounds_Ascent[ M - 3 ] << std::endl;
+    std::cout << "bounds[ 0 ][ " << N + 4 << " ] = " << parameterBounds_Ascent[ M - 2 ] << std::endl;
+    std::cout << "bounds[ 1 ][ " << N + 4 << " ] = " << parameterBounds_Ascent[ M - 1 ] << std::endl;
 
 
     for( int i = 0; i < NN ; i++ )
@@ -138,16 +148,16 @@ int main()
             p += 2;
         }
 
-        bounds[ 0 ][ ( N + 4 ) + i ] = parameterBounds_Descent[ p ];
-        bounds[ 1 ][ ( N + 4 ) + i ] = parameterBounds_Descent[ p + 1 ];
-        std::cout << "bounds[ 0 ][ " << ( N + 4 ) + i << " ] = " << parameterBounds_Descent[ p ] << std::endl;
-        std::cout << "bounds[ 1 ][ " << ( N + 4 ) + i << " ] = " << parameterBounds_Descent[ p + 1 ] << std::endl;
+        bounds[ 0 ][ ( N + 5 ) + i ] = parameterBounds_Descent[ p ];
+        bounds[ 1 ][ ( N + 5 ) + i ] = parameterBounds_Descent[ p + 1 ];
+        std::cout << "bounds[ 0 ][ " << ( N + 5 ) + i << " ] = " << parameterBounds_Descent[ p ] << std::endl;
+        std::cout << "bounds[ 1 ][ " << ( N + 5 ) + i << " ] = " << parameterBounds_Descent[ p + 1 ] << std::endl;
     }
 
-    bounds[ 0 ][ N + NN + 4 ] = parameterBounds_Descent[ MM - 2 ];
-    bounds[ 1 ][ N + NN + 4 ] = parameterBounds_Descent[ MM - 1 ];
-    std::cout << "bounds[ 0 ][ " << ( N + 4 ) + NN << " ] = " << parameterBounds_Descent[ MM - 2 ] << std::endl;
-    std::cout << "bounds[ 1 ][ " << ( N + 4 ) + NN << " ] = " << parameterBounds_Descent[ MM - 1 ] << std::endl;
+    bounds[ 0 ][ ( N + 5 ) + NN ] = parameterBounds_Descent[ MM - 2 ];
+    bounds[ 1 ][ ( N + 5 ) + NN ] = parameterBounds_Descent[ MM - 1 ];
+    std::cout << "bounds[ 0 ][ " << ( N + 5 ) + NN << " ] = " << parameterBounds_Descent[ MM - 2 ] << std::endl;
+    std::cout << "bounds[ 1 ][ " << ( N + 5 ) + NN << " ] = " << parameterBounds_Descent[ MM - 1 ] << std::endl;
 
     std::cout << "N = " << N << std::endl;
     std::cout << "M = " << M << std::endl;
@@ -173,6 +183,10 @@ int main()
 
     //! Declare and initialize numerical integration fixed step size.
     const double fixedStepSize = simulation_settingsValues[ 2 ];
+
+    //! Declare and initialize propagation to guidance sampling ratio.
+    const double samplingRatio = simulation_settingsValues[ 3 ];
+
 
     //! Declare and initialize number of control nodes.
     //const unsigned long nodesAscent = simulation_settingsValues[ 3 ];
@@ -235,6 +249,7 @@ int main()
     const double constraint_MechanicalLoad = terminationConditionsValues[ 6 ];
     const double constraint_HeatingRate = terminationConditionsValues[ 7 ];
     const double constraint_DynamicPressure = terminationConditionsValues[ 8 ];
+    const double constraint_PitchMomentCoefficient = terminationConditionsValues[ 9 ];
 
     //! Still working on these
     const double R_N = 3.0;
@@ -321,8 +336,8 @@ int main()
     //! Declare and initialize simulation body settings data map.
     std::map< std::string, std::shared_ptr< BodySettings > > bodySettings =
             getDefaultBodySettings( { centralBodyName },
-                                    simulationStartEpoch - 10.0 * fixedStepSize,
-                                    simulationEndEpoch + 10.0 * fixedStepSize );
+                                    simulationStartEpoch - 1000.0 * fixedStepSize,
+                                    simulationEndEpoch + 1000.0 * fixedStepSize );
 
     //  std::cout << "Define atmospheric model." << std::endl;
     //! Define atmospheric model.
@@ -344,9 +359,9 @@ int main()
     //! Define Earth's radius. Using spice here. Is there a way to get a 'radius
     //! field'? Im interested in includig Earth's flattening, yet am unsure how
     //! to properly do it.
-    const double radius_Earth = spice_interface::getAverageRadius( centralBodyName );
-    double radius_Earth_i = radius_Earth;
-    double radius_Earth_UP = radius_Earth;
+    const double radiusEarth = spice_interface::getAverageRadius( centralBodyName );
+    double radiusEarth_i = radiusEarth;
+    double radiusEarth_UP = radiusEarth;
 
     //!---------------------------- Still playing around with this section
 
@@ -355,7 +370,7 @@ int main()
     double flattening_Earth = 1 / 1;//nput_data_.back();
     if ( flattening_Earth != 1 )
     {
-        bodySettings[ centralBodyName ]->shapeModelSettings = std::make_shared< OblateSphericalBodyShapeSettings >( radius_Earth, flattening_Earth );
+        bodySettings[ centralBodyName ]->shapeModelSettings = std::make_shared< OblateSphericalBodyShapeSettings >( radiusEarth, flattening_Earth );
 
         // Declare variable in which raw result is to be put by Spice function.
         double radii[ 3 ];
@@ -377,14 +392,14 @@ int main()
         const double polar_angle_i_rad = polar_angle_i_deg * mathematical_constants::PI / 180;
         const double polar_angle_f_rad = polar_angle_f_deg * mathematical_constants::PI / 180;
 
-        const double radius_Earth_i_x = radii[ 0 ] * std::cos(polar_angle_i_rad) * std::cos(lon_i_rad);
-        const double radius_Earth_i_y = radii[ 1 ] * std::cos(polar_angle_i_rad) * std::sin(lon_i_rad);
-        const double radius_Earth_i_z = radii[ 2 ] * std::sin(polar_angle_i_rad);
-        radius_Earth_i = std::sqrt(pow(radius_Earth_i_x,2) + pow(radius_Earth_i_y,2) + pow(radius_Earth_i_z,2));
-        const double radius_Earth_UP_x = radii[ 0 ] * std::cos(polar_angle_f_rad) * std::cos(lon_f_rad);
-        const double radius_Earth_UP_y = radii[ 1 ] * std::cos(polar_angle_f_rad) * std::sin(lon_f_rad);
-        const double radius_Earth_UP_z = radii[ 2 ] * std::sin(polar_angle_f_rad);
-        radius_Earth_UP = std::sqrt(pow(radius_Earth_UP_x,2) + pow(radius_Earth_UP_y,2) + pow(radius_Earth_UP_z,2));
+        const double radiusEarth_i_x = radii[ 0 ] * std::cos(polar_angle_i_rad) * std::cos(lon_i_rad);
+        const double radiusEarth_i_y = radii[ 1 ] * std::cos(polar_angle_i_rad) * std::sin(lon_i_rad);
+        const double radiusEarth_i_z = radii[ 2 ] * std::sin(polar_angle_i_rad);
+        radiusEarth_i = std::sqrt(pow(radiusEarth_i_x,2) + pow(radiusEarth_i_y,2) + pow(radiusEarth_i_z,2));
+        const double radiusEarth_UP_x = radii[ 0 ] * std::cos(polar_angle_f_rad) * std::cos(lon_f_rad);
+        const double radiusEarth_UP_y = radii[ 1 ] * std::cos(polar_angle_f_rad) * std::sin(lon_f_rad);
+        const double radiusEarth_UP_z = radii[ 2 ] * std::sin(polar_angle_f_rad);
+        radiusEarth_UP = std::sqrt(pow(radiusEarth_UP_x,2) + pow(radiusEarth_UP_y,2) + pow(radiusEarth_UP_z,2));
 */
     }
     //!--------------------------------------------------------------
@@ -507,7 +522,6 @@ int main()
                     forceCoefficientFiles_CS_B,
                     momentCoefficientFiles_CS_B,
                     controlSurfaceIndependentVariableNames), BODYFLAP );
-
     /*
      aerodynamicCoefficientSettings->setControlSurfaceSettings(
                  readTabulatedControlIncrementAerodynamicCoefficientsFromFiles(
@@ -533,7 +547,7 @@ int main()
 
     //! Create vehicle systems and initialize by setting the landing (dry) Mass.
     std::shared_ptr< system_models::VehicleSystems > vehicleSystems = std::make_shared< system_models::VehicleSystems >( landingMass );
-    std::shared_ptr< bislip::VehicleSystems > bislipSystems = std::make_shared< bislip::VehicleSystems >( landingMass );
+    std::shared_ptr< bislip::BislipVehicleSystems > bislipSystems = std::make_shared< bislip::BislipVehicleSystems >( landingMass );
 
     //!
     bodyMap.at( vehicleName )->setVehicleSystems( vehicleSystems );
@@ -565,19 +579,19 @@ int main()
     bislipSystems->setInitialDistanceToTarget( initialDistanceToTarget_rad );
     bislipSystems->setFinalDistanceToTarget( finalDistanceToTarget_rad );
     bislipSystems->setStartingEpoch( simulationStartEpoch );
+    bislipSystems->setFixedStepSize( fixedStepSize );
+    bislipSystems->setSamplingRatio( samplingRatio );
     bislipSystems->setReferenceArea( S_ref );
     bislipSystems->setReferenceValues( referenceValues );
     bislipSystems->setMassReferenceCenter( R_com );
-    bislipSystems->setMomentReferenceCenter( R_mrc);
+    bislipSystems->setMomentReferenceCenter( R_mrc );
+    bislipSystems->setThrustReferenceCenter( R_cot );
 
-    vehicleSystems->setCurrentControlSurfaceDeflection( BODYFLAP, 0 );
-
+    vehicleSystems->setCurrentControlSurfaceDeflection( BODYFLAP, 0.0 );
 
     //! Set vehicle aerodynamic coefficients.
     bodyMap.at( vehicleName )->setAerodynamicCoefficientInterface(
-                createAerodynamicCoefficientInterface(
-                    aerodynamicCoefficientSettings,
-                    vehicleName ) );
+                createAerodynamicCoefficientInterface( aerodynamicCoefficientSettings, vehicleName ) );
 
     //std::map< std::string, std::shared_ptr< ControlSurfaceIncrementAerodynamicInterface >  > controlSurfaceList;
     //controlSurfaceList[ ELEVON_L ] = controlSurfaceInterface;
@@ -627,12 +641,12 @@ int main()
     //!     Transformation to Inertial Frame is done within fitness function, as the initial velocity is a
     //!     decision variable.
     Eigen::Vector6d initialState_spherical;
-    initialState_spherical( tudat::orbital_element_conversions::SphericalOrbitalStateElementIndices::radiusIndex )       = radius_Earth + h_i;
+    initialState_spherical( tudat::orbital_element_conversions::SphericalOrbitalStateElementIndices::radiusIndex )       = radiusEarth + h_i;
     initialState_spherical( tudat::orbital_element_conversions::SphericalOrbitalStateElementIndices::latitudeIndex )     = initialLat_rad;
     initialState_spherical( tudat::orbital_element_conversions::SphericalOrbitalStateElementIndices::longitudeIndex )    = initialLon_rad;
     initialState_spherical( tudat::orbital_element_conversions::SphericalOrbitalStateElementIndices::speedIndex )        = 0.0;
     initialState_spherical( tudat::orbital_element_conversions::SphericalOrbitalStateElementIndices::flightPathIndex )   = initialFlightPathAngle_rad;
-    initialState_spherical( tudat::orbital_element_conversions::SphericalOrbitalStateElementIndices::headingAngleIndex ) = bislip::Variables::computeHeadingToTarget( initialLat_rad,initialLon_rad,targetLat_rad,targetLon_rad );
+    initialState_spherical( tudat::orbital_element_conversions::SphericalOrbitalStateElementIndices::headingAngleIndex ) = 0.0;
 
     //! Create Earth's rotational ephemeris.
     std::shared_ptr< ephemerides::RotationalEphemeris > earthRotationalEphemeris =
@@ -661,7 +675,8 @@ int main()
     std::shared_ptr< bislip::MyGuidance > ThrustGuidance = std::make_shared< bislip::MyGuidance >(
                 bodyMap,
                 vehicleName,
-                centralBodyName);
+                centralBodyName,
+                bislipSystems->getStartingEpoch() );
 
     //! Declare and initialize thrust guidance direction guidance settings.
     std::shared_ptr< ThrustDirectionGuidanceSettings > thrustDirectionGuidanceSettings =
@@ -734,10 +749,54 @@ int main()
     std::shared_ptr< bislip::MyGuidance > AeroGuidance = std::make_shared< bislip::MyGuidance >(
                 bodyMap,
                 vehicleName,
-                centralBodyName );
+                centralBodyName,
+                bislipSystems->getStartingEpoch() );
 
     //! Set Guidance angle functions.
     setGuidanceAnglesFunctions( AeroGuidance, bodyMap.at( vehicleName ) );
+
+    //! **************************************************************************************
+    //! ********** Create heading error deadband interpolators used for bank angle reversals.
+    //! **************************************************************************************
+
+    //! Coarse interpolator section
+    std::map< double, double > map_headingErrorDeadBandInterpolator;
+    std::shared_ptr< tudat::interpolators::InterpolatorSettings > interpolatorSettings =
+            std::make_shared< tudat::interpolators::InterpolatorSettings >( linear_interpolator );
+
+    unsigned long deadBandSize = headingErrorDeadBand.size() / 2;
+    Eigen::VectorXd headingErrorDeadBand_distance( deadBandSize );
+    Eigen::VectorXd headingErrorDeadBand_error(deadBandSize );
+
+    for( unsigned long i = 0; i < deadBandSize; i++ )
+    {
+        headingErrorDeadBand_distance( i ) =  headingErrorDeadBand[ i ];
+        headingErrorDeadBand_error( i )    =  headingErrorDeadBand[ i + deadBandSize ];
+    }
+    for ( unsigned long i = 0; i < deadBandSize; ++i )
+    {
+        map_headingErrorDeadBandInterpolator[ headingErrorDeadBand_distance( i ) ] = headingErrorDeadBand_error( i );
+    }
+   // std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > headingErrorDeadBandInterpolator =
+     //       tudat::interpolators::createOneDimensionalInterpolator( map_headingErrorDeadBandInterpolator, interpolatorSettings );
+    std::pair< double, double > headingErrorDeadBandInterpolatorDomainInterval = std::make_pair( headingErrorDeadBand_distance.minCoeff(), headingErrorDeadBand_distance.maxCoeff() );
+    std::pair< double, double > headingErrorDeadBandInterpolatorRangeInterval = std::make_pair( headingErrorDeadBand_error.minCoeff(), headingErrorDeadBand_error.maxCoeff() );
+    std::pair< double, double > headingErrorDeadBandInterpolatorBoundaryValues = std::make_pair( headingErrorDeadBand_error( 0 ), headingErrorDeadBand_error( headingErrorDeadBand_error.size() - 1 ) );
+
+    std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > >  headingErrorDeadBandInterpolator =
+            tudat::interpolators::createOneDimensionalInterpolator< double, double >(
+                           map_headingErrorDeadBandInterpolator,
+                           interpolatorSettings,
+                           headingErrorDeadBandInterpolatorBoundaryValues );
+
+    //! Set Heading Error Dead Band Interpolator
+    bislipSystems->setHeadingErrorDeadBandInterpolator( headingErrorDeadBandInterpolator );
+
+    bislip::Variables::printhHeadingErrorDeadBandBounds(
+                headingErrorDeadBandInterpolator,
+                headingErrorDeadBandInterpolatorDomainInterval,
+                outputPath,
+                outputSubFolder );
 
     //! Define constant orientation
     //double constantAngleOfAttack = unit_conversions::convertDegreesToRadians( 10 );
@@ -939,16 +998,54 @@ int main()
                     centralBodyName ) );
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
-                    equilibrium_glide_limit,
+                    skip_suppression_limit,
                     vehicleName,
                     centralBodyName ) );
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
-                    bodyflap_deflection,
+                    control_surface_deflection_dependent_variable,
+                    vehicleName,
+                    BODYFLAP ) );
+    dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    bodyflap_deflection_moment_coefficient_increment,
                     vehicleName,
                     centralBodyName ) );
-
-
+    dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    bodyflap_deflection_moment_coefficient_increment_dif,
+                    vehicleName,
+                    centralBodyName ) );
+    dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    body_fixed_total_load_vector,
+                    vehicleName,
+                    centralBodyName ) );
+    dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    body_fixed_total_g_load_vector,
+                    vehicleName,
+                    centralBodyName ) );
+    dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    body_fixed_total_g_load_magnitude,
+                    vehicleName,
+                    centralBodyName ) );
+    dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    body_fixed_aero_load_vector,
+                    vehicleName,
+                    centralBodyName ) );
+    dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    aerodynamic_force_coefficients_dependent_variable,
+                    vehicleName,
+                    centralBodyName ) );
+    dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    aerodynamic_moment_coefficients_dependent_variable,
+                    vehicleName,
+                    centralBodyName ) );
 
     //! Create and initialize object with list of dependent variables
     std::shared_ptr< DependentVariableSaveSettings > dependentVariablesToSave =
@@ -1119,7 +1216,8 @@ int main()
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //! Create object to compute the problem fitness.
-    pagmo::problem prob{ Space4ErrBodyProblem( bounds,
+    pagmo::problem prob{ Space4ErrBodyProblem( outputPath,
+                                               bounds,
                                                problem_name,
                                                vehicleName,
                                                parameterList_Ascent,
@@ -1219,11 +1317,11 @@ int main()
     const double lat_f_rad = unit_conversions::convertDegreesToRadians( terminationConditionsValues[ 0 ] );
     const double lon_f_rad = unit_conversions::convertDegreesToRadians( terminationConditionsValues[ 1 ] );
 
-    //! Calculate initial heading angle: https://www.movable-type.co.uk/scripts/latlong.html
+    //! Calculate initial heading angle to target: https://www.movable-type.co.uk/scripts/latlong.html
     double chi_i_deg_calc = unit_conversions::convertRadiansToDegrees( bislip::Variables::computeHeadingToTarget( lat_i_rad , lon_i_rad , lat_f_rad , lon_f_rad ) );
 
     //! If heading angle is negative, this may help visualize it.
-    if (chi_i_deg_calc < 0)
+    if ( chi_i_deg_calc < 0)
     {
         chi_i_deg_calc = 360 + chi_i_deg_calc;
     }
@@ -1307,14 +1405,15 @@ int main()
     }
     std::cout << "--------------------------------------------------------" << std::endl;
     std::cout << "Ground distance to cover " << std::endl;
-    std::cout << "  Haversine Formula:        " << unit_conversions::convertRadiansToDegrees( d_angular ) << " degrees." << std::endl;
-    std::cout << "  Spherical Law of Cosines: " << d_spherical_law_cosines << " degrees." << std::endl;
-    std::cout << "Heading angle to Target:    " << chi_i_deg_calc << " degrees. Calculated."  << std::endl;
+    std::cout << "  Haversine Formula:               " << unit_conversions::convertRadiansToDegrees( d_angular ) << " degrees." << std::endl;
+    std::cout << "  Spherical Law of Cosines:        " << d_spherical_law_cosines << " degrees." << std::endl;
+    std::cout << "                                   " << d_spherical_law_cosines * radiusEarth / 1E3 << " km." << std::endl;
+    std::cout << "  Initial heading angle to Target: " << chi_i_deg_calc << " degrees. Calculated."  << std::endl;
     std::cout << "--------------------------------------------------------" << std::endl;
     std::cout << "Output subfolder: " << std::endl;
     std::cout << "     '" << outputSubFolder <<"'" << std::endl;
     std::cout << " DV   " << "  Lower Boundary " << "  Upper Boundary " << std::endl;
-    for( int i = 0; i < N + NN + 3 + 1; i++ )
+    for( int i = 0; i < ( N + 5 ) + NN + 1; i++ )
     {
         std::cout << std::fixed << std::setprecision(10) <<
                      std::setw(6) << i <<
@@ -1380,14 +1479,14 @@ int main()
                     this_run_settings;
 
             //! Write current iteration results to file
-            printPopulationToFile( isl.get_population( ).get_x( ),
-                                   this_run_settings_1,
-                                   outputSubFolder,
-                                   false );
-            printPopulationToFile( isl.get_population( ).get_f( ),
-                                   this_run_settings_1,
-                                   outputSubFolder,
-                                   true ); //! true boolean is for the printPopulationToFile to print with a different prefix: fitness_
+            bislip::Variables::printPopulationToFile( isl.get_population( ).get_x( ),
+                                                      this_run_settings_1,
+                                                      outputSubFolder,
+                                                      false );
+            bislip::Variables::printPopulationToFile( isl.get_population( ).get_f( ),
+                                                      this_run_settings_1,
+                                                      outputSubFolder,
+                                                      true ); //! true boolean is for the printPopulationToFile to print with a different prefix: fitness_
         }
 
         std::cout<<i<<std::endl;

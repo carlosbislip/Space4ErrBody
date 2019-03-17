@@ -65,8 +65,14 @@
 #include <Tudat/Astrodynamics/SystemModels/vehicleSystems.h>
 */
 #include "updateGuidance.h"
-#include "applicationOutput_tudat.h"
-#include "applicationOutput_pagmo.h"
+#include <Tudat/Bislip/bislipUtilities.h>
+
+#include <pagmo/pagmo.hpp>
+
+//#include "getPagmoAlgorithm.h"
+//#include "bislipUtilities.h"
+//#include "applicationOutput_tudat.h"
+//#include "applicationOutput_pagmo.h"
 
 
 using namespace pagmo;
@@ -79,7 +85,8 @@ struct Space4ErrBodyProblem {
     Space4ErrBodyProblem( ) { }
 
     //! Constructor.
-    Space4ErrBodyProblem( const std::vector< std::vector< double > > &bounds,
+    Space4ErrBodyProblem( const std::string &outputPath,
+                          const std::vector< std::vector< double > > &bounds,
                           const std::string &problem_name,
                           const std::string &vehicleName,
                           const std::vector< std::string > &parameterList_Ascent,
@@ -117,7 +124,7 @@ struct Space4ErrBodyProblem {
 
     std::vector< double >::size_type get_nobj() const
     {
-        return 4u;
+        return 10u;
     }
     std::vector< double >::size_type get_nec() const
     {
@@ -133,6 +140,7 @@ struct Space4ErrBodyProblem {
 
 private:
 
+    const std::string outputPath_;
     const std::vector< std::vector< double > > problemBounds_;
     const std::string problem_name_;
     const std::string vehicleName_;

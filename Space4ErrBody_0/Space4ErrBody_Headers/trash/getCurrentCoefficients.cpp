@@ -18,7 +18,7 @@ Eigen::Vector6d MyGuidance::getCurrentCoefficients()
 
     if( bislipSystems_ == nullptr )
     {
-        bislipSystems_ = std::dynamic_pointer_cast< bislip::VehicleSystems >(
+        bislipSystems_ = std::dynamic_pointer_cast< bislip::BislipVehicleSystems >(
                     bodyMap_.at( vehicleName_ )->getBislipSystems( ) );
     }
 

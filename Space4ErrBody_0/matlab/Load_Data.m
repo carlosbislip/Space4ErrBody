@@ -76,20 +76,28 @@ switch option
             evolutions(k).trajectories.individual.E_hat                            = nan;
             evolutions(k).trajectories.individual.total_aero_g_load                = nan;
             evolutions(k).trajectories.individual.dynamic_pressure                 = nan;
-            evolutions(k).trajectories.individual.heating_rate                     = nan;
+            evolutions(k).trajectories.individual.heat_rate_TUDAT_nose             = nan;
             evolutions(k).trajectories.individual.mass                             = nan;
+            evolutions(k).trajectories.individual.thrustMagnitude                  = nan;
+            
             evolutions(k).trajectories.individual.mass_rate                        = nan;
             evolutions(k).trajectories.individual.evaluated_throttle_setting       = nan;
             evolutions(k).trajectories.individual.evaluated_thrust_elevation_angle = nan;
             evolutions(k).trajectories.individual.evaluated_thrust_azimuth_angle   = nan;
             evolutions(k).trajectories.individual.evaluated_angle_of_attack        = nan;
             evolutions(k).trajectories.individual.evaluated_bank_angle             = nan;
+            
+            evolutions(k).trajectories.individual.commanded_throttle_setting       = nan;
+            evolutions(k).trajectories.individual.commanded_thrust_elevation_angle = nan;
+            evolutions(k).trajectories.individual.commanded_thrust_azimuth_angle   = nan;
+            evolutions(k).trajectories.individual.commanded_angle_of_attack        = nan;
+            evolutions(k).trajectories.individual.commanded_bank_angle             = nan;
             evolutions(k).trajectories.individual.engine_status                    = nan;
             evolutions(k).trajectories.individual.distance_traveled                = nan;
             evolutions(k).trajectories.individual.distance_to_go                   = nan;
             evolutions(k).trajectories.individual.heading_to_target                = nan;
             evolutions(k).trajectories.individual.heading_error                    = nan;
-            evolutions(k).trajectories.individual.q_dot_LE                         = nan;
+            evolutions(k).trajectories.individual.heat_flux_tauber_leadingedge     = nan;
             evolutions(k).trajectories.individual.body_fixed_thrust_load_x         = nan;
             evolutions(k).trajectories.individual.body_fixed_thrust_load_y         = nan;
             evolutions(k).trajectories.individual.body_fixed_thrust_load_z         = nan;
@@ -110,15 +118,20 @@ switch option
             evolutions(k).trajectories.individual.body_fixed_aero_load_x           = nan;
             evolutions(k).trajectories.individual.body_fixed_aero_load_y           = nan;
             evolutions(k).trajectories.individual.body_fixed_aero_load_z           = nan;
-            evolutions(k).trajectories.individual.bank_angle_reversal_trigger      = nan;
             evolutions(k).trajectories.individual.aero_force_coefficient_C_D       = nan;
             evolutions(k).trajectories.individual.aero_force_coefficient_C_S       = nan;
             evolutions(k).trajectories.individual.aero_force_coefficient_C_L       = nan;
             evolutions(k).trajectories.individual.aero_moment_coefficient_C_l      = nan;
             evolutions(k).trajectories.individual.aero_moment_coefficient_C_m      = nan;
             evolutions(k).trajectories.individual.aero_moment_coefficient_C_n      = nan;
-            
-            
+            evolutions(k).trajectories.individual.heat_flux_chapman_nose           = nan;
+            evolutions(k).trajectories.individual.localDensity                     = nan;
+            evolutions(k).trajectories.individual.passenger_fixed_total_g_load_x   = nan;
+            evolutions(k).trajectories.individual.passenger_fixed_total_g_load_y   = nan;
+            evolutions(k).trajectories.individual.passenger_fixed_total_g_load_z   = nan;            
+            evolutions(k).trajectories.individual.currentLiftForce                 = nan;            
+            evolutions(k).trajectories.individual.bank_angle_reversal_trigger      = nan;
+
             
             
             

@@ -77,13 +77,17 @@ public:
 
     void updateGuidance( const double currentTime );
 
+    void evaluateGuidanceFunctions(
+            std::shared_ptr< bislip::BislipVehicleSystems > &bislipSystems,
+            std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems,
+            const std::string &currentTrajectoryPhase);
+
     Eigen::Vector6d getPartialCurrentCoefficients( );
     Eigen::Vector3d getCurrentBodyFixedThrustDirection( );
     double getCurrentThrustMagnitude( );
     double getCurrentSpecificImpulse( ) { return bodyMap_.at( vehicleName_ )->getBislipSystems()->getSpecificImpulse(); }
     bool getCurrentEngineStatus( );
 
-    double getAngleofAttack( );
     double getBodyFlapDeflection( );
     double getBankAngle( );
 

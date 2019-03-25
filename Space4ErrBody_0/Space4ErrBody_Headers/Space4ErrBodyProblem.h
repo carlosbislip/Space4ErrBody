@@ -97,7 +97,7 @@ struct Space4ErrBodyProblem {
                           const std::vector< std::string > &aeroCoeffFileList,
                           const std::vector< double > &simulation_settingsValues,
                           const std::vector< double > &initialConditionsValues,
-                          const std::vector< double > &terminationConditionsValues,
+                          const std::vector< double > &constraintsValues,
                           const std::vector< double > &output_settingsValues,
                           const std::string &outputSubFolder,
                           const Eigen::Vector6d &initialState_spherical,
@@ -124,7 +124,7 @@ struct Space4ErrBodyProblem {
 
     std::vector< double >::size_type get_nobj() const
     {
-        return 10u;
+        return 26u;
     }
     std::vector< double >::size_type get_nec() const
     {
@@ -152,7 +152,7 @@ private:
     const std::vector< std::string > aeroCoeffFileList_;
     const std::vector< double > simulation_settingsValues_;
     const std::vector< double > initialConditionsValues_;
-    const std::vector< double > terminationConditionsValues_;
+    const std::vector< double > constraintsValues_;
     const std::vector< double > output_settingsValues_;
     const std::string outputSubFolder_;
     const Eigen::Vector6d initialState_spherical_;

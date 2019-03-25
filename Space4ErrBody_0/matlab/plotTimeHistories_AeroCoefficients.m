@@ -21,7 +21,7 @@ for p = 1:numel(compilation)
         
        %for ii = (numel(compilation(p).evolutions(k).trajectories)-10):numel(compilation(p).evolutions(k).trajectories)
         for ii = 1:numel(compilation(p).evolutions(k).trajectories)
-           plot(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
+           stairs(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
                 compilation(p).evolutions(k).trajectories(ii).individual.aero_moment_coefficient_C_m );
         end
         
@@ -61,7 +61,7 @@ for p = 1:numel(compilation)
 
         %for ii = (numel(compilation(p).evolutions(k).trajectories)-10):numel(compilation(p).evolutions(k).trajectories)
         for ii = 1:numel(compilation(p).evolutions(k).trajectories)
-                plot(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
+                stairs(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
                 compilation(p).evolutions(k).trajectories(ii).individual.increment_Cm_bodyflap_dif);
         end
         

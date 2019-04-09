@@ -7,7 +7,7 @@ function [angles] = convertNegativeAnglesToPositive( angles )
 for i = 1:numel(angles)
     % Convert angle from negative to positive
     if angles(i,1) < 0
-        angles(i,1) = angles(i) + 2*pi;
+        angles(i,1) = angles(i) + 360;
     end
     
 end

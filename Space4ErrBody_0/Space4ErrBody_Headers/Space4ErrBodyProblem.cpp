@@ -138,7 +138,7 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////            UNPACK INPUT DATA             //////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //std::cout << "Unpacking data" << std::endl;
+    std::cout << "Unpacking data" << std::endl;
 
     const std::string centralBodyName = "Earth";
 
@@ -433,7 +433,7 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
 
     //! Declare and initialize interpolator settings.
     std::shared_ptr< interpolators::InterpolatorSettings > interpolatorSettings = std::make_shared< interpolators::InterpolatorSettings >( hermite_spline_interpolator );
-    std::map< bislip::Parameters::Optimization, std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > >  > Interpolators_Ascent, Interpolators_Descent;
+    std::map< bislip::Parameters::Optimization, std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > > Interpolators_Ascent, Interpolators_Descent;
 
     //std::cout << "Creating Ascent Interpolators" << std::endl;
     //! Declare and initialize interpolators for Ascent phase.
@@ -445,18 +445,17 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
 
     //std::cout << "Creating Descent Interpolators" << std::endl;
     //! Declare and initialize interpolators for Descent phase.
-    std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > interpolator_alpha_deg_Descent, interpolator_sigma_deg_Descent, interpolator_eps_T_deg_Descent, interpolator_phi_T_deg_Descent, interpolator_throttle_Descent;
-    Interpolators_Descent[ bislip::Parameters::Optimization::AngleOfAttack ] = bislip::Variables::createOneDimensionalHermiteInterpolator( alpha_deg_Descent, E_mapped_Descent, map_alpha_deg_Descent, interpolatorSettings );
-    Interpolators_Descent[ bislip::Parameters::Optimization::BankAngle ] = bislip::Variables::createOneDimensionalHermiteInterpolator( sigma_deg_Descent, E_mapped_Descent, map_sigma_deg_Descent, interpolatorSettings );
+    Interpolators_Descent[ bislip::Parameters::Optimization::AngleOfAttack ]        = bislip::Variables::createOneDimensionalHermiteInterpolator( alpha_deg_Descent, E_mapped_Descent, map_alpha_deg_Descent, interpolatorSettings );
+    Interpolators_Descent[ bislip::Parameters::Optimization::BankAngle ]            = bislip::Variables::createOneDimensionalHermiteInterpolator( sigma_deg_Descent, E_mapped_Descent, map_sigma_deg_Descent, interpolatorSettings );
     Interpolators_Descent[ bislip::Parameters::Optimization::ThrustElevationAngle ] = bislip::Variables::createOneDimensionalHermiteInterpolator( eps_T_deg_Descent, E_mapped_Descent, map_eps_T_deg_Descent, interpolatorSettings );
-    Interpolators_Descent[ bislip::Parameters::Optimization::ThrustAzimuthAngle ] = bislip::Variables::createOneDimensionalHermiteInterpolator( phi_T_deg_Descent, E_mapped_Descent, map_phi_T_deg_Descent, interpolatorSettings );
-    Interpolators_Descent[ bislip::Parameters::Optimization::ThrottleSetting ] = bislip::Variables::createOneDimensionalHermiteInterpolator( throttle_Descent, E_mapped_Descent, map_throttle_Descent, interpolatorSettings );
+    Interpolators_Descent[ bislip::Parameters::Optimization::ThrustAzimuthAngle ]   = bislip::Variables::createOneDimensionalHermiteInterpolator( phi_T_deg_Descent, E_mapped_Descent, map_phi_T_deg_Descent, interpolatorSettings );
+    Interpolators_Descent[ bislip::Parameters::Optimization::ThrottleSetting ]      = bislip::Variables::createOneDimensionalHermiteInterpolator( throttle_Descent, E_mapped_Descent, map_throttle_Descent, interpolatorSettings );
 
     //! Declare vectors containing interpolated values.
     Eigen::VectorXd interpolated_values_Ascent( 5 ), interpolated_values_Descent( 5 );
 
     //! Declare data map to contain vectors of interpolated values.
-    std::map< double, Eigen::VectorXd > interpolators_Ascent, interpolators_Descent;
+    std::map< double, Eigen::VectorXd > evaluatedInterpolatorsAscent, evaluatedInterpolatorsDescent;
 
     //! Declare evaluation variable.
     double eval;
@@ -474,7 +473,7 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
         interpolated_values_Ascent( 3 ) = ( Interpolators_Ascent[ bislip::Parameters::Optimization::ThrustAzimuthAngle ] )->interpolate( eval );
         interpolated_values_Ascent( 4 ) = ( Interpolators_Ascent[ bislip::Parameters::Optimization::ThrottleSetting ] )->interpolate( eval );
 
-        interpolators_Ascent[ eval ] = interpolated_values_Ascent;
+        evaluatedInterpolatorsAscent[ eval ] = interpolated_values_Ascent;
 
         eval = pp * E_mapped_Descent.maxCoeff() / 1000;
         interpolated_values_Descent( 0 ) = ( Interpolators_Descent[ bislip::Parameters::Optimization::AngleOfAttack ] )->interpolate( eval );
@@ -483,41 +482,12 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
         interpolated_values_Descent( 3 ) = ( Interpolators_Descent[ bislip::Parameters::Optimization::ThrustAzimuthAngle ] )->interpolate( eval );
         interpolated_values_Descent( 4 ) = ( Interpolators_Descent[ bislip::Parameters::Optimization::ThrottleSetting ] )->interpolate( eval );
 
-        interpolators_Descent[ eval ] = interpolated_values_Descent;
+        evaluatedInterpolatorsDescent[ eval ] = interpolated_values_Descent;
 
         pp += 1;
     }
 
-    //std::cout << "Print out Interpolators and DVs" << std::endl;
-    //! Print data maps containing vectors of evaluation of interpolators.
-    writeDataMapToTextFile( interpolators_Ascent,
-                            "interpolators_pre_Ascent",
-                            outputPath_ + outputSubFolder_,
-                            "",
-                            std::numeric_limits< double >::digits10,
-                            std::numeric_limits< double >::digits10,
-                            "," );
-    writeDataMapToTextFile( map_DV_mapped_Ascent,
-                            "DV_mapped_pre_Ascent",
-                            outputPath_ + outputSubFolder_,
-                            "",
-                            std::numeric_limits< double >::digits10,
-                            std::numeric_limits< double >::digits10,
-                            "," );
-    writeDataMapToTextFile( interpolators_Descent,
-                            "interpolators_pre_Descent",
-                            outputPath_ + outputSubFolder_,
-                            "",
-                            std::numeric_limits< double >::digits10,
-                            std::numeric_limits< double >::digits10,
-                            "," );
-    writeDataMapToTextFile( map_DV_mapped_Descent,
-                            "DV_mapped_pre_Descent",
-                            outputPath_ + outputSubFolder_,
-                            "",
-                            std::numeric_limits< double >::digits10,
-                            std::numeric_limits< double >::digits10,
-                            "," );
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////             CREATE MASS RATE SETTINGS: ASCENT            //////////////////////////////////////
@@ -860,7 +830,7 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
     //std::cout << "Aqui" << std::endl;
 
     //std::cout << rowsAscent + rowsDescent << std::endl;
-    //std::cout << "depVarTimeHistoryMap.size():  " << depVarTimeHistoryMap.size() << std::endl;
+   // std::cout << "depVarTimeHistoryMap.size():  " << depVarTimeHistoryMap.size() << std::endl;
 
     Eigen::MatrixXd depVarTimeHistoryMatrix( depVarTimeHistoryMap.size(), columns );
 
@@ -876,7 +846,7 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
     {
         depVarTimeHistoryMatrix.row( i ) = depVarTimeHistoryMap.at( simulationStartEpoch + ( i ) * fixedStepSize );
     }
-    //std::cout << "depVarTimeHistoryMatrix.size():  " << depVarTimeHistoryMatrix.size() << std::endl;
+   // std::cout << "depVarTimeHistoryMatrix.size():  " << depVarTimeHistoryMatrix.size() << std::endl;
 
     //std::cout << "Aqui!!!!" << std::endl;
 
@@ -903,6 +873,10 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
     Eigen::VectorXd depVar_MechanicalLoad             = depVarTimeHistoryMatrix.col( 57 );
     Eigen::VectorXd depVar_PitchMomentCoefficient     = depVarTimeHistoryMatrix.col( 66 );
     Eigen::VectorXd depVar_HeatFluxChapman            = depVarTimeHistoryMatrix.col( 67 );
+    Eigen::VectorXd depVar_BankReversalTrigger        = depVarTimeHistoryMatrix.col( 81 );
+
+
+
 
     //! Extract Dependent variables of final state.
     const Eigen::VectorXd dependentVariableFinalState_Descent = ( descentSimulation.getDependentVariableHistory( ).rbegin() )->second;
@@ -991,11 +965,11 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
 
     //std::cout << "Penalty: Dynamic Pressure - Ascent" << std::endl;
     const double penaltyDynamicPressureAscent = 10000.0 * bislip::Variables::computePenalty( depVar_DynamicPressure, 1, rowsAscent, constraint_DynamicPressure, fixedStepSize, tof, false );
-   // std::cout << "penaltyDynamicPressureAscent: " << penaltyDynamicPressureAscent << std::endl;
+    // std::cout << "penaltyDynamicPressureAscent: " << penaltyDynamicPressureAscent << std::endl;
 
     //std::cout << "Penalty: Dynamic Pressure - Descent" << std::endl;
     const double penaltyDynamicPressureDescent = 10000.0 * bislip::Variables::computePenalty( depVar_DynamicPressure, rowsAscent, depVar_DynamicPressure.size(), constraint_DynamicPressure, fixedStepSize, tof, false );
-   // std::cout << "penaltyDynamicPressureDescent: " << penaltyDynamicPressureDescent << std::endl;
+    // std::cout << "penaltyDynamicPressureDescent: " << penaltyDynamicPressureDescent << std::endl;
 
     //std::cout << "Penalty: Mechanical Load - Ascent" << std::endl;
     const double penaltyMechanicalLoadAscent = 1000.0 * bislip::Variables::computePenalty( depVar_MechanicalLoad, 1, rowsAscent, constraint_MechanicalLoad, fixedStepSize, tof, false );
@@ -1090,14 +1064,36 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
     //std::cout << "Penalty: Heading Error - Descent" << std::endl;
     const double penaltyHeadingErrorDescent = 100000.0 * ( headingErrorDeadbandViolationSumDescent ) * ( fixedStepSize / tof );
 
-
+/*
     Eigen::VectorXd bankAngleReversal( depVarTimeHistoryMap.size() );
     Eigen::VectorXd temp( columns + 1 );
+    Eigen::VectorXd CARAJO( columns );
     std::map< double, Eigen::VectorXd > depVarTimeHistoryMapNEW;
 
     bankAngleReversal( 0 ) = 0;
+    CARAJO << depVarTimeHistoryMap.at( simulationStartEpoch );
     temp << depVarTimeHistoryMap.at( simulationStartEpoch ),  bankAngleReversal( 0 ) ;
     depVarTimeHistoryMapNEW[ simulationStartEpoch ] = temp;
+
+
+
+    std::cout << "simulationStartEpoch: " <<  simulationStartEpoch << std::endl;
+
+    for( unsigned int i = 0; i < CARAJO.size() - 1; i++)
+    {
+        std::cout  << CARAJO( i ) << " | " ;
+    }
+    std::cout  << CARAJO( CARAJO.size() - 1 ) <<  std::endl;
+
+    std::cout << "Verifying content of initial entry to depVarTimeHistoryMap" << std::endl;
+    std::cout << "depVarTimeHistoryMap.at( simulationStartEpoch ): " <<  depVarTimeHistoryMap.at( simulationStartEpoch ) << std::endl;
+
+    std::cout << "Printing temp row" << std::endl;
+    std::cout << "temp: " <<  temp << std::endl;
+    std::cout << "Verifying content of initial entry to depVarTimeHistoryMapNEW" << std::endl;
+
+    std::cout << "depVarTimeHistoryMapNEW[ simulationStartEpoch ]: " <<  depVarTimeHistoryMapNEW[ simulationStartEpoch ] << std::endl;
+
     for ( int i = 1; i < depVar_BankAngle.size(); i++ )
     {
         if( ( ( depVar_BankAngle( i ) > 0 ) && ( depVar_BankAngle( i - 1 ) < 0 ) ) || ( ( depVar_BankAngle( i ) < 0 ) && ( depVar_BankAngle( i - 1 ) > 0 ) ) )
@@ -1107,10 +1103,15 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
 
         temp << depVarTimeHistoryMap.at( simulationStartEpoch + ( i - 1 ) * fixedStepSize ), bankAngleReversal( i - 1 );
         depVarTimeHistoryMapNEW[ simulationStartEpoch + ( i - 1 ) * fixedStepSize ] = temp;
-    }
 
+
+        std::cout << "simulationStartEpoch + ( i - 1 ) * fixedStepSize: " << simulationStartEpoch + ( i - 1 ) * fixedStepSize << std::endl;
+        std::cout << "depVarTimeHistoryMapNEW[ simulationStartEpoch + ( i - 1 ) * fixedStepSize ] : " << depVarTimeHistoryMapNEW[ simulationStartEpoch + ( i - 1 ) * fixedStepSize ]  << std::endl;
+
+    }
+*/
     double penaltyExcessiveBankReversals = 0;
-    double bankAngleReversalSum = bislip::Variables::computeSumOfEigenVectorXd( bankAngleReversal );
+    double bankAngleReversalSum = bislip::Variables::computeSumOfEigenVectorXd( depVar_BankReversalTrigger );
     // if( bankAngleReversal.sum() > 4 )
     /* // {
     for ( int i = 0; i < bankAngleReversal.size() - 1; i++ )
@@ -1181,10 +1182,10 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
 
 
     //delta.push_back( costConsumedMassAscent +
-      //               penaltyMaximumNormalizedSpecificEnergyAscent +
-        //             penaltyMonotonicAscent + 0 +
-          //           0 + penaltyFlightPathAngleAscent +
-            //         0 + 0 );
+    //               penaltyMaximumNormalizedSpecificEnergyAscent +
+    //             penaltyMonotonicAscent + 0 +
+    //           0 + penaltyFlightPathAngleAscent +
+    //         0 + 0 );
 
     delta.push_back( costHeatFluxChapmanAscent );
     delta.push_back( penaltyHeatFluxChapmanAscent );
@@ -1211,10 +1212,10 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
     delta.push_back( penaltyHeadingErrorDescent );
 
     //delta.push_back( costConsumedMassDescent +
-      //               penaltyMinimumNormalizedSpecificEnergyDescent +
-        //             penaltyMonotonicDescent + 0 +
-          //           0 + penaltyFlightPathAngleDescent +
-            //         0 + 0 );
+    //               penaltyMinimumNormalizedSpecificEnergyDescent +
+    //             penaltyMonotonicDescent + 0 +
+    //           0 + penaltyFlightPathAngleDescent +
+    //         0 + 0 );
 
 
 
@@ -1241,14 +1242,6 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
             std::to_string( targetLon_deg_calc ) + "_" +
             simulation_save_time;
 
-
-    for( unsigned int i = 0; i < delta.size() - 1; i++)
-    {
-        std::cout  << delta[ i ] << " | " ;
-    }
-    //std::cout  << delta[ delta.size() - 1 ] << "  ||  " << rowsAscent << "  ||  " << tof << "  ||  " << " Theoretical delV = " << theoreticaldelV << "  ||  " << " Goal delV = " << goaldelV << "  ||  " << " Actual delV = " << actualdelV << std::endl;
-    //    std::cout  << delta[ delta.size() - 1 ] << "  ||  " << rowsAscent << "  ||  " << tof <<  std::endl;
-    std::cout  << delta[ delta.size() - 1 ] << " ||  " << tof <<  std::endl;
 
     /*
     //! Print results to terminal. Used to gauge progress.
@@ -1284,16 +1277,16 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
 
     std::string complete_file_name_Prop = "HORUSPropHistory_" + simulation_file_name_suffix + ".dat";
     std::string complete_file_name_DepVar = "HORUSDepVar_" + simulation_file_name_suffix + "_NEW" + ".dat";
-    std::string complete_file_name_interpolators_Ascent = "interpolators_Ascent_" + simulation_file_name_suffix + ".dat";
+    std::string complete_file_name_interpolators_Ascent = "evaluatedInterpolatorsAscent_" + simulation_file_name_suffix + ".dat";
     std::string complete_file_name_map_DV_mapped_Ascent = "map_DV_mapped_Ascent_" + simulation_file_name_suffix + ".dat";
-    std::string complete_file_name_interpolators_Descent = "interpolators_Descent_" + simulation_file_name_suffix + ".dat";
+    std::string complete_file_name_interpolators_Descent = "evaluatedInterpolatorsDescent_" + simulation_file_name_suffix + ".dat";
     std::string complete_file_name_map_DV_mapped_Descent = "map_DV_mapped_Descent_" + simulation_file_name_suffix + ".dat";
 
     //! Will print out depending on some input values. Each entry corresponds to
     //! a different type of output. Entries are binary, 0 or 1.
     if ( int( output_settingsValues_[ 1 ] ) == 1 )
     {
-        //   std::cout << "Saving EQM " << std::endl;
+      //  std::cout << "Saving EQM " << std::endl;
 
         //! Write propagation history to file.
         writeDataMapToTextFile( propagationTimeHistoryMap,
@@ -1308,39 +1301,51 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
     }
     if ( int( output_settingsValues_[ 2 ] ) == 1 )
     {
-        //   std::cout << "Saving DepVar " << std::endl;
+      //  std::cout << "Saving DepVar " << std::endl;
 
-        writeDataMapToTextFile( depVarTimeHistoryMapNEW,
-                                complete_file_name_DepVar,
-                                outputPath_ + outputSubFolder_,
-                                "",
-                                std::numeric_limits< double >::digits10,
-                                std::numeric_limits< double >::digits10,
-                                "," );
-       /* writeDataMapToTextFile( depVarTimeHistoryMap,
+       // writeDataMapToTextFile( depVarTimeHistoryMapNEW,
+         //                       complete_file_name_DepVar,
+           ///                     outputPath_ + outputSubFolder_,
+              //                  "",
+                //                std::numeric_limits< double >::digits10,
+                  //              std::numeric_limits< double >::digits10,
+                    //            "," );
+         writeDataMapToTextFile( depVarTimeHistoryMap,
                                 complete_file_name_DepVar + "OLD",
                                 outputPath_ + outputSubFolder_,
                                 "",
                                 std::numeric_limits< double >::digits10,
                                 std::numeric_limits< double >::digits10,
-                                "," ); */
-        //    std::cout << "DepVar Saved" << std::endl;
+                                "," );
+    //    std::cout << "DepVar Saved" << std::endl;
 
 
     }
+
+
     if ( int( output_settingsValues_[ 3 ] ) == 1 )
     {
-        //   std::cout << "Saving interpolators_Ascent " << std::endl;
+       // std::cout << "Saving evaluatedInterpolatorsAscent " << std::endl;
 
-        writeDataMapToTextFile( interpolators_Ascent,
+        writeDataMapToTextFile( evaluatedInterpolatorsAscent,
                                 complete_file_name_interpolators_Ascent,
                                 outputPath_ + outputSubFolder_,
                                 "",
                                 std::numeric_limits< double >::digits10,
                                 std::numeric_limits< double >::digits10,
                                 "," );
+
+       // std::cout << "Saving evaluatedInterpolatorsDescent " << std::endl;
+        writeDataMapToTextFile( evaluatedInterpolatorsDescent,
+                                complete_file_name_interpolators_Descent,
+                                outputPath_ + outputSubFolder_,
+                                "",
+                                std::numeric_limits< double >::digits10,
+                                std::numeric_limits< double >::digits10,
+                                "," );
+
         //   std::cout << "interpolators_Ascent Saved" << std::endl;
-        //   std::cout << "Saving map_DV_mapped_Ascent " << std::endl;
+      //  std::cout << "Saving map_DV_mapped_Ascent " << std::endl;
 
         writeDataMapToTextFile( map_DV_mapped_Ascent,
                                 complete_file_name_map_DV_mapped_Ascent,
@@ -1349,19 +1354,9 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
                                 std::numeric_limits< double >::digits10,
                                 std::numeric_limits< double >::digits10,
                                 "," );
-        //   std::cout << "map_DV_mapped_Ascent Saved" << std::endl;
 
-        //   std::cout << "Saving interpolators_Descent " << std::endl;
-
-        writeDataMapToTextFile( interpolators_Descent,
-                                complete_file_name_interpolators_Descent,
-                                outputPath_ + outputSubFolder_,
-                                "",
-                                std::numeric_limits< double >::digits10,
-                                std::numeric_limits< double >::digits10,
-                                "," );
         //  std::cout << "interpolators_Descent Saved" << std::endl;
-        //   std::cout << "Saving map_DV_mapped_Descent " << std::endl;
+      //  std::cout << "Saving map_DV_mapped_Descent " << std::endl;
 
         writeDataMapToTextFile( map_DV_mapped_Descent,
                                 complete_file_name_map_DV_mapped_Descent,
@@ -1370,10 +1365,16 @@ std::vector<double> Space4ErrBodyProblem::fitness( const std::vector< double > &
                                 std::numeric_limits< double >::digits10,
                                 std::numeric_limits< double >::digits10,
                                 "," );
-        //std::cout << "map_DV_mapped_Descent Saved" << std::endl;
-
-
     }
+
+
+    for( unsigned int i = 0; i < delta.size() - 1; i++)
+    {
+        std::cout  << delta[ i ] << " | " ;
+    }
+    //std::cout  << delta[ delta.size() - 1 ] << "  ||  " << rowsAscent << "  ||  " << tof << "  ||  " << " Theoretical delV = " << theoreticaldelV << "  ||  " << " Goal delV = " << goaldelV << "  ||  " << " Actual delV = " << actualdelV << std::endl;
+    //    std::cout  << delta[ delta.size() - 1 ] << "  ||  " << rowsAscent << "  ||  " << tof <<  std::endl;
+    std::cout  << delta[ delta.size() - 1 ] << " ||  " << tof <<  std::endl;
 
 
     //  }

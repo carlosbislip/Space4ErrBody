@@ -52,9 +52,11 @@ int main()
     const std::vector< double > output_settingsValues          = bislip::Variables::getDataNumeri ( primary[ 12 ] );
     const std::vector< std::string > initialConditionsList     = bislip::Variables::getDataString ( primary[ 13 ] );
     const std::vector< double > initialConditionsValues        = bislip::Variables::getDataNumeri ( primary[ 14 ] );
-    const std::vector< std::string > constraintsList = bislip::Variables::getDataString ( primary[ 15 ] );
-    const std::vector< double > constraintsValues    = bislip::Variables::getDataNumeri ( primary[ 16 ] );
+    const std::vector< std::string > constraintsList           = bislip::Variables::getDataString ( primary[ 15 ] );
+    const std::vector< double > constraintsValues              = bislip::Variables::getDataNumeri ( primary[ 16 ] );
     const std::vector< double > headingErrorDeadBand           = bislip::Variables::getDataNumeri ( primary[ 17 ] );
+    const std::vector< double > alphaMachEnvelopeLB            = bislip::Variables::getDataNumeri ( primary[ 18 ] );
+    const std::vector< double > alphaMachEnvelopeUB            = bislip::Variables::getDataNumeri ( primary[ 19 ] );
     const std::string problem_name                             = primary.rbegin()[ 1 ];
     const std::string vehicleName                              = primary.rbegin()[ 0 ];
 
@@ -69,7 +71,7 @@ int main()
             std::to_string( int( optimization_settingsValues[ 2 ] ) ) + "_" +
             std::to_string( int( optimization_settingsValues[ 3 ] ) ) + "_" +
             std::to_string( int( optimization_settingsValues[ 4 ] ) ) + "_" +
-            std::to_string( simulation_settingsValues[ 3 ] );
+            std::to_string( simulation_settingsValues[ 2 ] );
 
     //! Create output subfolder filename. Based on arbitrary prefix, the
     //! previously created partial suffix, and the run's time stamp.
@@ -230,6 +232,9 @@ int main()
     //! Declare and initialize vertebral column inclination angle
     const double vertebralColumnInclinationAngle_deg = vehicleParameterValues[ 17 ]; // deg
 
+    //! Declare and initialize the minimum dynamic pressure required for bank angle assignment.
+    const double minimumDynamicPressureforControlSurface = vehicleParameterValues[ 18 ];
+
     //! Declare and initialize starting height
     const double initialHeight = initialConditionsValues[ 2 ]; // m
 
@@ -258,13 +263,13 @@ int main()
     const double constraint_PitchMomentCoefficient = constraintsValues[ 9 ];
 
     //! Convert angles from degrees to radians
-    const double initialLat_rad             = unit_conversions::convertDegreesToRadians( initialLat_deg );
-    const double initialLon_rad             = unit_conversions::convertDegreesToRadians( initialLon_deg );
-    const double targetLat_rad              = unit_conversions::convertDegreesToRadians( targetLat_deg );
-    const double targetLon_rad              = unit_conversions::convertDegreesToRadians( targetLon_deg );
-    const double finalDistanceToTarget_rad  = unit_conversions::convertDegreesToRadians( finalDistanceToTarget_deg );
-    const double initialFlightPathAngle_rad = unit_conversions::convertDegreesToRadians( gamma_i_deg );
-    const double relativeChestForwardAngle_rad = unit_conversions::convertDegreesToRadians( relativeChestForwardAngle_deg );
+    const double initialLat_rad                      = unit_conversions::convertDegreesToRadians( initialLat_deg );
+    const double initialLon_rad                      = unit_conversions::convertDegreesToRadians( initialLon_deg );
+    const double targetLat_rad                       = unit_conversions::convertDegreesToRadians( targetLat_deg );
+    const double targetLon_rad                       = unit_conversions::convertDegreesToRadians( targetLon_deg );
+    const double finalDistanceToTarget_rad           = unit_conversions::convertDegreesToRadians( finalDistanceToTarget_deg );
+    const double initialFlightPathAngle_rad          = unit_conversions::convertDegreesToRadians( gamma_i_deg );
+    const double relativeChestForwardAngle_rad       = unit_conversions::convertDegreesToRadians( relativeChestForwardAngle_deg );
     const double vertebralColumnInclinationAngle_rad = unit_conversions::convertDegreesToRadians( vertebralColumnInclinationAngle_deg );
 
     //! Pre-define various variables used to determine fitness.
@@ -348,10 +353,10 @@ int main()
     //! Declare and initialize simulation body settings data map.
     std::map< std::string, std::shared_ptr< BodySettings > > bodySettings =
             getDefaultBodySettings( { centralBodyName },
-                                    simulationStartEpoch - 1000.0 * fixedStepSize,
-                                    simulationEndEpoch + 1000.0 * fixedStepSize );
+                                    simulationStartEpoch - 10000.0 * fixedStepSize,
+                                    simulationEndEpoch + 10000.0 * fixedStepSize );
 
-    //  std::cout << "Define atmospheric model." << std::endl;
+  //    std::cout << "Define atmospheric model." << std::endl;
     //! Define atmospheric model.
     bodySettings[ centralBodyName ]->atmosphereSettings = std::make_shared< AtmosphereSettings >(
                 nrlmsise00 );
@@ -608,7 +613,7 @@ int main()
     bislipSystems->setVertebralColumnInclinationAngle( vertebralColumnInclinationAngle_rad );
     bislipSystems->setBodyFrameToPassengerFrameTransformationMatrix( bodyFrameToPassengerFrameTransformationMatrix );
 
-
+bislipSystems->setMinimumDynamicPressureforControlSurface( minimumDynamicPressureforControlSurface );
 
 
 
@@ -780,6 +785,91 @@ int main()
     setGuidanceAnglesFunctions( AeroGuidance, bodyMap.at( vehicleName ) );
 
     //! **************************************************************************************
+    //! ********** Create alpha-Mach interpolators delineating aerodyanmic data range.
+    //! **************************************************************************************
+
+    //!
+    std::map< double, double > map_alphaMachEnvelopeUB, map_alphaMachEnvelopeLB;
+
+    //! Declare and initialize alpha-Mach Interpolator Settings.
+    std::shared_ptr< tudat::interpolators::InterpolatorSettings > alphaMachEnvelopeInterpolatorSettings = std::make_shared< tudat::interpolators::InterpolatorSettings >( linear_interpolator );
+
+    //! Declare and initialize size vector size.
+    unsigned long alphaMachEnvelopeUBSize = alphaMachEnvelopeUB.size() / 2;
+    unsigned long alphaMachEnvelopeLBSize = alphaMachEnvelopeLB.size() / 2;
+
+    //! Declare alpha-Mach bound vectors.
+    Eigen::VectorXd alphaMachEnvelopeUB_alpha( alphaMachEnvelopeUBSize );
+    Eigen::VectorXd alphaMachEnvelopeUB_Mach(alphaMachEnvelopeUBSize );
+
+    Eigen::VectorXd alphaMachEnvelopeLB_alpha( alphaMachEnvelopeLBSize );
+    Eigen::VectorXd alphaMachEnvelopeLB_Mach(alphaMachEnvelopeLBSize );
+
+    //! Populate vectors that will be used with data map.
+    for( unsigned long i = 0; i < alphaMachEnvelopeUBSize; i++ )
+    {
+        alphaMachEnvelopeUB_Mach( i )  =  alphaMachEnvelopeUB[ i ];
+        alphaMachEnvelopeUB_alpha( i ) =  alphaMachEnvelopeUB[ i + alphaMachEnvelopeUBSize ];
+    }
+
+    //! Populate vectors that will be used with data map.
+    for( unsigned long i = 0; i < alphaMachEnvelopeLBSize; i++ )
+    {
+        alphaMachEnvelopeLB_Mach( i )  =  alphaMachEnvelopeLB[ i ];
+        alphaMachEnvelopeLB_alpha( i ) =  alphaMachEnvelopeLB[ i + alphaMachEnvelopeLBSize ];
+    }
+
+    //! Populate data map for interpolator.
+    for ( unsigned long i = 0; i < alphaMachEnvelopeUBSize; ++i )
+    { map_alphaMachEnvelopeUB[ alphaMachEnvelopeUB_Mach( i ) ] = alphaMachEnvelopeUB_alpha( i ); }
+
+    //! Populate data map for interpolator.
+    for ( unsigned long i = 0; i < alphaMachEnvelopeLBSize; ++i )
+    { map_alphaMachEnvelopeLB[ alphaMachEnvelopeLB_Mach( i ) ] = alphaMachEnvelopeLB_alpha( i ); }
+
+    std::pair< double, double > alphaMachEnvelopeUBInterpolatorDomainInterval = std::make_pair( alphaMachEnvelopeUB_Mach.minCoeff(), alphaMachEnvelopeUB_Mach.maxCoeff() );
+    std::pair< double, double > alphaMachEnvelopeUBInterpolatorRangeInterval  = std::make_pair( alphaMachEnvelopeUB_alpha.minCoeff(), alphaMachEnvelopeUB_alpha.maxCoeff() );
+    std::pair< double, double > alphaMachEnvelopeUBInterpolatorBoundaryValues = std::make_pair( alphaMachEnvelopeUB_alpha( 0 ), alphaMachEnvelopeUB_alpha( alphaMachEnvelopeUB_alpha.size() - 1 ) );
+
+    std::pair< double, double > alphaMachEnvelopeLBInterpolatorDomainInterval = std::make_pair( alphaMachEnvelopeLB_Mach.minCoeff(), alphaMachEnvelopeLB_Mach.maxCoeff() );
+    std::pair< double, double > alphaMachEnvelopeLBInterpolatorRangeInterval  = std::make_pair( alphaMachEnvelopeLB_alpha.minCoeff(), alphaMachEnvelopeLB_alpha.maxCoeff() );
+    std::pair< double, double > alphaMachEnvelopeLBInterpolatorBoundaryValues = std::make_pair( alphaMachEnvelopeLB_alpha( 0 ), alphaMachEnvelopeLB_alpha( alphaMachEnvelopeLB_alpha.size() - 1 ) );
+
+    //! Create alpha-Mach upper bound Interpolator.
+    std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > >  alphaMachEnvelopeUBInterpolator =
+            tudat::interpolators::createOneDimensionalInterpolator< double, double >(
+                           map_alphaMachEnvelopeUB,
+                           alphaMachEnvelopeInterpolatorSettings,
+                           alphaMachEnvelopeUBInterpolatorBoundaryValues );
+
+    //! Create alpha-Mach lower bound Interpolator.
+    std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > >  alphaMachEnvelopeLBInterpolator =
+            tudat::interpolators::createOneDimensionalInterpolator< double, double >(
+                           map_alphaMachEnvelopeLB,
+                           alphaMachEnvelopeInterpolatorSettings,
+                           alphaMachEnvelopeLBInterpolatorBoundaryValues );
+
+    bislip::Variables::printAlphaMachUpperBound(
+                alphaMachEnvelopeUBInterpolator,
+                alphaMachEnvelopeUBInterpolatorDomainInterval,
+                outputPath,
+                outputSubFolder );
+
+    bislip::Variables::printAlphaMachLowerBound(
+                alphaMachEnvelopeLBInterpolator,
+                alphaMachEnvelopeLBInterpolatorDomainInterval,
+                outputPath,
+                outputSubFolder );
+
+    //! Set alpha-Mach upper bound Interpolator
+    bislipSystems->setAlphaMachEnvelopeUBInterpolator( alphaMachEnvelopeUBInterpolator );
+
+    //! Set alpha-Mach lower bound Interpolator
+    bislipSystems->setAlphaMachEnvelopeLBInterpolator( alphaMachEnvelopeLBInterpolator );
+
+
+
+    //! **************************************************************************************
     //! ********** Create heading error deadband interpolators used for bank angle reversals.
     //! **************************************************************************************
 
@@ -787,7 +877,7 @@ int main()
     std::map< double, double > map_headingErrorDeadBandInterpolator;
 
     //! Declare and initialize Interpolator Settings.
-    std::shared_ptr< tudat::interpolators::InterpolatorSettings > interpolatorSettings = std::make_shared< tudat::interpolators::InterpolatorSettings >( linear_interpolator );
+    std::shared_ptr< tudat::interpolators::InterpolatorSettings > headingErrorDeadbandInterpolatorSettings = std::make_shared< tudat::interpolators::InterpolatorSettings >( linear_interpolator );
 
     //! Declare and initialize size vector size.
     unsigned long deadBandSize = headingErrorDeadBand.size() / 2;
@@ -810,20 +900,20 @@ int main()
    // std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > > headingErrorDeadBandInterpolator =
      //       tudat::interpolators::createOneDimensionalInterpolator( map_headingErrorDeadBandInterpolator, interpolatorSettings );
     std::pair< double, double > headingErrorDeadBandInterpolatorDomainInterval = std::make_pair( headingErrorDeadBand_distance.minCoeff(), headingErrorDeadBand_distance.maxCoeff() );
-    std::pair< double, double > headingErrorDeadBandInterpolatorRangeInterval = std::make_pair( headingErrorDeadBand_error.minCoeff(), headingErrorDeadBand_error.maxCoeff() );
+    std::pair< double, double > headingErrorDeadBandInterpolatorRangeInterval  = std::make_pair( headingErrorDeadBand_error.minCoeff(), headingErrorDeadBand_error.maxCoeff() );
     std::pair< double, double > headingErrorDeadBandInterpolatorBoundaryValues = std::make_pair( headingErrorDeadBand_error( 0 ), headingErrorDeadBand_error( headingErrorDeadBand_error.size() - 1 ) );
 
     //! Create Heading Error Deadband Interpolator.
     std::shared_ptr< tudat::interpolators::OneDimensionalInterpolator< double, double > >  headingErrorDeadBandInterpolator =
             tudat::interpolators::createOneDimensionalInterpolator< double, double >(
                            map_headingErrorDeadBandInterpolator,
-                           interpolatorSettings,
+                           headingErrorDeadbandInterpolatorSettings,
                            headingErrorDeadBandInterpolatorBoundaryValues );
 
     //! Set Heading Error Deadband Interpolator
     bislipSystems->setHeadingErrorDeadBandInterpolator( headingErrorDeadBandInterpolator );
 
-    bislip::Variables::printhHeadingErrorDeadBandBounds(
+    bislip::Variables::printHeadingErrorDeadBandBounds(
                 headingErrorDeadBandInterpolator,
                 headingErrorDeadBandInterpolatorDomainInterval,
                 outputPath,
@@ -1032,133 +1122,163 @@ int main()
                     heading_error,
                     vehicleName,
                     centralBodyName ) );
+    //! 40
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     heat_rate_leading_edge,
                     vehicleName,
                     centralBodyName ) );
+    //! 41-43
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     body_fixed_thrust_vector,
                     vehicleName,
                     centralBodyName ) );
+    //! 44
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     bending_moment,
                     vehicleName,
                     centralBodyName ) );
+    //! 45-46
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     local_gravity,
                     vehicleName,
                     centralBodyName ) );
+    //! 47
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     skip_suppression_limit,
                     vehicleName,
                     centralBodyName ) );
+    //! 48
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     control_surface_deflection_dependent_variable,
                     vehicleName,
                     BODYFLAP ) );
+    //! 49
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     bodyflap_deflection_moment_coefficient_increment,
                     vehicleName,
                     centralBodyName ) );
+    //! 50
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     bodyflap_deflection_moment_coefficient_increment_dif,
                     vehicleName,
                     centralBodyName ) );
+    //! 51-53
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     body_fixed_total_load_vector,
                     vehicleName,
                     centralBodyName ) );
+    //! 54-56
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     body_fixed_total_g_load_vector,
                     vehicleName,
                     centralBodyName ) );
+    //! 57
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     body_fixed_total_g_load_magnitude,
                     vehicleName,
                     centralBodyName ) );
+    //! 58-60
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     body_fixed_aero_load_vector,
                     vehicleName,
                     centralBodyName ) );
+    //! 61-63
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     aerodynamic_force_coefficients_dependent_variable,
                     vehicleName,
                     centralBodyName ) );
+    //! 64-66
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     aerodynamic_moment_coefficients_dependent_variable,
                     vehicleName,
                     centralBodyName ) );
+    //! 67
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     heat_rate_chapman,
                     vehicleName,
                     centralBodyName ) );
+    //! 68
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     local_density_dependent_variable,
                     vehicleName,
                     centralBodyName ) );
+    //! 69-71
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     passenger_fixed_total_g_load_vector,
                     vehicleName,
                     centralBodyName ) );
+    //! 72
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
                    commanded_throttle_setting,
                     vehicleName,
                     centralBodyName ) );
+    //! 73
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     commanded_thrust_elevation_angle,
                     vehicleName,
                     centralBodyName ) );
+    //! 74
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     commanded_thrust_azimuth_angle,
                     vehicleName,
                     centralBodyName ) );
+    //! 75
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     commanded_angle_of_attack,
                     vehicleName,
                     centralBodyName ) );
+    //! 76
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     commanded_bank_angle,
                     vehicleName,
                     centralBodyName ) );
+    //! 77
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
-                    current_lift_force,
+                    current_lift_magnitude,
                     vehicleName,
                     centralBodyName ) );
+    //! 78
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     current_heading_error_deadband,
                     vehicleName,
                     centralBodyName ) );
-
-
+    //! 79
+    dep_varList.push_back(
+                std::make_shared< SingleDependentVariableSaveSettings >(
+                    temp_bank_angle,
+                    vehicleName,
+                    centralBodyName ) );
+    //! 80
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     reversal_conditional,
                     vehicleName,
                     centralBodyName ) );
+    //! 81
     dep_varList.push_back(
                 std::make_shared< SingleDependentVariableSaveSettings >(
                     bank_reversal_trigger,
@@ -1201,19 +1321,19 @@ int main()
             std::make_shared< tudat::propagators::PropagationDependentVariableTerminationSettings >(
                 std::make_shared< tudat::propagators::SingleDependentVariableSaveSettings >(
                     angular_distance_to_go,
-                    vehicleName),bislipSystems->getFinalDistanceToTarget(), true );
+                    vehicleName), tudat::unit_conversions::convertRadiansToDegrees( bislipSystems->getFinalDistanceToTarget() ), true );
 
     std::shared_ptr< PropagationTerminationSettings > angularDistanceTravelled_TerminationSettings =
             std::make_shared< tudat::propagators::PropagationDependentVariableTerminationSettings >(
                 std::make_shared< tudat::propagators::SingleDependentVariableSaveSettings >(
                     angular_distance_traveled,
-                    vehicleName),bislipSystems->getInitialDistanceToTarget(), false );
+                    vehicleName), tudat::unit_conversions::convertRadiansToDegrees( bislipSystems->getInitialDistanceToTarget() ), false );
 
     std::shared_ptr< PropagationTerminationSettings > mass_TerminationSettings =
             std::make_shared< tudat::propagators::PropagationDependentVariableTerminationSettings >(
                 std::make_shared< tudat::propagators::SingleDependentVariableSaveSettings >(
                     current_mass,
-                    vehicleName),bislipSystems->getLandingMass(), true );
+                    vehicleName), bislipSystems->getLandingMass(), true );
 
     std::shared_ptr< PropagationTerminationSettings > E_hat_TerminationSettings =
             std::make_shared< tudat::propagators::PropagationDependentVariableTerminationSettings >(
@@ -1268,7 +1388,7 @@ int main()
                 std::make_shared< BodyAerodynamicAngleVariableSaveSettings >(
                     vehicleName,
                     reference_frames::AerodynamicsReferenceFrameAngles::flight_path_angle,
-                    centralBodyName) , unit_conversions::convertDegreesToRadians( 0.0 ) , true );
+                    centralBodyName) , 0.0 , true );
 
     std::shared_ptr< PropagationTerminationSettings > total_aero_g_load_TerminationSettings =
             std::make_shared< tudat::propagators::PropagationDependentVariableTerminationSettings >(
@@ -1500,6 +1620,7 @@ int main()
     std::cout << std::setw(30) << vehicleParameterList[15] << "      " <<  vehicleParameterValues[15] << std::endl;
     std::cout << std::setw(30) << vehicleParameterList[16] << "      " <<  vehicleParameterValues[16] << std::endl;
     std::cout << std::setw(30) << vehicleParameterList[17] << "      " <<  vehicleParameterValues[17] << std::endl;
+    std::cout << std::setw(30) << vehicleParameterList[18] << "      " <<  vehicleParameterValues[18] << std::endl;
     std::cout << "--------------------------------------------------------" << std::endl;
     std::cout << "Aerodynamic Coefficients File Names" << std::endl;
     for( int i = 0; i < int( aeroCoeffFileList.size() ) ; i++)
@@ -1562,7 +1683,10 @@ int main()
 
 
     //! Create an island with populationSize individuals
-    pagmo::island isl{algo, prob, populationSize};
+    pagmo::island isl{ algo, prob, populationSize };
+
+    std::cout << "PAGMO island created" << std::endl;
+
 
     //! Instantiate an archipelago
     /*  archipelago archi{archipelagoSize, algo, prob, pop_per_archi};
@@ -1624,7 +1748,7 @@ int main()
                                                       true ); //! true boolean is for the printPopulationToFile to print with a different prefix: fitness_
         }
 
-        std::cout<<i<<std::endl;
+        std::cout<< i <<std::endl;
 
     }
 

@@ -253,46 +253,50 @@ end
 %% Time History: BodyFlap Deflection Angle - per Evolution
 for p = 1:numel(compilation)
     
-    for k = 1:numel(compilation(p).evolutions)
-        %for k = numel(compilation(p).evolutions):numel(compilation(p).evolutions)
+    % for k = 1:numel(compilation(p).evolutions)
+    %for k = numel(compilation(p).evolutions):numel(compilation(p).evolutions)
+    for k = 1
         fig_num = p*700 + 654000 + k*1;
         figure(fig_num)
         set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
         set (gca,'Fontsize',15)
         title(strcat('BodyFlap Deflection Angle through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
-        ylim([-30 30])
+       % ylim([-30 30])
         max_tof = max([compilation(p).evolutions.max_tof]);
         xlim([0 max_tof])
         xlabel('Propagation Time (s)') % x-axis label
         ylabel('BodyFlap Deflection Angle (deg)') % y-axis label
-        set(gca,'YTick', -30:10:30);
+        %set(gca,'YTick', -30:10:30);
         set(gca,'XTick', 0:200:max_tof);
         hold on
         
         %for ii = (numel(compilation(p).evolutions(k).trajectories)-10):numel(compilation(p).evolutions(k).trajectories)
         for ii = 1:numel(compilation(p).evolutions(k).trajectories)
-            stairs(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
-                compilation(p).evolutions(k).trajectories(ii).individual.bodyflap_deflection);
+            for ii = 1:numel(compilation(p).evolutions(k).trajectories)
+                if ( compilation(p).evolutions(k).trajectories(ii).individual.distance_to_go(end) < 40 )
+                    stairs(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
+                        compilation(p).evolutions(k).trajectories(ii).individual.bodyflap_deflection);
+                end
+            end
         end
-        
-        %plot([0 max_tof],(6371 + 25)*[1 1],'k','LineWidth',2)
-        hold off
-        saveas(...
-            figure(fig_num),...
-            strcat(...
-            compilation(p).mainpath,...
-            '/figures/bodyflap_deflection_angle_v_T_Evolution_',...
-            num2str(k - 1),...
-            '_Set',...
-            convertCharsToStrings(compilation(p).set),...
-            '.png'),...
-            'png');
-        close(fig_num);
+            %plot([0 max_tof],(6371 + 25)*[1 1],'k','LineWidth',2)
+            hold off
+            saveas(...
+                figure(fig_num),...
+                strcat(...
+                compilation(p).mainpath,...
+                '/figures/bodyflap_deflection_angle_v_T_Evolution_',...
+                num2str(k - 1),...
+                '_Set',...
+                convertCharsToStrings(compilation(p).set),...
+                '.png'),...
+                'png');
+            close(fig_num);
+        end
     end
-end
-
-
-
+    
+    
+    
 
 
 

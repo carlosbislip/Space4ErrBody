@@ -25,6 +25,11 @@ void MyGuidance::updateGuidance( const double currentTime )
             coefficientInterface_ = std::dynamic_pointer_cast< tudat::aerodynamics::AerodynamicCoefficientInterface >(
                         bodyMap_.at( vehicleName_ )->getAerodynamicCoefficientInterface( ) );
         }
+
+        if ( bislipSystems->getTempBankAngle() * currentBankAngle_ < 0.0 ) { bislipSystems->setBankAngleReversalTrigger( true ); }
+        else { bislipSystems->setBankAngleReversalTrigger( false ); }
+
+
     }
 
     if ( ( currentTime >= startingEpoch ) && ( ( currentTime < startingEpoch + fixedStepSize * samplingRatio ) ) )
@@ -49,10 +54,6 @@ void MyGuidance::updateGuidance( const double currentTime )
         currentBankAngle_ = bislipSystems->getCurrentBankAngle();
 
         currentAngleOfSideslip_ = 0.0;
-        //std::cout << "Third one: " << currentTime - startingEpoch<< " | "<< currentTrajectoryPhase <<" | "<< tudat::unit_conversions::convertRadiansToDegrees( currentAngleOfAttack_ ) << " | "<< tudat::unit_conversions::convertRadiansToDegrees( currentBankAngle_ ) <<std::endl;
-        // bankLimit = tudat::unit_conversions::convertRadiansToDegrees( bislip::Variables::computeSkipSuppressionLimit( bodyMap_, vehicleName_, centralBodyName_ ) );
-        //   std::cout << "currentBankAngle_: " <<  tudat::unit_conversions::convertRadiansToDegrees( currentBankAngle_ ) << std::endl;
-        //std::cout << "bankLimit: " <<  bankLimit << std::endl;
 
     }
 
@@ -65,45 +66,74 @@ void MyGuidance::evaluateGuidanceFunctions(
         std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems,
         const std::string &currentTrajectoryPhase )
 {
+    //! Determine and set values by evaluating interpolators.
+   // std::cout << "Determine and set values by evaluating interpolators." << std::endl;
     bislipSystems->setCurrentAngleOfAttack( tudat::unit_conversions::convertDegreesToRadians( bislip::Variables::evaluateGuidanceInterpolator( bislip::Parameters::Optimization::AngleOfAttack, bodyMap_, vehicleName_ ) ) );
     bislipSystems->setEvaluatedBankAngle( tudat::unit_conversions::convertDegreesToRadians( bislip::Variables::evaluateGuidanceInterpolator( bislip::Parameters::Optimization::BankAngle, bodyMap_, vehicleName_ ) ) );
     bislipSystems->setCurrentThrustElevationAngle( tudat::unit_conversions::convertDegreesToRadians( bislip::Variables::evaluateGuidanceInterpolator( bislip::Parameters::Optimization::ThrustElevationAngle, bodyMap_, vehicleName_ ) ) );
     bislipSystems->setCurrentThrustAzimuthAngle( tudat::unit_conversions::convertDegreesToRadians( bislip::Variables::evaluateGuidanceInterpolator( bislip::Parameters::Optimization::ThrustAzimuthAngle, bodyMap_, vehicleName_ ) ) );
     bislipSystems->setCurrentThrottleSetting( bislip::Variables::evaluateGuidanceInterpolator( bislip::Parameters::Optimization::ThrottleSetting, bodyMap_, vehicleName_ ) );
+
+    //! Determine and set values by evaluating various functions.
+    //std::cout << "Determine and set values by evaluating various functions." << std::endl;
     bislipSystems->setCurrentEngineStatus( bislip::Variables::determineEngineStatus( bodyMap_.at( vehicleName_ )->getBodyMass(), bodyMap_.at( vehicleName_ )->getVehicleSystems()->getDryMass() ) );
     bislipSystems->setCurrentBodyFixedThrustDirection( bislip::Variables::computeBodyFixedThrustDirection( bodyMap_, vehicleName_ ) );
     bislipSystems->setCurrentThrustMagnitude( bislip::Variables::computeThrustMagnitude( bodyMap_, vehicleName_) );
 
-    currentAngleOfAttack_ = bislipSystems->getCurrentAngleOfAttack();
+    //! Bound and assign the current angle of attack.
+    //std::cout << "Bound and assign the current angle of attack." << std::endl;
+    double angleOfAttackUpperBound = ( bislipSystems->getAlphaMachEnvelopeUBInterpolator() )->interpolate( FlightConditions_->getCurrentMachNumber() ) ;
+    //std::cout << "Angle of attack Upper Bound: " << angleOfAttackUpperBound << std::endl;
+    double angleOfAttackLowerBound = ( bislipSystems->getAlphaMachEnvelopeLBInterpolator() )->interpolate( FlightConditions_->getCurrentMachNumber() ) ;
+    //std::cout << "Angle of attack Lower Bound: " << angleOfAttackLowerBound << std::endl;
+    if ( bislipSystems->getCurrentAngleOfAttack() > angleOfAttackUpperBound )
+    {
+        bislipSystems->setCurrentAngleOfAttack( angleOfAttackUpperBound );
+        currentAngleOfAttack_ = angleOfAttackUpperBound;
+    }
+    else if ( bislipSystems->getCurrentAngleOfAttack() < angleOfAttackLowerBound )
+    {
+        bislipSystems->setCurrentAngleOfAttack( angleOfAttackLowerBound );
+        currentAngleOfAttack_ = angleOfAttackLowerBound;
+    }
+    else
+    { currentAngleOfAttack_ = bislipSystems->getCurrentAngleOfAttack(); }
 
+
+    //! Compute and assign the current bodyflap angle
+    //std::cout << "Compute and assign the current bodyflap angle." << std::endl;
     bislipSystems->setCurrentBodyFlapAngle( bislip::Variables::computeBodyFlapDeflection( bodyMap_, vehicleName_ ) );
-
     vehicleSystems->setCurrentControlSurfaceDeflection( "BodyFlap", tudat::unit_conversions::convertDegreesToRadians( bislipSystems->getCurrentBodyFlapAngle() ) );
+
 
     double bankAngleForSkipSuppression = 0.0;
     bislipSystems->setCurrentBankAngleLimit( bankAngleForSkipSuppression );
 
-    if ( ( currentTrajectoryPhase == "Ascent" ) ) { currentBankAngle_ = 0.0; }
-    else
+
+    currentBankAngle_ = 0.0;
+    if ( currentTrajectoryPhase != "Ascent" )
     {
-        currentBankAngle_ = bislip::Variables::computeBankAngle( bodyMap_, vehicleName_ );
-
-        bankAngleForSkipSuppression = double( bislip::Variables::determineBankAngleSign( currentBankAngle_ ) ) * std::abs( bislip::Variables::computeSkipSuppressionLimit( bodyMap_, vehicleName_, centralBodyName_ ) );
-       //  std::cout << "Current (old) bank angle: " <<  tudat::unit_conversions::convertRadiansToDegrees( bislipSystems->getCurrentBankAngle( ) ) << "  |  "<< "bankLimit: " <<  tudat::unit_conversions::convertRadiansToDegrees( bankLimit ) << "  |  "<< "Calculated (new) Bank Angle: " <<  tudat::unit_conversions::convertRadiansToDegrees( currentBankAngle_ ) << std::endl;
-        bislipSystems->setCurrentBankAngleLimit( bankAngleForSkipSuppression );
-
-
-        if ( std::isnan( bankAngleForSkipSuppression ) == false )
+        if ( FlightConditions_->getCurrentDynamicPressure() > bislipSystems->getMinimumDynamicPressureforControlSurface() )
         {
-            //  std::cout << "bankLimit: " <<  bankLimit << std::endl;
-            //std::cout << "currentBankAngle_: " <<  tudat::unit_conversions::convertRadiansToDegrees( currentBankAngle_ ) << std::endl;
-            if ( std::abs( bankAngleForSkipSuppression ) > std::abs( currentBankAngle_ ) ){ currentBankAngle_ = bankAngleForSkipSuppression; }
-         //   std::cout << "NEW currentBankAngle_: " <<  tudat::unit_conversions::convertRadiansToDegrees( currentBankAngle_ ) << std::endl;
+            currentBankAngle_ = bislip::Variables::computeBankAngle( bodyMap_, vehicleName_ );
+
+
+            bankAngleForSkipSuppression = double( bislip::Variables::determineBankAngleSign( currentBankAngle_ ) ) * std::abs( bislip::Variables::computeSkipSuppressionLimit( bodyMap_, vehicleName_, centralBodyName_ ) );
+            //  std::cout << "Current (old) bank angle: " <<  tudat::unit_conversions::convertRadiansToDegrees( bislipSystems->getCurrentBankAngle( ) ) << "  |  "<< "bankLimit: " <<  tudat::unit_conversions::convertRadiansToDegrees( bankLimit ) << "  |  "<< "Calculated (new) Bank Angle: " <<  tudat::unit_conversions::convertRadiansToDegrees( currentBankAngle_ ) << std::endl;
+            bislipSystems->setCurrentBankAngleLimit( bankAngleForSkipSuppression );
+
+            if ( std::isnan( bankAngleForSkipSuppression ) == false )
+            {
+                //  std::cout << "bankLimit: " <<  bankLimit << std::endl;
+                //std::cout << "currentBankAngle_: " <<  tudat::unit_conversions::convertRadiansToDegrees( currentBankAngle_ ) << std::endl;
+               // if ( std::abs( bankAngleForSkipSuppression ) > std::abs( currentBankAngle_ ) ){ currentBankAngle_ = bankAngleForSkipSuppression; }
+                //   std::cout << "NEW currentBankAngle_: " <<  tudat::unit_conversions::convertRadiansToDegrees( currentBankAngle_ ) << std::endl;
+            }
         }
     }
     bislipSystems->setCurrentBankAngle( currentBankAngle_ );
 
-    // std::cout << "currentThrustMagnitude: " <<  bislipSystems->getCurrentThrustMagnitude() << std::endl;
+   // std::cout << "currentThrustMagnitude: " <<  bislipSystems->getCurrentThrustMagnitude() << std::endl;
     // std::cout << "currentBankAngle_: " <<  tudat::unit_conversions::convertRadiansToDegrees( currentBankAngle_ ) << std::endl;
     // std::cout << "bankLimit: " <<  bankLimit << std::endl;
 
@@ -113,52 +143,23 @@ void MyGuidance::evaluateGuidanceFunctions(
 
 Eigen::Vector3d MyGuidance::getCurrentBodyFixedThrustDirection( )
 {
-    if( FlightConditions_ == nullptr )
-    {
-        FlightConditions_ = std::dynamic_pointer_cast< tudat::aerodynamics::AtmosphericFlightConditions >(
-                    bodyMap_.at( vehicleName_ )->getFlightConditions( ) );
-    }
     std::shared_ptr< bislip::BislipVehicleSystems > bislipSystems = bodyMap_.at( vehicleName_ )->getBislipSystems();
-
     return bislipSystems->getCurrentBodyFixedThrustDirection();
 }
 
 bool MyGuidance::getCurrentEngineStatus( )
 {
-    if( FlightConditions_ == nullptr )
-    {
-        FlightConditions_ = std::dynamic_pointer_cast< tudat::aerodynamics::AtmosphericFlightConditions >(
-                    bodyMap_.at( vehicleName_ )->getFlightConditions( ) );
-    }
     std::shared_ptr< bislip::BislipVehicleSystems > bislipSystems = bodyMap_.at( vehicleName_ )->getBislipSystems();
-
     return bislipSystems->getCurrentEngineStatus();
 }
 
 double MyGuidance::getCurrentThrustMagnitude( )
 {
-    if( FlightConditions_ == nullptr )
-    {
-        FlightConditions_ = std::dynamic_pointer_cast< tudat::aerodynamics::AtmosphericFlightConditions >(
-                    bodyMap_.at( vehicleName_ )->getFlightConditions( ) );
-    }
     std::shared_ptr< bislip::BislipVehicleSystems > bislipSystems = bodyMap_.at( vehicleName_ )->getBislipSystems();
-
     return bislipSystems->getCurrentThrustMagnitude();
 }
 
-
-
-double MyGuidance::getBodyFlapDeflection( )
-{
-    return bislip::Variables::computeBodyFlapDeflection( bodyMap_, vehicleName_ );
-}
-
-double MyGuidance::getBankAngle( )
-{
-    return bislip::Variables::computeBankAngle( bodyMap_, vehicleName_ );
-}
-
+/*
 Eigen::Vector6d MyGuidance::getPartialCurrentCoefficients( )
 {
     if( FlightConditions_ == nullptr )
@@ -181,7 +182,7 @@ Eigen::Vector6d MyGuidance::getPartialCurrentCoefficients( )
 
     return bislip::Variables::computePartialCurrentCoefficients( bodyMap_, vehicleName_ );
 }
-
+*/
 
 
 

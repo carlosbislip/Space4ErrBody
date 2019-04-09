@@ -82,14 +82,13 @@ public:
             std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems,
             const std::string &currentTrajectoryPhase);
 
-    Eigen::Vector6d getPartialCurrentCoefficients( );
+   // Eigen::Vector6d getPartialCurrentCoefficients( );
     Eigen::Vector3d getCurrentBodyFixedThrustDirection( );
     double getCurrentThrustMagnitude( );
     double getCurrentSpecificImpulse( ) { return bodyMap_.at( vehicleName_ )->getBislipSystems()->getSpecificImpulse(); }
     bool getCurrentEngineStatus( );
 
     double getBodyFlapDeflection( );
-    double getBankAngle( );
 
 
 public:

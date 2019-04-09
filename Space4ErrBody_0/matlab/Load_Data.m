@@ -128,10 +128,13 @@ switch option
             evolutions(k).trajectories.individual.localDensity                     = nan;
             evolutions(k).trajectories.individual.passenger_fixed_total_g_load_x   = nan;
             evolutions(k).trajectories.individual.passenger_fixed_total_g_load_y   = nan;
-            evolutions(k).trajectories.individual.passenger_fixed_total_g_load_z   = nan;            
-            evolutions(k).trajectories.individual.currentLiftForce                 = nan;            
+            evolutions(k).trajectories.individual.passenger_fixed_total_g_load_z   = nan;
+            evolutions(k).trajectories.individual.currentLiftForce                 = nan;
+            evolutions(k).trajectories.individual.headingErrorDeadband             = nan;
+            evolutions(k).trajectories.individual.temBankAngle                     = nan;
+            evolutions(k).trajectories.individual.reversalConditional              = nan;
             evolutions(k).trajectories.individual.bank_angle_reversal_trigger      = nan;
-
+            
             
             
             

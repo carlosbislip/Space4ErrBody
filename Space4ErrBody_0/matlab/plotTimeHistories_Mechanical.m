@@ -4,7 +4,9 @@ function [  ] = plotTimeHistories_Mechanical( compilation )
 %% Time History: Total Body G-load - per Evolution
 for p = 1:numel(compilation)
     
-    for k = numel(compilation(p).evolutions):numel(compilation(p).evolutions)
+    %   for k = 1:numel(compilation(p).evolutions)
+    % for k = numel(compilation(p).evolutions):numel(compilation(p).evolutions)
+    for k = 1
         fig_num = p*100 + 3457000 + k*1;
         figure(fig_num)
         set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
@@ -19,12 +21,13 @@ for p = 1:numel(compilation)
         set(gca,'XTick', 0:200:max_tof);
         hold on
         
-         %for ii = (numel(compilation(p).evolutions(k).trajectories)-10):numel(compilation(p).evolutions(k).trajectories)
+       % for ii = (numel(compilation(p).evolutions(k).trajectories)):numel(compilation(p).evolutions(k).trajectories)
         for ii = 1:numel(compilation(p).evolutions(k).trajectories)
-          stairs(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
+            if ( compilation(p).evolutions(k).trajectories(ii).individual.distance_to_go(end) < 40 )
+               stairs(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
                 compilation(p).evolutions(k).trajectories(ii).individual.body_fixed_total_g_load_mag);
         end
-        
+        end
         %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
         hold off
         saveas(...
@@ -46,7 +49,9 @@ end
 %% Time History: Total Body Z-Component G-load - per Evolution
 for p = 1:numel(compilation)
     
-    for k = numel(compilation(p).evolutions):numel(compilation(p).evolutions)
+    %   for k = 1:numel(compilation(p).evolutions)
+    % for k = numel(compilation(p).evolutions):numel(compilation(p).evolutions)
+    for k = 1
         fig_num = p*200 + 3457000 + k*1;
         figure(fig_num)
         set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
@@ -61,10 +66,12 @@ for p = 1:numel(compilation)
         set(gca,'XTick', 0:200:max_tof);
         hold on
         
-         %for ii = (numel(compilation(p).evolutions(k).trajectories)-10):numel(compilation(p).evolutions(k).trajectories)
+        % for ii = (numel(compilation(p).evolutions(k).trajectories)):numel(compilation(p).evolutions(k).trajectories)
         for ii = 1:numel(compilation(p).evolutions(k).trajectories)
-          stairs(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
-                compilation(p).evolutions(k).trajectories(ii).individual.body_fixed_total_g_load_z);
+            if ( compilation(p).evolutions(k).trajectories(ii).individual.distance_to_go(end) < 40 )
+                stairs(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
+                    compilation(p).evolutions(k).trajectories(ii).individual.body_fixed_total_g_load_z);
+            end
         end
         
         %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
@@ -87,7 +94,9 @@ end
 %% Time History: Total Passenger Z-Component G-load - per Evolution
 for p = 1:numel(compilation)
     
-    for k = numel(compilation(p).evolutions):numel(compilation(p).evolutions)
+   %   for k = 1:numel(compilation(p).evolutions)
+    % for k = numel(compilation(p).evolutions):numel(compilation(p).evolutions)
+    for k = 1  
         fig_num = p*200 + 3458000 + k*1;
         figure(fig_num)
         set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
@@ -102,10 +111,12 @@ for p = 1:numel(compilation)
         set(gca,'XTick', 0:200:max_tof);
         hold on
         
-         %for ii = (numel(compilation(p).evolutions(k).trajectories)-10):numel(compilation(p).evolutions(k).trajectories)
+        % for ii = (numel(compilation(p).evolutions(k).trajectories)):numel(compilation(p).evolutions(k).trajectories)
         for ii = 1:numel(compilation(p).evolutions(k).trajectories)
+            if ( compilation(p).evolutions(k).trajectories(ii).individual.distance_to_go(end) < 40 )
           stairs(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
                 compilation(p).evolutions(k).trajectories(ii).individual.passenger_fixed_total_g_load_z);
+            end
         end
         
         %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
@@ -231,10 +242,10 @@ for p = 1:numel(compilation)
         set(gca,'XTick', 0:50:max_tof);
         hold on
         
-        for ii = (numel(compilation(p).evolutions(k).trajectories)):numel(compilation(p).evolutions(k).trajectories)
-            % for ii = 1:numel(compilation(p).evolutions(k).trajectories)
-            if ( compilation(p).evolutions(k).trajectories(ii).individual.distance_to_go(end) < 30 )
-                plot(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
+       % for ii = (numel(compilation(p).evolutions(k).trajectories)):numel(compilation(p).evolutions(k).trajectories)
+        for ii = 1:numel(compilation(p).evolutions(k).trajectories)
+            if ( compilation(p).evolutions(k).trajectories(ii).individual.distance_to_go(end) < 40 )
+                  plot(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
                     compilation(p).evolutions(k).trajectories(ii).individual.acc_thru_M);
             end
         end
@@ -262,8 +273,9 @@ end
 %% Time History: Dynamic Pressure - per Evolution
 for p = 1:numel(compilation)
     
-    for k = 1:numel(compilation(p).evolutions)
-   % for k = numel(compilation(p).evolutions):numel(compilation(p).evolutions)
+    %   for k = 1:numel(compilation(p).evolutions)
+    % for k = numel(compilation(p).evolutions):numel(compilation(p).evolutions)
+    for k = 1
         fig_num = p*100 + 654180 + k*1;
         figure(fig_num)
         set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
@@ -278,12 +290,14 @@ for p = 1:numel(compilation)
         set(gca,'XTick', 0:200:max_tof);
         hold on
         
-       % for ii = (numel(compilation(p).evolutions(k).trajectories)-10):numel(compilation(p).evolutions(k).trajectories)
-             for ii = 1:numel(compilation(p).evolutions(k).trajectories)
-            plot(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
-                compilation(p).evolutions(k).trajectories(ii).individual.dynamic_pressure/1e3);
+        % for ii = (numel(compilation(p).evolutions(k).trajectories)):numel(compilation(p).evolutions(k).trajectories)
+        for ii = 1:numel(compilation(p).evolutions(k).trajectories)
+            if ( compilation(p).evolutions(k).trajectories(ii).individual.distance_to_go(end) < 40 )
+                plot(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
+                    compilation(p).evolutions(k).trajectories(ii).individual.dynamic_pressure/1e3);
+            end
+            
         end
-        
         %plot([0 max_tof],(6371 + 25)*[1 1],'k','LineWidth',2)
         hold off
         saveas(...

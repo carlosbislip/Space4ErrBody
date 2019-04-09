@@ -321,7 +321,7 @@ for p = 1:numel(compilation)
         
         % for ii = (numel(compilation(p).evolutions(k).trajectories)-10):numel(compilation(p).evolutions(k).trajectories)
         for ii = 1:numel(compilation(p).evolutions(k).trajectories)
-            if ( compilation(p).evolutions(k).trajectories(ii).individual.distance_to_go(end) < 30 )
+           % if ( compilation(p).evolutions(k).trajectories(ii).individual.distance_to_go(end) < 30 )
                 stairs(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
                     abs(compilation(p).evolutions(k).trajectories(ii).individual.skip_suppression_limit));
                 
@@ -331,7 +331,7 @@ for p = 1:numel(compilation)
                 stairs(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
                     compilation(p).evolutions(k).trajectories(ii).individual.evaluated_bank_angle)
                 
-            end
+          %  end
         end
         
         %plot([0 max_tof],(25)*[1 1],'k','LineWidth',2)

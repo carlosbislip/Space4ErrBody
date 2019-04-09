@@ -16,5 +16,7 @@ initialConditionsValues.txt
 constraintsList.txt
 constraintsValues.txt
 headingErrorDeadBand.txt
+alphaMachEnvelopeLB.txt
+alphaMachEnvelopeUB.txt
 AMS to IAD Ballistic Trajectory: 10/28/2018  11:00:00 AM
 Vehicle

@@ -5,3 +5,4 @@ Thrust Elevation Angle
 Thrust Azimuth Angle
 Throttle Setting
 Final Velocity
+Skip Suppression

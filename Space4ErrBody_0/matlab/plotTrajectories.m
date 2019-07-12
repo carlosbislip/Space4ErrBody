@@ -12,7 +12,7 @@ if compilation(1).validation == 1
     lat_f_deg = 5;
     lon_f_deg = -53;
     validation = 1;
-  end
+end
 
 % %% Termination State on 2D Map - per Set
 % %close all
@@ -33,7 +33,7 @@ if compilation(1).validation == 1
 %     xlim([-180 180])
 %     ylim([-90 90])
 %     for k = 1:numel(compilation(p).evolutions)
-%         % for ii = 1:numel(compilation(p).evolutions(k).trajectories) 
+%         % for ii = 1:numel(compilation(p).evolutions(k).trajectories)
 %         %         terminal_lat(ii) =  compilation(p).evolutions(k).trajectories(ii).individual.latitude_angle(end);
 %         %                    lons(ii) =  compilation(p).evolutions(k).trajectories(ii).individual.longitude_angle(end);
 %         %
@@ -127,125 +127,151 @@ yunit = .75 * sin(th) + lat_f_deg;
 %% Trajectories on 2D Map - per Set
 %close all
 for p = 1:numel(compilation)
-    fig_num = p + 300;
-    figure(fig_num)
-    hold on
-    title(strcat('Trajectories - per Set ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
-    set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
-    xlabel('\tau (deg)') % x-axis label
-    ylabel('\delta (deg)') % y-axis label
-    img = imread('img.jpg');
-    imagesc([-180 180], [-90 90], (flipud(img)));
-    set (gca,'Fontsize',20)
-    set(gca,'YTick', -90:15:90);
-    set(gca,'XTick', -180:30:180);
-    %xlim([-30 15])
-    %ylim([38 75])
-    xlim([-180 180])
-    ylim([-90 90])
     
     for k = 1:numel(compilation(p).evolutions)
-        for ii = 1:numel(compilation(p).evolutions(k).trajectories)
-           if  compilation(1).validation == 1
-                plot(...
-                compilation(p).evolutions(k).trajectories(ii).individual.longitude_angle,...
-                compilation(p).evolutions(k).trajectories(ii).individual.latitude_angle,'g','LineWidth',2)
-           else  
-               plot(...
-                compilation(p).evolutions(k).trajectories(ii).individual.longitude_angle,...
-                compilation(p).evolutions(k).trajectories(ii).individual.latitude_angle)
-           end
+        
+        if compilation(p).evolutions(k).population(1).indices.printed > 0
+            
+            fig_num = p + 3000 + k*1;
+            figure(fig_num)
+            hold on
+            title(strcat('Trajectories - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+            set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
+            xlabel('\tau (deg)') % x-axis label
+            ylabel('\delta (deg)') % y-axis label
+            img = imread('img.jpg');
+            imagesc([-180 180], [-90 90], (flipud(img)));
+            set (gca,'Fontsize',20)
+            set(gca,'YTick', -90:15:90);
+            set(gca,'XTick', -180:30:180);
+            %xlim([-30 15])
+            %ylim([38 75])
+            xlim([-180 180])
+            ylim([-90 90])
+            
+            for ii = compilation(p).evolutions(k).population(1).indices.printed
+                if  compilation(1).validation == 1
+                    plot(...
+                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.longitudeAngle,...
+                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.latitudeAngle,'g','LineWidth',2)
+                else
+                    
+                    plot(...
+                        ...%rad2deg(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.longitudeAngle),...
+                        ...%rad2deg(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.latitudeAngle),'g','LineWidth',2)
+                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.longitudeAngle,...
+                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.latitudeAngle,'LineWidth',2)
+                end
+            end
+            
+            
+            
+            
+            
+            plot(lon_f_deg,lat_f_deg,'MarkerSize',20)
+            plot(lon_f_deg*[1 1],90*[-1 1],'k','LineWidth',2)
+            plot(180*[-1 1],lat_f_deg*[1 1],'k','LineWidth',2)
+            plot(xunit, yunit,'k','LineWidth',2);
+            scatter(lon_f_deg,lat_f_deg,100,'r','x')
+            axP = get(gca,'Position');
+            %  legend(legendtext,'Location','southeastoutside')
+            set(gca, 'Position', axP)
+            
+            clear legendtext
+            %xlim([(lon_IAD_deg - 20) (lon_IAD_deg + 20)])
+            %ylim([(lat_IAD_deg - 10) (lat_IAD_deg + 10)])
+            hold off
+            saveas(...
+                figure(fig_num),...
+                strcat(...
+                compilation(p).mainpath,...
+                'figures/Trajectories_2D_Map_',...
+                num2str(k - 1),...
+                '_Set',...
+                convertCharsToStrings(compilation(p).set),...
+                '.png'),...
+                'png');
+            % close(fig_num);
         end
+        
     end
-    
-    plot(lon_f_deg,lat_f_deg,'MarkerSize',20)
-    plot(lon_f_deg*[1 1],90*[-1 1],'k','LineWidth',2)
-    plot(180*[-1 1],lat_f_deg*[1 1],'k','LineWidth',2)
-    plot(xunit, yunit,'k','LineWidth',2);
-    scatter(lon_f_deg,lat_f_deg,100,'r','x')
-    axP = get(gca,'Position');
-    %  legend(legendtext,'Location','southeastoutside')
-    set(gca, 'Position', axP)
-    
-    clear legendtext
-    %xlim([(lon_IAD_deg - 20) (lon_IAD_deg + 20)])
-    %ylim([(lat_IAD_deg - 10) (lat_IAD_deg + 10)])
-    hold off
-    saveas(...
-        figure(fig_num),...
-        strcat(...
-compilation(p).mainpath,...
-        '/figures/Trajectories_2D_Map_Set',...
-        convertCharsToStrings(compilation(p).set)',...
-        '.png'),...
-        'png');
-    % close(fig_num);
-    
 end
 
 %% Trajectories on 2D Map - Zoom - per Set
 %close all
 for p = 1:numel(compilation)
-    fig_num = p + 310;
-    figure(fig_num)
-    hold on
-    title(strcat('Trajectories - Zoom - per Set ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
-    set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
-    xlabel('\tau (deg)') % x-axis label
-    ylabel('\delta (deg)') % y-axis label
-    img = imread('img.jpg');
-    imagesc([-180 180], [-90 90], (flipud(img)));
-    set (gca,'Fontsize',20)
-    set(gca,'YTick', -90:2:90);
-    set(gca,'XTick', -180:2:180);
-    xlim([(lon_f_deg - 2) (lon_f_deg + 30)])
-    ylim([(lat_f_deg - 2) (lat_f_deg + 14)])
-
-    if compilation(1).validation == 1
-        xlim([-82 -42])
-        ylim([-8 12])
-        
-    end
     
     for k = 1:numel(compilation(p).evolutions)
-        for ii = 1:numel(compilation(p).evolutions(k).trajectories)
-           if  compilation(1).validation == 1
-                plot(...
-                compilation(p).evolutions(k).trajectories(ii).individual.longitude_angle,...
-                compilation(p).evolutions(k).trajectories(ii).individual.latitude_angle,'g','LineWidth',2)
-           else  
-               plot(...
-                compilation(p).evolutions(k).trajectories(ii).individual.longitude_angle,...
-                compilation(p).evolutions(k).trajectories(ii).individual.latitude_angle)
-           end
+        
+        if compilation(p).evolutions(k).population(1).indices.printed > 0
+            
+            fig_num = p + 3100 + k*1;
+            figure(fig_num)
+            hold on
+            title(strcat('Trajectories - Zoom - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+            set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
+            xlabel('\tau (deg)') % x-axis label
+            ylabel('\delta (deg)') % y-axis label
+            img = imread('img.jpg');
+            imagesc([-180 180], [-90 90], (flipud(img)));
+            set (gca,'Fontsize',20)
+            set(gca,'YTick', -90:2:90);
+            set(gca,'XTick', -180:2:180);
+            xlim([(lon_f_deg - 2) (lon_f_deg + 30)])
+            ylim([(lat_f_deg - 2) (lat_f_deg + 14)])
+            
+            if compilation(1).validation == 1
+                xlim([-82 -42])
+                ylim([-8 12])
+                
+            end
+            
+            
+            for ii = compilation(p).evolutions(k).population(1).indices.printed
+                % if compilation(p).evolutions(k).trajectories(ii).individual.distance_to_go(end) < 15
+                
+                if  compilation(1).validation == 1
+                    plot(...
+                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.longitudeAngle,...
+                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.latitudeAngle,'g','LineWidth',2)
+                else
+                    plot(...
+                        ...%rad2deg(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.longitudeAngle),...
+                        ...%rad2deg(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.latitudeAngle),'g','LineWidth',2)
+                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.longitudeAngle,...
+                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.latitudeAngle,'LineWidth',2)
+                end
+                %end
+            end
+            
+            
+            plot(lon_f_deg,lat_f_deg,'MarkerSize',20)
+            plot(lon_f_deg*[1 1],90*[-1 1],'k','LineWidth',2)
+            plot(180*[-1 1],lat_f_deg*[1 1],'k','LineWidth',2)
+            plot(xunit, yunit,'k','LineWidth',2);
+            scatter(lon_f_deg,lat_f_deg,100,'r','x')
+            axP = get(gca,'Position');
+            % legend(legendtext,'Location','southeastoutside')
+            set(gca, 'Position', axP)
+            
+            clear legendtext
+            %xlim([(lon_IAD_deg - 20) (lon_IAD_deg + 20)])
+            %ylim([(lat_IAD_deg - 10) (lat_IAD_deg + 10)])
+            hold off
+            saveas(...
+                figure(fig_num),...
+                strcat(...
+                compilation(p).mainpath,...
+                'figures/Trajectories_2D_Map_Zoom_',...
+                num2str(k - 1),...
+                '_Set',...
+                convertCharsToStrings(compilation(p).set),...
+                '.png'),...
+                'png');
+            % close(fig_num);
         end
     end
-    
-    plot(lon_f_deg,lat_f_deg,'MarkerSize',20)
-    plot(lon_f_deg*[1 1],90*[-1 1],'k','LineWidth',2)
-    plot(180*[-1 1],lat_f_deg*[1 1],'k','LineWidth',2)
-    plot(xunit, yunit,'k','LineWidth',2);
-    scatter(lon_f_deg,lat_f_deg,100,'r','x')
-    axP = get(gca,'Position');
-    % legend(legendtext,'Location','southeastoutside')
-    set(gca, 'Position', axP)
-
-    clear legendtext
-    %xlim([(lon_IAD_deg - 20) (lon_IAD_deg + 20)])
-    %ylim([(lat_IAD_deg - 10) (lat_IAD_deg + 10)])
-    hold off
-    saveas(...
-        figure(fig_num),...
-        strcat(...
-compilation(p).mainpath,...
-        '/figures/Trajectories_2D_Map_Zoom_Set',...
-        convertCharsToStrings(compilation(p).set)',...
-        '.png'),...
-        'png');
-    % close(fig_num);
-    
 end
-
 %
 % %% Trajectory on 2D Map - Zoom - per Evolution
 % %close all
@@ -275,7 +301,7 @@ end
 %
 %         end
 %
-% for ii = 1:numel(compilation(p).evolutions(k).trajectories) 
+% for ii = 1:numel(compilation(p).evolutions(k).trajectories)
 %
 %             plot(...
 %                 compilation(p).evolutions(k).trajectories(ii).individual.longitude_angle,...
@@ -299,7 +325,7 @@ end
 %         hold off
 %         saveas(...
 %             figure(fig_num),...
-%             strcat(            compilations(1).evolutions.mainpath,... 
+%             strcat(            compilations(1).evolutions.mainpath,...
 %             '/figures/Trajectories_2D_Map_Zoom_Evolution_',...
 %             num2str(k - 1),...
 %             '_Set',...
@@ -337,20 +363,15 @@ for p = 1:numel(compilation)
     axis('off');
     
     for k = 1:numel(compilation(p).evolutions)
-    %for k = 7
-for ii = 1:numel(compilation(p).evolutions(k).trajectories) 
-     %   for ii = 53
-                 if ( compilation(p).evolutions(k).trajectories(ii).individual.time_vector(end) < 2000 )
-
-     
+        for ii = compilation(p).evolutions(k).population(1).indices.printed
+            
+            
             color_line3(...
-                compilation(p).evolutions(k).trajectories(ii).individual.x_R,...
-                compilation(p).evolutions(k).trajectories(ii).individual.y_R,...
-                compilation(p).evolutions(k).trajectories(ii).individual.z_R,...
-                compilation(p).evolutions(k).trajectories(ii).individual.time_vector);
-           
-                 end
-                  %                 scatter3(...
+                compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.x_R,...
+                compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.y_R,...
+                compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.z_R,...
+                compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight);
+            %                 scatter3(...
             %                     compilation(p).evolutions(i).trajectories(k).individual.x_R(1),...
             %                     compilation(p).evolutions(i).trajectories(k).individual.y_R(1),...
             %                     compilation(p).evolutions(i).trajectories(k).individual.z_R(1),'filled')

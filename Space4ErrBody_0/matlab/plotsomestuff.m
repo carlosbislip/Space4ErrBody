@@ -1,6 +1,7 @@
 function [  ] = plotsomestuff( compilation )
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
+disp('PLOTSOMESTUFF')
 
 lat_f_deg = 38.9444444444444;
 lon_f_deg = -77.4558333333;
@@ -16,6 +17,133 @@ if compilation(1).validation == 1
     lon_f_deg = -53;
     validation = 1;
 end
+
+%% Printed Distribution per Evolution
+for p = 1:numel(compilation)
+    
+    fig_num = p*100;
+    figure(fig_num)
+    set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
+    set (gca,'Fontsize',15)
+    title(strcat('Printed Distribution per Evolution:_{ }',' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+    ylim([0 compilation(p).evolutions(1).population(1).size.collective])
+    % max_tof = max([compilation(p).evolutions.max_tof]);
+    %max_tof =1400;
+    %xlim([0 max_tof])
+    xlabel('Evolution') % x-axis label
+    ylabel('Printed Distribution') % y-axis label
+    set(gca,'YTick', 0:compilation(p).evolutions(1).population(1).size.collective/10:compilation(p).evolutions(1).population(1).size.collective);
+    set(gca,'XTick', 0:1:numel(compilation(p).evolutions)-1);
+    hold on
+    grid on
+    % for ii = 1:numel(compilation(p).evolutions(k).trajectories)
+    %    plot(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
+    %       compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.airspeed);
+    %end
+    
+    for k = 1:numel(compilation(p).evolutions)
+        popMatrix(k,:) = [ compilation(p).evolutions(k).population(1).size.printed compilation(p).evolutions(k).population(1).size.nonPrinted ];
+        
+    end
+    
+    
+    X = linspace(1,numel(compilation(p).evolutions),numel(compilation(p).evolutions)) - 1;
+    
+    if X == 0
+        bar(0,sum(popMatrix),'FaceColor',[0.8500, 0.3250, 0.0980])
+        bar(0,popMatrix(1),'FaceColor',[0, 0.4470, 0.7410])
+        labels = {'Printed Population','Non-Printed Population'};
+        legend(labels{end:-1:1});
+    else
+        bar( X, popMatrix,'stacked')
+        legend('Printed Population','Non-Printed Population')
+    end
+    
+    % a = axis;
+    % axis([a(1) a(2)-0.8 a(3:4)]);
+    
+    %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
+    hold off
+    saveas(...
+        figure(fig_num),...
+        strcat(...
+        compilation(p).mainpath,...
+        '/figures/printedDistribution_Evolution_',...
+        '_Set',...
+        convertCharsToStrings(compilation(p).set),...
+        '.png'),...
+        'png');
+    %        close(fig_num);
+end
+
+
+
+%% PARETO!?????
+for p = 1:numel(compilation)
+   
+    for k = 1:numel(compilation(p).evolutions)
+
+    fig_num = p*100 + k*1;
+    figure(fig_num)
+    set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
+    set (gca,'Fontsize',15)
+    title(strcat('Pareto Front per Evolution:_{ }',' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+    %ylim([0 compilation(p).evolutions(1).population(1).size.collective])
+    % max_tof = max([compilation(p).evolutions.max_tof]);
+    %max_tof =1400;
+    %xlim([0 max_tof])
+    xlabel('Objective X') % x-axis label
+    ylabel('Objective Y') % y-axis label
+    zlabel('Objective Z') % y-axis label
+    %set(gca,'YTick', 0:compilation(p).evolutions(1).population(1).size.collective/10:compilation(p).evolutions(1).population(1).size.collective);
+    %set(gca,'XTick', 0:1:numel(compilation(p).evolutions)-1);
+   
+    hold on
+    grid on
+    
+    
+    
+    
+    
+    
+    for i = 1:length(compilation(p).evolutions(k).population(1).indices.nonDominatedFront)
+
+        indices = [ compilation(p).evolutions(k).population(1).indices.nonDominatedFront{1,i} ];
+        
+        for j = 1:length(indices)
+            XYZ(j,:) = [ compilation(p).evolutions(k).population(indices(j)).fitnessVector.Common.angularDistanceToGo ...
+                compilation(p).evolutions(k).population(indices(j)).fitnessVector.Ascent.basicDynamics ...
+                compilation(p).evolutions(k).population(indices(j)).fitnessVector.Descent.basicDynamics ];
+        end
+       scatter3( XYZ(:,1),XYZ(:,2),XYZ(:,3))
+
+        
+    end
+    
+    view(3)
+   
+    
+    % a = axis;
+    % axis([a(1) a(2)-0.8 a(3:4)]);
+    
+    %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
+    hold off
+    saveas(...
+        figure(fig_num),...
+        strcat(...
+        compilation(p).mainpath,...
+        '/figures/paretoFront_Evolution_',...
+                        num2str(k - 1),...
+'_Set',...
+        convertCharsToStrings(compilation(p).set),...
+        '.png'),...
+        'png');
+    %        close(fig_num);
+end
+
+end
+
+
 
 
 
@@ -47,7 +175,6 @@ plotTimeHistories_EngineOps( compilation );
 %%
 plotTimeHistories_SpatialAwareness( compilation );
 
-
 %%
 plotCompoundRelations( compilation );
 
@@ -55,39 +182,52 @@ plotCompoundRelations( compilation );
 for p = 1:numel(compilation)
     
     for k = 1:numel(compilation(p).evolutions)
-        fig_num = p*100 + 3466000 + k*1;
-        figure(fig_num)
-        set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
-        set (gca,'Fontsize',15)
-        title(strcat('Airspeed through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
-        %ylim([0 5])
-        max_tof = max([compilation(p).evolutions.max_tof]);
-        %max_tof =1400;
-        xlim([0 max_tof])
-        xlabel('Propagation Time (s)') % x-axis label
-        ylabel('Airspeed (m/s)') % y-axis label
-        %set(gca,'YTick', 0:1:10);
-        set(gca,'XTick', 0:200:max_tof);
-        hold on
-        grid on
-for ii = 1:numel(compilation(p).evolutions(k).trajectories)   
-            plot(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
-                compilation(p).evolutions(k).trajectories(ii).individual.airspeed);
-        end
         
-        %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
-        hold off
-        saveas(...
-            figure(fig_num),...
-            strcat(...
-            compilation(p).mainpath,...
-            '/figures/airspeed_v_T_Evolution_',...
-            num2str(k - 1),...
-            '_Set',...
-            convertCharsToStrings(compilation(p).set),...
-            '.png'),...
-            'png');
-        %        close(fig_num);
+        if compilation(p).evolutions(k).population(1).indices.printed > 0
+            
+            fig_num = p*100 + 3466000 + k*1;
+            figure(fig_num)
+            set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
+            set (gca,'Fontsize',15)
+            title(strcat('Airspeed through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+            max_tof = max([compilation(p).evolutions.max_tof]);
+            ylim([0 8000])
+            xlim([0 max_tof])
+            xlabel('Propagation Time (s)') % x-axis label
+            ylabel('Airspeed (m/s)') % y-axis label
+            set(gca,'YTick', 0:1000:8000);
+            set(gca,'XTick', 0:200:max_tof);
+            
+            hold on
+            grid on
+            
+            for ii = compilation(p).evolutions(k).population(1).indices.printed
+                h = stairs(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
+                    compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.airspeed);
+                set(gca, 'ColorOrder', circshift(get(gca, 'ColorOrder'), numel(h)))
+                
+                scatter(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(1)),...
+                    compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.airspeed(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(1)),'x');
+                set(gca, 'ColorOrder', circshift(get(gca, 'ColorOrder'), numel(h)))
+                
+                scatter(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(2)),...
+                    compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.airspeed(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(2)),'s');
+            end
+            
+            hold off
+            
+            saveas(...
+                figure(fig_num),...
+                strcat(...
+                compilation(p).mainpath,...
+                '/figures/timeHistoryAirspeed_Evolution',...
+                num2str(k - 1),...
+                '_Set',...
+                convertCharsToStrings(compilation(p).set),...
+                '.png'),...
+                'png');
+            %        close(fig_num);
+        end
     end
 end
 
@@ -95,238 +235,264 @@ end
 for p = 1:numel(compilation)
     
     for k = 1:numel(compilation(p).evolutions)
-        %  for k = numel(compilation(p).evolutions):numel(compilation(p).evolutions)
-        fig_num = p*100 + 3466000 + k*1;
-        figure(fig_num)
-        set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
-        set (gca,'Fontsize',15)
-        title(strcat('Mach through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
-        ylim([0 30])
-        max_tof = max([compilation(p).evolutions.max_tof]);
-        %max_tof = 1400;
-        xlim([0 max_tof])
-        xlabel('Propagation Time (s)') % x-axis label
-        ylabel('Mach (-)') % y-axis label
-        %set(gca,'YTick', 0:1:10);
-        set(gca,'XTick', 0:200:max_tof);
-        hold on
-        grid on
         
-        
-        for ii = 1:numel(compilation(p).evolutions(k).trajectories)
-            if  compilation(1).validation == 1
-                stairs(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
-                    compilation(p).evolutions(k).trajectories(ii).individual.mach,'k','LineWidth',2);
-            else
-                stairs(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
-                    compilation(p).evolutions(k).trajectories(ii).individual.mach);
+        if compilation(p).evolutions(k).population(1).indices.printed > 0
+            
+            fig_num = p*100 + 3466000 + k*1;
+            figure(fig_num)
+            set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
+            set (gca,'Fontsize',15)
+            title(strcat('Mach through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+            ylim([0 30])
+            max_tof = max([compilation(p).evolutions.max_tof]);
+            xlim([0 max_tof])
+            xlabel('Propagation Time (s)') % x-axis label
+            ylabel('Mach (-)') % y-axis label
+            set(gca,'YTick', 0:5:30);
+            set(gca,'XTick', 0:200:max_tof);
+            
+            hold on
+            grid on
+            
+            for ii = compilation(p).evolutions(k).population(1).indices.printed
+                if  compilation(1).validation == 1
+                    stairs(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
+                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.machNumber,'k','LineWidth',2);
+                    xlim([0 1400])
+                    set(gca,'XTick', 0:200:1400);
+                else
+                    h = stairs(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
+                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.machNumber);
+                    set(gca, 'ColorOrder', circshift(get(gca, 'ColorOrder'), numel(h)))
+                    
+                    scatter(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(1)),...
+                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.machNumber(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(1)),'x');
+                    set(gca, 'ColorOrder', circshift(get(gca, 'ColorOrder'), numel(h)))
+                    
+                    scatter(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(2)),...
+                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.machNumber(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(2)),'s');
+                end
             end
+            
+            %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
+            hold off
+            
+            saveas(...
+                figure(fig_num),...
+                strcat(...
+                compilation(p).mainpath,...
+                '/figures/timeHistoryMachNumber_Evolution',...
+                num2str(k - 1),...
+                '_Set',...
+                convertCharsToStrings(compilation(p).set),...
+                '.png'),...
+                'png');
+            % close(fig_num);
+            
         end
-        %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
-        hold off
-        saveas(...
-            figure(fig_num),...
-            strcat(...
-            compilation(p).mainpath,...
-            '/figures/mach_v_T_Evolution_',...
-            num2str(k - 1),...
-            '_Set',...
-            convertCharsToStrings(compilation(p).set),...
-            '.png'),...
-            'png');
-        % close(fig_num);
     end
 end
-
-
 
 %% Time History: Specific Energy - per Evolution
 for p = 1:numel(compilation)
     
-    %for k = numel(compilation(p).evolutions):numel(compilation(p).evolutions)
     for k = 1:numel(compilation(p).evolutions)
-        fig_num = p*100 + 3457000 + k*1;
-        figure(fig_num)
-        set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
-        set (gca,'Fontsize',15)
-        title(strcat('Specific E through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
-        %ylim([0 2e6])
-        max_tof = max([compilation(p).evolutions.max_tof]);
-        xlim([0 max_tof])
-        xlabel('Propagation Time (s)') % x-axis label
-        ylabel('Specific Energy (E)') % y-axis label
-        % set(gca,'YTick', 0:2e5:2e6);
-        set(gca,'XTick', 0:200:max_tof);
-        hold on
-  
-        for ii = 1:numel(compilation(p).evolutions(k).trajectories)
-            if  compilation(1).validation == 1
-                stairs(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
-                    compilation(p).evolutions(k).trajectories(ii).individual.specificEnergy,'k','LineWidth',2);
-            else
-                stairs(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
-                    compilation(p).evolutions(k).trajectories(ii).individual.specificEnergy);
+        
+        if compilation(p).evolutions(k).population(1).indices.printed > 0
+            
+            fig_num = p*100 + 3457000 + k*1;
+            figure(fig_num)
+            set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
+            set (gca,'Fontsize',15)
+            title(strcat('Specific E through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+            %ylim([0 2e6])
+            max_tof = max([compilation(p).evolutions.max_tof]);
+            xlim([0 max_tof])
+            xlabel('Propagation Time (s)') % x-axis label
+            ylabel('Specific Energy (E)') % y-axis label
+            % set(gca,'YTick', 0:2e5:2e6);
+            set(gca,'XTick', 0:200:max_tof);
+            
+            hold on
+            grid on
+            
+            for ii = compilation(p).evolutions(k).population(1).indices.printed
+                if  compilation(1).validation == 1
+                    stairs(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
+                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.specificEnergy,'k','LineWidth',2);
+                    xlim([0 1400])
+                    set(gca,'XTick', 0:200:1400);
+                else
+                    stairs(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
+                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.specificEnergy);
+                end
             end
+            
+            %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
+            hold off
+            
+            saveas(...
+                figure(fig_num),...
+                strcat(...
+                compilation(p).mainpath,...
+                '/figures/timeHistorySpecificEnergy_Evolution',...
+                num2str(k - 1),...
+                '_Set',...
+                convertCharsToStrings(compilation(p).set),...
+                '.png'),...
+                'png');
+            %      close(fig_num);
         end
-
-        %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
-        hold off
-        saveas(...
-            figure(fig_num),...
-            strcat(...
-            compilation(p).mainpath,...
-            '/figures/specificEnergy_v_T_Evolution_',...
-            num2str(k - 1),...
-            '_Set',...
-            convertCharsToStrings(compilation(p).set),...
-            '.png'),...
-            'png');
-        %      close(fig_num);
     end
 end
-
 
 %% Time History: Normalized Specific Energy - per Evolution
 for p = 1:numel(compilation)
     
-    %
-    %     a = 301.7;
-    %     R_E = 6.378137e6;
-    %     h_UP = 122000;
-    %     mu = 3.986004418e14;
-    %     omega_E = 7.292115e-5;
-    %     % double V_i = a * Mach_i;
-    %     V_f = 0.99 * sqrt( mu / ( R_E + h_UP ) );
-    %     %double E_min = g0 * h_i + 0.5 * V_i * V_i;
-    %     E_max = 9.80665 * h_UP + 0.5 * V_f * V_f;
-    
     for k = 1:numel(compilation(p).evolutions)
         
-        fig_num = p*100 + 3458000 + k*1;
-        figure(fig_num)
-        set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
-        set (gca,'Fontsize',15)
-        title(strcat('Normalized Specific Energy through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
-        ylim([0 1])
-        max_tof = max([compilation(p).evolutions.max_tof]);
-        %     max_tof = 1400;
-        xlim([0 max_tof])
-        xlabel('Propagation Time (s)') % x-axis label
-        ylabel('Normalized Specific Energy') % y-axis label
-        set(gca,'YTick', 0:.1:1);
-        set(gca,'XTick', 0:200:max_tof);
-        hold on
-        grid on
- 
-        for ii = 1:numel(compilation(p).evolutions(k).trajectories)
-            if  compilation(1).validation == 1
-                stairs(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
-                    compilation(p).evolutions(k).trajectories(ii).individual.normalizedSpecificEnergy,'k','LineWidth',2);
-            else
-                stairs(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
-                    compilation(p).evolutions(k).trajectories(ii).individual.normalizedSpecificEnergy);
+        if compilation(p).evolutions(k).population(1).indices.printed > 0
+            
+            fig_num = p*100 + 3458000 + k*1;
+            figure(fig_num)
+            set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
+            set (gca,'Fontsize',15)
+            title(strcat('Normalized Specific Energy through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+            ylim([0 5])
+            max_tof = max([compilation(p).evolutions.max_tof]);
+            %     max_tof = 1400;
+            xlim([0 max_tof])
+            xlabel('Propagation Time (s)') % x-axis label
+            ylabel('Normalized Specific Energy') % y-axis label
+            %set(gca,'YTick', 0:.1:1);
+            set(gca,'XTick', 0:200:max_tof);
+            hold on
+            grid on
+            
+            for ii = compilation(p).evolutions(k).population(1).indices.printed
+                %if compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.distance_to_go(end) < 15
+                %   if max(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.body_fixed_total_g_load_mag) < 4
+                if  compilation(1).validation == 1
+                    stairs(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
+                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.normalizedSpecificEnergy,'k','LineWidth',2);
+                    xlim([0 1400])
+                    set(gca,'XTick', 0:200:1400);
+                else
+                    stairs(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
+                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.normalizedSpecificEnergy);
+                    %      end
+                    % end
+                end
             end
+            
+            %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
+            hold off
+            saveas(...
+                figure(fig_num),...
+                strcat(...
+                compilation(p).mainpath,...
+                '/figures/timeHistoryNormalizedSpecificEnergy_Evolution',...
+                num2str(k - 1),...
+                '_Set',...
+                convertCharsToStrings(compilation(p).set),...
+                '.png'),...
+                'png');
+            %        close(fig_num);
         end
-
-        
-        %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
-        hold off
-        saveas(...
-            figure(fig_num),...
-            strcat(...
-            compilation(p).mainpath,...
-            '/figures/normalizedSpecificEnergy_v_T_Evolution_',...
-            num2str(k - 1),...
-            '_Set',...
-            convertCharsToStrings(compilation(p).set),...
-            '.png'),...
-            'png');
-        %        close(fig_num);
     end
 end
-
 
 %% Time History: Mass - per Evolution
 for p = 1:numel(compilation)
     
     for k = 1:numel(compilation(p).evolutions)
-        fig_num = p*100 + 723000 + k*1;
-        figure(fig_num)
-        set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
-        set (gca,'Fontsize',15)
-        title(strcat('Mass through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
-%         ylim([25 175])
-        max_tof = max([compilation(p).evolutions.max_tof]);
-        xlim([0 max_tof])
-        xlabel('Propagation Time (s)') % x-axis label
-        ylabel('Mass (x10^3 kg)') % y-axis label
-%         set(gca,'YTick', 25:25:175);
-        set(gca,'XTick', 0:200:max_tof);
-        hold on
-        grid on
         
-for ii = 1:numel(compilation(p).evolutions(k).trajectories)   
-                stairs(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
-                    compilation(p).evolutions(k).trajectories(ii).individual.mass/1e3);
+        if compilation(p).evolutions(k).population(1).indices.printed > 0
+            
+            fig_num = p*100 + 723000 + k*1;
+            figure(fig_num)
+            set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
+            set (gca,'Fontsize',15)
+            title(strcat('Mass through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+            %         ylim([25 175])
+            max_tof = max([compilation(p).evolutions.max_tof]);
+            xlim([0 max_tof])
+            xlabel('Propagation Time (s)') % x-axis label
+            ylabel('Mass (x10^3 kg)') % y-axis label
+            %         set(gca,'YTick', 25:25:175);
+            set(gca,'XTick', 0:200:max_tof);
+            
+            hold on
+            grid on
+            
+            for ii = compilation(p).evolutions(k).population(1).indices.printed
+                stairs(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
+                    compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.mass/1e3);
+            end
+            
+            hold off
+            
+            saveas(...
+                figure(fig_num),...
+                strcat(...
+                compilation(p).mainpath,...
+                '/figures/timeHistoryBodyMass_Evolution',...
+                num2str(k - 1),...
+                '_Set',...
+                convertCharsToStrings(compilation(p).set),...
+                '.png'),...
+                'png');
+            %    close(fig_num);
         end
-        %plot([0 max_tof],(25)*[1 1],'k','LineWidth',2)
-        hold off
-        saveas(...
-            figure(fig_num),...
-            strcat(...
-            compilation(p).mainpath,...
-            '/figures/mass_v_T_Evolution_',...
-            num2str(k - 1),...
-            '_Set',...
-            convertCharsToStrings(compilation(p).set),...
-            '.png'),...
-            'png');
-        %    close(fig_num);
     end
 end
-
 
 %% Time History: Mass rate - per Evolution
 for p = 1:numel(compilation)
     
     for k = numel(compilation(p).evolutions):numel(compilation(p).evolutions)
-        fig_num = p*100 + 3476000 + k*1;
-        figure(fig_num)
-        set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
-        set (gca,'Fontsize',15)
-        title(strcat('Mass rate through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
-        %ylim([0 5])
-        max_tof = max([compilation(p).evolutions.max_tof]);
-        max_tof = 1400;
-        xlim([0 max_tof])
-        xlabel('Propagation Time (s)') % x-axis label
-        ylabel('Mass Rate (kg/s)') % y-axis label
-        %set(gca,'YTick', 0:1:10);
-        set(gca,'XTick', 0:200:max_tof);
-        hold on
-        grid on
-     for ii = 1:numel(compilation(p).evolutions(k).trajectories)   
-            plot(compilation(p).evolutions(k).trajectories(ii).individual.time_vector,...
-                compilation(p).evolutions(k).trajectories(ii).individual.mass_rate);
+        
+        if compilation(p).evolutions(k).population(1).indices.printed > 0
+            
+            fig_num = p*100 + 3476000 + k*1;
+            figure(fig_num)
+            set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
+            set (gca,'Fontsize',15)
+            title(strcat('Mass rate through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+            %ylim([0 5])
+            max_tof = max([compilation(p).evolutions.max_tof]);
+            max_tof = 1400;
+            xlim([0 max_tof])
+            xlabel('Propagation Time (s)') % x-axis label
+            ylabel('Mass Rate (kg/s)') % y-axis label
+            %set(gca,'YTick', 0:1:10);
+            set(gca,'XTick', 0:200:max_tof);
+            
+            hold on
+            grid on
+            
+            for ii = compilation(p).evolutions(k).population(1).indices.printed
+                plot(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
+                    compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.massRate);
+            end
+            
+            hold off
+            
+            saveas(...
+                figure(fig_num),...
+                strcat(...
+                compilation(p).mainpath,...
+                '/figures/timeHistoryTotalMassRate_Evolution',...
+                num2str(k - 1),...
+                '_Set',...
+                convertCharsToStrings(compilation(p).set),...
+                '.png'),...
+                'png');
+            %    close(fig_num);
         end
         
-        %plot([0 max_tof],(10)*[0 1],'k','LineWidth',2)
-        hold off
-        saveas(...
-            figure(fig_num),...
-            strcat(...
-            compilation(p).mainpath,...
-            '/figures/massRate_v_T_Evolution_',...
-            num2str(k - 1),...
-            '_Set',...
-            convertCharsToStrings(compilation(p).set),...
-            '.png'),...
-            'png');
-        %    close(fig_num);
     end
 end
-
-
 %
 %
 %
@@ -502,8 +668,8 @@ end
 %     for k = 1:numel(compilation(p).evolutions)
 %         for ii = 1:size(best_index,2)
 %             plot(...
-%                 compilation(p).evolutions(k).trajectories(best_index(k,ii)).individual.longitude_angle,...
-%                 compilation(p).evolutions(k).trajectories(best_index(k,ii)).individual.latitude_angle,'LineWidth',2)
+%                 compilation(p).evolutions(k).trajectories(best_index(k,ii)).dependentVariableTimeHistory.longitude_angle,...
+%                 compilation(p).evolutions(k).trajectories(best_index(k,ii)).dependentVariableTimeHistory.latitude_angle,'LineWidth',2)
 %             legendtext(k) = cellstr(strcat(strrep(convertCharsToStrings(compilation(p).set),'_',' '),' - Evolution:_{ } ', num2str(k-1)));
 %         end
 %     end
@@ -566,8 +732,8 @@ end
 %     for k = 1:numel(compilation(p).evolutions)
 %         for ii = 1:size(best_index,2)
 %             plot(...
-%                 compilation(p).evolutions(k).trajectories(best_index(k,ii)).individual.longitude_angle,...
-%                 compilation(p).evolutions(k).trajectories(best_index(k,ii)).individual.latitude_angle,'LineWidth',2)
+%                 compilation(p).evolutions(k).trajectories(best_index(k,ii)).dependentVariableTimeHistory.longitude_angle,...
+%                 compilation(p).evolutions(k).trajectories(best_index(k,ii)).dependentVariableTimeHistory.latitude_angle,'LineWidth',2)
 %             legendtext(k) = cellstr(strcat(strrep(convertCharsToStrings(compilation(p).set),'_',' '),' - Evolution:_{ } ', num2str(k-1)));
 %         end
 %     end
@@ -619,10 +785,10 @@ end
 % % hold on
 % %
 % % for k = 1:numel(compilation(p).evolutions(i).trajectories)
-% %     plot(compilation(p).evolutions(i).trajectories(k).individual.t-compilation(p).evolutions(i).trajectories(k).individual.t(1),...
-% %         compilation(p).evolutions(i).trajectories(k).individual.R_R_norm/1e3);
+% %     plot(compilation(p).evolutions(i).trajectories(k).dependentVariableTimeHistory.t-compilation(p).evolutions(i).trajectories(k).dependentVariableTimeHistory.t(1),...
+% %         compilation(p).evolutions(i).trajectories(k).dependentVariableTimeHistory.R_R_norm/1e3);
 % % end
-% % plot([0 max_tof],compilation(1).evolutions(1).trajectories(1).individual.R_R_norm(1)*[1 1]/1e3,'k','LineWidth',2)
+% % plot([0 max_tof],compilation(1).evolutions(1).trajectories(1).dependentVariableTimeHistory.R_R_norm(1)*[1 1]/1e3,'k','LineWidth',2)
 % %
 % % hold off
 % %
@@ -663,7 +829,7 @@ end
 %             xlabel('Time (s)') % y-axis label
 %             set (gca,'Fontsize',15)
 %             hold on
-%             plot(compilation(p).evolutions(ii).trajectories(k).individual.time_vector,(compilation(p).evolutions(ii).trajectories(k).individual.heading_angle));
+%             plot(compilation(p).evolutions(ii).trajectories(k).dependentVariableTimeHistory.timeOfFlight,(compilation(p).evolutions(ii).trajectories(k).dependentVariableTimeHistory.heading_angle));
 %             hold off
 %             saveas(figure(basenumber),strcat(mainpath,'/figures/heading_v_T_',num2str(ii),'_Set',num2str(k),convertCharsToStrings(compilation(p).set),'.png'));
 %             close(basenumber);
@@ -680,7 +846,7 @@ end
 %             xlabel('Time (s)') % y-axis label
 %             set (gca,'Fontsize',15)
 %             hold on
-%             plot(compilation(p).evolutions(ii).trajectories(k).individual.time_vector,(compilation(p).evolutions(ii).trajectories(k).individual.flight_path_angle));
+%             plot(compilation(p).evolutions(ii).trajectories(k).dependentVariableTimeHistory.timeOfFlight,(compilation(p).evolutions(ii).trajectories(k).dependentVariableTimeHistory.flight_path_angle));
 %             hold off
 %             saveas(figure(basenumber),strcat(mainpath,'/figures/flightpath_v_T_',num2str(ii),'_Set',num2str(k),convertCharsToStrings(compilation(p).set),'.png'));
 %             close(basenumber);
@@ -698,7 +864,7 @@ end
 %             xlabel('Time (s)') % y-axis label
 %             set (gca,'Fontsize',15)
 %             hold on
-%             plot(compilation(p).evolutions(ii).trajectories(k).individual.time_vector,(compilation(p).evolutions(ii).trajectories(k).individual.angle_of_attack));
+%             plot(compilation(p).evolutions(ii).trajectories(k).dependentVariableTimeHistory.timeOfFlight,(compilation(p).evolutions(ii).trajectories(k).dependentVariableTimeHistory.angle_of_attack));
 %             hold off
 %             saveas(figure(basenumber),strcat(mainpath,'/figures/AoA_v_T_',num2str(ii),'_Set',num2str(k),convertCharsToStrings(compilation(p).set),'.png'));
 %             close(basenumber);
@@ -715,7 +881,7 @@ end
 %             %             set(figure(basenumber),'units','pixels','position',[0,0,1200,600])
 %             %             set (gca,'Fontsize',15)
 %             %             hold on
-%             %             plot(compilation(p).evolutions(i).trajectories(k).individual.time_vector,(compilation(p).evolutions(i).trajectories(k).individual.angle_of_sideslip));
+%             %             plot(compilation(p).evolutions(i).trajectories(k).dependentVariableTimeHistory.timeOfFlight,(compilation(p).evolutions(i).trajectories(k).dependentVariableTimeHistory.angle_of_sideslip));
 %             %             hold off
 %             %                                                 saveas(figure(basenumber),strcat('/Users/bislip/Cloud Storage/OneDrive/School/TUDelft/Space Flight/Thesis/code/figures/sideslip_v_T_',num2str(i),'_',num2str(k),convertCharsToStrings(compilation(p).set),'.png'));
 %
@@ -729,11 +895,11 @@ end
 %             set(gca,'XTick', 0:200:max_tof);
 %             set (gca,'Fontsize',15)
 %             hold on
-%             plot(compilation(p).evolutions(ii).trajectories(k).individual.time_vector,(compilation(p).evolutions(ii).trajectories(k).individual.bank_angle));
-%             plot(compilation(p).evolutions(ii).trajectories(k).individual.time_vector,(compilation(p).evolutions(ii).trajectories(k).individual.heading_angle));
-%             plot(compilation(p).evolutions(ii).trajectories(k).individual.time_vector,(compilation(p).evolutions(ii).trajectories(k).individual.heading_required));
-%             plot(compilation(p).evolutions(ii).trajectories(k).individual.time_vector,(compilation(p).evolutions(ii).trajectories(k).individual.heading_error));
-%             plot(compilation(p).evolutions(ii).trajectories(k).individual.time_vector,(compilation(p).evolutions(ii).trajectories(k).individual.d_deg));
+%             plot(compilation(p).evolutions(ii).trajectories(k).dependentVariableTimeHistory.timeOfFlight,(compilation(p).evolutions(ii).trajectories(k).dependentVariableTimeHistory.bank_angle));
+%             plot(compilation(p).evolutions(ii).trajectories(k).dependentVariableTimeHistory.timeOfFlight,(compilation(p).evolutions(ii).trajectories(k).dependentVariableTimeHistory.heading_angle));
+%             plot(compilation(p).evolutions(ii).trajectories(k).dependentVariableTimeHistory.timeOfFlight,(compilation(p).evolutions(ii).trajectories(k).dependentVariableTimeHistory.heading_required));
+%             plot(compilation(p).evolutions(ii).trajectories(k).dependentVariableTimeHistory.timeOfFlight,(compilation(p).evolutions(ii).trajectories(k).dependentVariableTimeHistory.heading_error));
+%             plot(compilation(p).evolutions(ii).trajectories(k).dependentVariableTimeHistory.timeOfFlight,(compilation(p).evolutions(ii).trajectories(k).dependentVariableTimeHistory.d_deg));
 %
 %             plot([0 max_tof],30*[1 1],'k','LineWidth',2)
 %             plot([0 max_tof],-30*[1 1],'k','LineWidth',2)
@@ -774,9 +940,9 @@ end
 %             %
 %             %             hold on
 %             %             plot3(...
-%             %                 compilation(p).evolutions(i).trajectories(k).individual.d_deg,...
-%             %                 compilation(p).evolutions(i).trajectories(k).individual.time_vector,...
-%             %                 compilation(p).evolutions(i).trajectories(k).individual.bank_angle);
+%             %                 compilation(p).evolutions(i).trajectories(k).dependentVariableTimeHistory.d_deg,...
+%             %                 compilation(p).evolutions(i).trajectories(k).dependentVariableTimeHistory.timeOfFlight,...
+%             %                 compilation(p).evolutions(i).trajectories(k).dependentVariableTimeHistory.bank_angle);
 %             %             %  legendtext = ['bank angle';'heading error','angular distance'];
 %             %             % legend(legendtext,'Location','southeast')
 %             %             view(3)

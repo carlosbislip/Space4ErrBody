@@ -14,41 +14,36 @@ format long
 
 %%
 online = 0;
-
-matlabScripts = '/Users/bislip/Cloud Storage/OneDrive/School/TUDelft/Space Flight/Thesis/tudatBundle.git/tudatApplications/Space4ErrBody.git/Space4ErrBody_0/matlab/';
-mainpath = '/Users/bislip/Cloud Storage/OneDrive/School/TUDelft/Space Flight/Thesis/tudatBundle.git/tudatApplications/Space4ErrBody.git/Space4ErrBody_0/matlab/';
+matlabScripts = '/Users/bislip/Cloud Storage/OneDrive/School/TUDelft/Space Flight/Thesis/tudatBundle/tudatApplications/Space4ErrBody.git/Space4ErrBody_0/Space4ErrBody_Headers/executables/';
+mainpath =      '/Users/bislip/Cloud Storage/OneDrive/School/TUDelft/Space Flight/Thesis/tudatBundle/tudatApplications/Space4ErrBody.git/Space4ErrBody_0/Space4ErrBody_Headers/executables/';
 %mainpath = uigetdir;
-%mainpath = '/Volumes/Public/';
 
-if online == 1
-    mainpath = '..';
-end
-pop_Location = strcat(mainpath,'SimulationOutput/THESIS/HORUS/');
-%pop_Location = strcat(mainpath,'SimulationOutput/Validation/');
-fit_Location = pop_Location;
-pop_prefix = 'population*';
-fit_prefix = 'fitness*';
+simulationOutputPath          = strcat(mainpath,'SimulationOutput/');
+workingFolder                 = 'THESIS_HORUS_NSGA2_234998684_100_2_10_1_A_10_10/';
+workingFolderPath             = strcat(simulationOutputPath,workingFolder);
+Output_Location               = workingFolderPath;
+pop_Location                  = workingFolderPath;
+fit_Location                  = workingFolderPath;
 
-%pop_prefix = 'monteCarloPopulation*';
-%fit_prefix = 'monteCarloFitness*';
-
-Output_Location = pop_Location;
-%Folder_prefix = 'HORUS_OUTPUT*';
-Folder_prefix = 'OUTPUT*';
-%File_prefix = 'HORUSsystemFinalStateGOAL*';
-prop_File_prefix = 'propagationHistory/propagationHistory*';
-depvar_File_prefix = 'dependentVariables/dependentVariables*';
-interp_Ascent_File_prefix = 'evaluatedInterpolatorsAscent/evaluatedInterpolatorsAscent*';
-interp_Ascent_LB_File_prefix = 'evaluatedInterpolatorsAscent_LB/evaluatedInterpolatorsAscent*';
-interp_Ascent_UB_File_prefix = 'evaluatedInterpolatorsAscent_UB/evaluatedInterpolatorsAscent*';
-interp_Descent_File_prefix = 'evaluatedInterpolatorsDescent/evaluatedInterpolatorsDescent*';
+pop_prefix                    = 'population*';
+fit_prefix                    = 'fitness*';
+Folder_prefix                 = 'OUTPUT*';
+prop_File_prefix              = 'propagationHistory/propagationHistory*';
+depvar_File_prefix            = 'dependentVariables/dependentVariables*';
+interp_Ascent_File_prefix     = 'evaluatedInterpolatorsAscent/evaluatedInterpolatorsAscent*';
+interp_Ascent_LB_File_prefix  = 'evaluatedInterpolatorsAscent_LB/evaluatedInterpolatorsAscent*';
+interp_Ascent_UB_File_prefix  = 'evaluatedInterpolatorsAscent_UB/evaluatedInterpolatorsAscent*';
+interp_Descent_File_prefix    = 'evaluatedInterpolatorsDescent/evaluatedInterpolatorsDescent*';
 interp_Descent_LB_File_prefix = 'evaluatedInterpolatorsDescent_LB/evaluatedInterpolatorsAscent*';
 interp_Descent_UB_File_prefix = 'evaluatedInterpolatorsDescent_UB/evaluatedInterpolatorsAscent*';
 
-DV_mapped_Ascent_File_prefix = 'map_DV_mapped_Ascent/map_DV_mapped_Ascent*';
+DV_mapped_Ascent_File_prefix  = 'map_DV_mapped_Ascent/map_DV_mapped_Ascent*';
 DV_mapped_Descent_File_prefix = 'map_DV_mapped_Descent/map_DV_mapped_Descent*';
 headingErrorDeadbandBounds_prefix = 'headingErrorDeadBandBounds';
-alphaMachBounds_prefix = 'alphaMachBounds';
+alphaMachBounds_prefix        = 'alphaMachBounds';
+
+underscore_indices    = strfind(workingFolder,'_'); 
+objectiveFunctionCase = workingFolder(underscore_indices(8)+1);
 
 % Hardcoded coordinates of origin: AMS
 lon_i_deg = 4.76416667;
@@ -172,7 +167,7 @@ switch option
                 pop_i,fit_path,fit_i,output] = ...
                 ...
                 ...
-                Path_Prep(option,p,...
+                Path_Prep(option,p,objectiveFunctionCase,...
                 prop_File_Path_List_prefix,...
                 depvar_File_Path_List_prefix,...
                 interp_Ascent_File_Path_List_prefix,...
@@ -208,7 +203,7 @@ switch option
                 pop_i,fit_path,fit_i,output] = ...
                 ...
                 ...
-                Path_Prep(option,p,...
+                Path_Prep(option,p,objectiveFunctionCase,...
                 prop_File_Path_List_prefix,...
                 depvar_File_Path_List_prefix,...
                 interp_Ascent_File_Path_List_prefix,...
@@ -271,7 +266,7 @@ switch option
                 pop_i,fit_path,fit_i,output] = ...
                 ...
                 ...
-                Path_Prep(option,p,...
+                Path_Prep(option,p,objectiveFunctionCase,...
                 prop_File_Path_List_prefix,...
                 depvar_File_Path_List_prefix,...
                 interp_Ascent_File_Path_List_prefix,...
@@ -280,7 +275,7 @@ switch option
                 DV_mapped_Descent_File_Path_List_prefix,...
                 headingErrorDeadbandBounds_File_Path_List_prefix,...
                 alphaMachBounds_File_Path_List_prefix,...
-                Folder_Path_List,pop_file_path_prefix,fit_file_path_prefix);
+                Folder_Path_List{p},pop_file_path_prefix,fit_file_path_prefix);
             
             %            if isempty(idx) == 1
             %
@@ -301,7 +296,7 @@ switch option
                 ...
                 Get_Trajectories(...
                 evolutions,...
-                Folder_Path_List,...
+                Folder_Path_List{p},...
                 pop_Location,...
                 pop_path,...
                 prop_path,...
@@ -319,7 +314,8 @@ switch option
             compilation(p).evolutions = evolutions;
             %compilation(p).evolutions.hardConstraints = hardConstraints;
             compilation(p).validation = validation;
-            save(output, 'compilation','-v7.3')
+           savelocation = strcat(workingFolderPath,output);
+            save(savelocation, 'compilation','-v7.3')
 
             % textprogressbar(p*100/numel(prop_File_Path_List_prefix))
             

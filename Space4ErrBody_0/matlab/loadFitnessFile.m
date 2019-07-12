@@ -21,7 +21,7 @@ delimiter = ',';
 
 %% Read columns of data as text:
 % For more information, see the TEXTSCAN documentation.
-formatSpec = '%s%s%s%s%s%[^\n\r]';
+formatSpec = '%s%s%s%s%s%s%s%s%s%s%s%s%s%[^\n\r]';
 
 %% Open the text file.
 fileID = fopen(filename,'r');
@@ -50,7 +50,7 @@ for col=1:length(dataArray)-1
 end
 numericData = NaN(size(dataArray{1},1),size(dataArray,2));
 
-for col=[2,3,4,5]
+for col=[2,3,4,5,6,7,8,9,10,11,12,13]
     % Converts text in the input cell array to numbers. Replaced non-numeric
     % text with NaN.
     rawData = dataArray{col};
@@ -85,7 +85,7 @@ end
 
 
 %% Split data into numeric and string columns.
-rawNumericColumns = raw(:, [2,3,4,5]);
+rawNumericColumns = raw(:, [2,3,4,5,6,7,8,9,10,11]);
 rawStringColumns = string(raw(:, 1));
 
 

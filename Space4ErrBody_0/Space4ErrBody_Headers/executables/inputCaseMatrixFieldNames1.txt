@@ -1,0 +1,75 @@
+Simulation Output SubFolder
+Simulation Type
+Continuity Type
+Subfolder with Previous Data
+Problem Name
+Vehicle Name
+Density Parameters File for Jerk
+Vehicle Parameter File
+Aero-Coefficients File List
+Heading Error Deadband File List
+Alpha-Mach Envelope File List
+Non-Nodal Parameter File
+Nodal Parameter File
+Kourou Validation Time Histories
+Import Initial Population Conditional
+Initial Population File
+Initial Fitness File
+Initial Extremes and Constraints File
+Starting Calendar Year
+Starting Calendar Month
+Starting Calendar Day
+Starting Calendar Hour
+Starting Calendar Minute
+Starting Calendar Second
+Max. Elapsed Time
+Propagation Step Size
+Guidance Step Size
+Spherical Harmonic Degree
+Spherical Harmonic Order
+Maximize Thrust
+Debug Info
+Print Pop. & Fitness
+Top Individuals
+Re-evaluate Population
+Initial Latitude           [ deg ]
+Initial Longitude          [ deg ]
+Initial Height             [ m   ]
+Initial Mach               [ -   ]
+Initial Flight-path Angle  [ deg ]
+Initial Bodyflap Angle     [ deg ]
+Initial Elevon Angle       [ deg ]
+Target Latitude            [ deg ]
+Target Longitude           [ deg ]
+Terminal Angular Distance  [ deg ]
+Maximum Height             [ m   ]
+Minimum Height             [ m   ]
+Minimum Mach Number        [ -   ]
+Maximum Airspeed           [ m/s ]
+Maximum C_m                [ -   ]
+Max Mech Load Ascent       [ -   ]
+Max Mech Load Descent      [ -   ]
+Maximum Heat Flux          [W/m^2]
+Maximum Dynamic Pressure   [ Pa  ]
+Maximum Bending Moment     [Pa-rad]
+Maximum Pass. +z gLoad     [ -   ]
+Maximum Pass. -z gLoad     [ -   ]
+Maximum Pass. Jerk Load    [m/s^3]
+Population per Island
+Num. of Islands
+Num. of Evolutions
+Seed Number
+Single Island
+Obj. Function Case
+Monte Carlo Analysis
+Optimizer
+Custom Parameters Boolean
+Parameter 1
+Parameter 2
+Parameter 3
+Parameter 4
+Parameter 5
+Parameter 6
+Parameter 7
+Parameter 8
+Parameter 9

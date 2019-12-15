@@ -1,0 +1,11 @@
+# Nodal Parameters structured to be used in 4d Array?
+#
+#
+#
+0	0	0	10	20
+0	0	1	10	20
+0	0	2	10	20
+0	0	3	10	20
+0	0	4	10	20
+0	0	5	10	20
+0	0	6	10	20

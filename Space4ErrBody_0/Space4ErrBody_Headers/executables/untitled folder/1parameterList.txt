@@ -1,0 +1,9 @@
+Initial Flight-Path Angle
+Initial Launch Heading
+Initial Velocity
+Maximum Velocity
+Maximum Height
+Additional Mass
+Termination Distance Ratio
+Final Velocity
+Skip Suppression

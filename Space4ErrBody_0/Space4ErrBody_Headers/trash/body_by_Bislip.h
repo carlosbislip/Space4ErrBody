@@ -1006,26 +1006,26 @@ public:
         currentMass_ = bodyMass;
     }
 
-    void setTargetLat( const double target_lat )
+    void setCentralTargetLatitude( const double centralTargetLatitude )
     {
-        target_lat_ = target_lat;
+        centralTargetLatitude_ = centralTargetLatitude;
     }
 
-    void setTargetLon( const double target_lon )
+    void setCentralTargetLongitude( const double centralTargetLongitude )
     {
-        target_lon_ = target_lon;
+        centralTargetLongitude_ = centralTargetLongitude;
     }
 
-    void setInitialLat( const double initial_lat )
+    void setInitialValue( bislip::initial_values::initial_value_type::latitude_angle, const double initial_lat )
     {
         initial_lat_ = initial_lat;
     }
 
-    void setInitialLon( const double initial_lon )
+    void setInitialValue( bislip::initial_values::initial_value_type::longitude_angle, const double initial_lon )
     {
         initial_lon_ = initial_lon;
     }
-    void setInitialDistanceToTarget( const double initial_d_to_target )
+    void setInitialValue( bislip::initial_values::initial_value_type::distance_to_central_target, const double initial_d_to_target )
     {
         initial_d_to_target_ = initial_d_to_target;
     }
@@ -1077,21 +1077,21 @@ public:
     }
     double getTargetLat( )
     {
-        return target_lat_;
+        return centralTargetLatitude_;
     }        
     double getTargetLon( )
     {
-        return target_lon_;
+        return centralTargetLongitude_;
     }
-    double getInitialLat( )
+    double getInitialValue( bislip::initial_values::initial_value_type::latitude_angle )
     {
         return initial_lat_;
     }        
-    double getInitialLon( )
+    double getInitialValue( bislip::initial_values::initial_value_type::longitude_angle )
     {
         return initial_lon_;
     }
-    double getInitialDistanceToTarget( )
+    double getInitialValue( bislip::initial_values::initial_value_type::distance_to_central_target  )
     {
         return initial_d_to_target_;
     }
@@ -1296,8 +1296,8 @@ private:
     boost::shared_ptr< system_models::VehicleSystems > vehicleSystems_;
 
    //! Passing target coordinates
-    double target_lat_;
-    double target_lon_;
+    double centralTargetLatitude_;
+    double centralTargetLongitude_;
 
     //! Passing initial coordinates
     double initial_lat_;

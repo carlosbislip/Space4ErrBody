@@ -5,3 +5,5 @@
 .gitignore
 *.a
 /Space4ErrBody_0/Space4ErrBody_Headers/executables/Space4ErrBody
+/Space4ErrBody_0/Space4ErrBody_Headers/executables/SimulationOutput/
+/Space4ErrBody_0/Space4ErrBody_Headers/executables/figures/

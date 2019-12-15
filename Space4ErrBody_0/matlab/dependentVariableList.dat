@@ -1,0 +1,160 @@
+t,Epoch,$(\mathrm{s})$,1,-inf,inf,200
+timeOfFlight,Time of Flight,$(\mathrm{s})$,1,0,inf,200
+height,Height,$(\mathrm{km})$,1e3,0,200,20
+latitudeAngle,Latitude Angle,$(\mathrm{deg})$,1,-90,90,15
+longitudeAngle,Longitude Angle,$(\mathrm{deg})$,1,-180,180,30
+airspeed,Airspeed,$(\frac{\mathrm{m}}{\mathrm{s}})$,1,0,8000,1000
+normalizedSpecificEnergy,Normalized Specific Energy,$(-)$,1,0,5,1
+dynamicPressure,Dynamic Pressure,$(\mathrm{kPa})$,1e3,0,100,10
+bendingMoment,Bending Moment,(kPa-rad),1e3,0,5,.5
+mass,Mass,$(\mathrm{kg})$,1,0,140000,20000
+flightPathAngle,Flight-Path Angle,$(\mathrm{deg})$,1,-15,15,3
+centralTargetAngularDistanceToGo,Central Target Angular Distance To Go,$(\mathrm{deg})$,1,0,60,10
+bodyFrameTotalGLoad_x,Body Frame Total g-Load - x,$(g_0)$,1,-4,4,1
+bodyFrameTotalGLoad_y,Body Frame Total g-Load - y,$(g_0)$,1,-4,4,1
+bodyFrameTotalGLoad_z,Body Frame Total g-Load - z,$(g_0)$,1,-4,4,1
+bodyFrameTotalGLoadMagnitude,Body Frame Total g-Load Magnitude,$(g_0)$,1,0,10,2
+passengerFrameTotalGLoad_x,Passenger Frame Total g-Load - x,$(g_0)$,1,-4,4,1
+passengerFrameTotalGLoad_y,Passenger Frame Total g-Load - y,$(g_0)$,1,-4,4,1
+passengerFrameTotalGLoad_z,Passenger Frame Total g-Load - z,$(g_0)$,1,-4,4,1
+passengerFrameTotalAcceleration_x,Passenger Frame Total Acceleration - x,$(\frac{\mathrm{m}}{\mathrm{s}^2})$,1,-inf,inf,1
+passengerFrameTotalAcceleration_y,Passenger Frame Total Acceleration - y,$(\frac{\mathrm{m}}{\mathrm{s}^2})$,1,-inf,inf,1
+passengerFrameTotalAcceleration_z,Passenger Frame Total Acceleration - z,$(\frac{\mathrm{m}}{\mathrm{s}^2})$,1,-inf,inf,1
+heatFluxChapmanNose,Chapman Heat Flux - Nose,$(\frac{\mathrm{kW}}{\mathrm{m}^2})$,1e3,0,1000,100
+x_R,Rotating Planetocentric Position - x,$(\mathrm{km})$,1e3,-inf,inf,1
+y_R,Rotating Planetocentric Position - y,$(\mathrm{km})$,1e3,-inf,inf,1
+z_R,Rotating Planetocentric Position - z,$(\mathrm{km})$,1e3,-inf,inf,1
+altitude,Altitude,$(\mathrm{km})$,1e3,6371,6571,20
+specificEnergy,Specific Energy,$(\frac{\mathrm{MJ}}{\mathrm{kg}})$,1e6,0,3,.5
+angularDistanceTraveled,Angular Distance Traveled,$(\mathrm{deg})$,1,0,60,10
+cumulativeAngularDistanceTravelled,Cumulative Angular Distance Traveled,$(\mathrm{deg})$,1,0,60,10
+groundtrackDifference,Groundtrack Difference,$(\mathrm{deg})$,1,0,60,10
+cumulativeCartesianDistanceTravelled,Cumulative Cartesian Distance Traveled,$(\mathrm{km})$,1e3,0,8000,1000
+headingAngle,Heading Angle,$(\mathrm{deg})$,1,0,360,30
+headingAngleToCentralTarget,Heading Angle to Central Target,$(\mathrm{deg})$,1,0,360,30
+headingAngleToCentralTargetError,Heading Angle to Central Target Error,$(\mathrm{deg})$,1,-30,30,10
+headingAngleToDynamicTarget,Heading Angle to Dynamic Target,$(\mathrm{deg})$,1,0,360,30
+headingAngleToDynamicTargetError,Heading Angle to Dynamic Target Error,$(\mathrm{deg})$,1,-30,30,10
+headingAngleToDynamicTargetErrorDeadband,Heading Angle to Dynamic Target Deadband,$(\mathrm{deg})$,1,-30,30,10
+vertexLatitude,Vertex Latitude,$(\mathrm{deg})$,1,-90,90,15
+vertexLongitude,Vertex Longitude,$(\mathrm{deg})$,1,-180,180,30
+tangent1Latitude,Tangent 1 Latitude,$(\mathrm{deg})$,1,0,90,15
+tangent1Longitude,Tangent 1 Longitude,$(\mathrm{deg})$,1,-inf,inf,1
+tangent2Latitude,Tangent 2 Latitude,$(\mathrm{deg})$,1,0,90,15
+tangent2Longitude,Tangent 2 Longitude,$(\mathrm{deg})$,1,-inf,inf,1
+dynamicTargetHeadingAngleBounds1,Dynamic Target Heading Angle Bounds 1,$(\mathrm{deg})$,1,0,360,30
+dynamicTargetHeadingAngleBounds2,Dynamic Target Heading Angle Bounds 2,$(\mathrm{deg})$,1,0,360,30
+dynamicTargetLatitude,Dynamic Target Latitude,$(\mathrm{deg})$,1,0,90,15
+dynamicTargetLongitude,Dynamic Target Longitude,$(\mathrm{deg})$,1,-inf,inf,1
+dynamicTargetAngularDistanceToGo,Dynamic Target Angular Distance To Go,$(\mathrm{deg})$,1,0,60,10
+centralTargetLongitudeIntersection,Central Target Longitude Intersection,$(\mathrm{deg})$,1,-inf,inf,1
+centralTargetLatitudeIntersection,Central Target Latitude Intersection,$(\mathrm{deg})$,1,0,90,15
+centralTargetLatitudeIntersectionAzimuth,Central Target Latitude Intersection Azimuth,$(\mathrm{deg})$,1,-inf,inf,1
+intersectionCase,Intersection Case,$(-)$,1,-inf,inf,1
+estimatedFightPathAngle,Estimated Flight-Path Angle,$(\mathrm{deg})$,1,-inf,inf,1
+flightPathAngleRate,Flight-Path Angle Rate,$(\frac{\mathrm{deg}}{\mathrm{s}})$,1,-1,1,.1
+angularDistanceCoveredRatio,Angular Distance Covered Ratio,$(-)$,1,0,1,.1
+trajectoryPhase,Trajectory Phase,$(-)$,1,-inf,inf,1
+angleOfAttack,Angle of Attack,$(\mathrm{deg})$,1,0,50,10
+evaluatedAngleOfAttack,Evaluated Angle of Attack,$(\mathrm{deg})$,1,0,50,10
+commandedAngleOfAttack,Commanded Angle of Attack,$(\mathrm{deg})$,1,0,50,10
+machNumber,Mach Number,$(-)$,1,0,50,10
+bodyflapDeflectionAngle,Body-Flap Deflection Angle,$(\mathrm{deg})$,1,-20,30,10
+increment_Cm_bodyflap,\Delta C_m - Body-Flap,$(-)$,1,-inf,inf,1
+increment_Cm_bodyflap_dif,\Delta C_m - Body-Flap Dif,$(-)$,1,-inf,inf,1
+elevonDeflectionAngle,Elevon Deflection Angle,$(\mathrm{deg})$,1,-inf,inf,1
+aerodynamicForceCoefficient_CD,C_D,$(-)$,1,0,2,.2
+aerodynamicForceCoefficient_CS,C_S,$(-)$,1,0,2,.2
+aerodynamicForceCoefficient_CL,C_L,$(-)$,1,0,2,.2
+aerodynamicMomentCoefficient_Cl,C_l,$(-)$,1,-1,1,.1
+aerodynamicMomentCoefficient_Cm,C_m,$(-)$,1,-1,1,.1
+aerodynamicMomentCoefficient_Cn,C_n,$(-)$,1,-1,1,.1
+evaluatedThrustElevationAngle,Evaluated Thrust Elevation Angle,$(\mathrm{deg})$,1,-20,20,5
+commandedThrustElevationAngle,Commanded Thrust Elevation Angle,$(\mathrm{deg})$,1,-20,20,5
+evaluatedThrustAzimuthAngle,Evaluated Thrust Azimuth Angle,$(\mathrm{deg})$,1,-20,20,5
+commandedThrustAzimuthAngle,Commanded Thrust Azimuth Angle,$(\mathrm{deg})$,1,-20,20,5
+angleOfSideslip,Angle of Sideslip,$(\mathrm{deg})$,1,-90,90,15
+bankAngle,Bank Angle,$(\mathrm{deg})$,1,-90,90,15
+evaluatedBankAngle,Evaluated Bank Angle,$(\mathrm{deg})$,1,-90,90,15
+commandedBankAngle,Commanded Bank Angle,$(\mathrm{deg})$,1,-90,90,15
+tempBankAngle,Temporary Bank Angle,$(\mathrm{deg})$,1,-90,90,15
+skipSuppressionBankAngleLimit,Skip Suppression Bank Angle Limit,$(\mathrm{deg})$,1,0,90,15
+reversalConditional,Reversal Conditional,(aaaaa),1,-inf,inf,1
+bankAngleReversalTrigger,Bank Angle Reversal Trigger,(aaaaa),1,-inf,inf,1
+speedOfSound,Speed of Sound,$(\frac{\mathrm{m}}{\mathrm{s}})$,1,-inf,inf,1
+freestreamTemperature,Freestream Temperature,$(\mathrm{K})$,1,-inf,inf,1
+adiabaticWallTemperature,Adiabatic Wall Temperature,$(\mathrm{K})$,1,-inf,inf,1
+localDensity,Local Density,$(\frac{\mathrm{kg}}{\mathrm{m}^3})$,1,-inf,inf,1
+heatFluxTUDATNose,TUDAT Heat Flux,$(\frac{\mathrm{kW}}{\mathrm{m}^2})$,1e3,-inf,inf,1
+equilibriumWallTemperatureChapmanNose,Chapman Equilibrium Wall Temperature,$(\mathrm{K})$,1,0,2000,200
+equilibriumWallTemperatureTauberStagnationLeadingEdge,Tauber Stagnation Equilibrium Wall Temperature - Leading Edge,$(\mathrm{K})$,1,0,2000,200
+equilibriumWallTemperatureTauberFlatPlateLeadingEdge,Tauber Flat PLate Equilibrium Wall Temperature - Leading Edge,$(\mathrm{K})$,1,0,2000,200
+heatFluxTauberStagnationLeadingEdge,Tauber Stagnation Heat Flux - Leading Edge,$(\frac{\mathrm{kW}}{\mathrm{m}^2})$,1e3,-inf,inf,1
+heatFluxTauberFlatPlateLeadingEdge,Tauber Flat Plate Heat Flux - Leading Edge,$(\frac{\mathrm{kW}}{\mathrm{m}^2})$,1e3,-inf,inf,1
+heatFluxTauberLeadingEdge,Tauber Heat Flux - Leading Edge,$(\frac{\mathrm{kW}}{\mathrm{m}^2})$,1e3,-inf,inf,1
+massRate,Mass Rate,$(\frac{\mathrm{kg}}{\mathrm{s}})$,1,-300,0,50
+engineStatus,Engine Status,$(-)$,1,-inf,inf,1
+evaluatedThrottleSetting,Evaluated Throttle Setting,$(-)$,1,0,1,.1
+commandedThrottleSetting,Commanded Throttle Setting,$(-)$,1,0,1,.1
+acc_grav_x,Inertial Frame Acceleration - Gravity - x,$(\frac{\mathrm{m}}{\mathrm{s}^2})$,1,-inf,inf,1
+acc_grav_y,Inertial Frame Acceleration - Gravity - y,$(\frac{\mathrm{m}}{\mathrm{s}^2})$,1,-inf,inf,1
+acc_grav_z,Inertial Frame Acceleration - Gravity - z,$(\frac{\mathrm{m}}{\mathrm{s}^2})$,1,-inf,inf,1
+localGravity_1,Local Gravity - x,$(\frac{\mathrm{m}}{\mathrm{s}^2})$,1,-inf,inf,1
+localGravity_2,Local Gravity - y,$(\frac{\mathrm{m}}{\mathrm{s}^2})$,1,-inf,inf,1
+localGravity_3,Local Gravity - z,$(\frac{\mathrm{m}}{\mathrm{s}^2})$,1,-inf,inf,1
+localGravityfromSphericalHarmonics_1,Local Gravity from Spherical Harmonics - x,$(\frac{\mathrm{m}}{\mathrm{s}^2})$,1,-inf,inf,1
+localGravityfromSphericalHarmonics_2,Local Gravity from Spherical Harmonics - y,$(\frac{\mathrm{m}}{\mathrm{s}^2})$,1,-inf,inf,1
+localGravityfromSphericalHarmonics_3,Local Gravity from Spherical Harmonics - z,$(\frac{\mathrm{m}}{\mathrm{s}^2})$,1,-inf,inf,1
+acc_aero_x,Inertial Frame Acceleration - Aerodynamics - x,$(\frac{\mathrm{m}}{\mathrm{s}^2})$,1,-inf,inf,1
+acc_aero_y,Inertial Frame Acceleration - Aerodynamics - y,$(\frac{\mathrm{m}}{\mathrm{s}^2})$,1,-inf,inf,1
+acc_aero_z,Inertial Frame Acceleration - Aerodynamics - z,$(\frac{\mathrm{m}}{\mathrm{s}^2})$,1,-inf,inf,1
+currentDragForce,Current Drag Force,$(\mathrm{N})$,1,-inf,inf,1
+currentLiftForce,Current Lift Force,$(\mathrm{N})$,1,-inf,inf,1
+aerodyamicFrameAerodynamicLoad_x,Aerodynamic Frame Aerodynamic Load - x,$(\mathrm{N})$,1,-inf,inf,1
+aerodyamicFrameAerodynamicLoad_y,Aerodynamic Frame Aerodynamic Load - y,$(\mathrm{N})$,1,-inf,inf,1
+aerodyamicFrameAerodynamicLoad_z,Aerodynamic Frame Aerodynamic Load - z,$(\mathrm{N})$,1,-inf,inf,1
+aerodynamicFrameAerodynamicGLoad,Aerodynamic Frame Aerodynamic g-Load,$(g_0)$,1,-inf,inf,1
+acc_thru_x,Inertial Frame Acceleration - Thrust - x,$(\frac{\mathrm{m}}{\mathrm{s}^2})$,1,-inf,inf,1
+acc_thru_y,Inertial Frame Acceleration - Thrust - y,$(\frac{\mathrm{m}}{\mathrm{s}^2})$,1,-inf,inf,1
+acc_thru_z,Inertial Frame Acceleration - Thrust - z,$(\frac{\mathrm{m}}{\mathrm{s}^2})$,1,-inf,inf,1
+thrustMagnitude,Thrust Magnitude,$(\mathrm{N})$,1,-inf,inf,1
+bodyFrameThrustLoad_x,Body Frame Thrust Load - x,$(\mathrm{N})$,1,-inf,inf,1
+bodyFrameThrustLoad_y,Body Frame Thrust Load - y,$(\mathrm{N})$,1,-inf,inf,1
+bodyFrameThrustLoad_z,Body Frame Thrust Load - z,$(\mathrm{N})$,1,-inf,inf,1
+bodyFrameAerodynamicLoad_x,Body Frame Aerodynamic Load - x,$(\mathrm{N})$,1,-inf,inf,1
+bodyFrameAerodynamicLoad_y,Body Frame Aerodynamic Load - y,$(\mathrm{N})$,1,-inf,inf,1
+bodyFrameAerodynamicLoad_z,Body Frame Aerodynamic Load - z,$(\mathrm{N})$,1,-inf,inf,1
+bodyFrameTotalLoad_x,Body Frame Total Load - x,$(\mathrm{N})$,1,-inf,inf,1
+bodyFrameTotalLoad_y,Body Frame Total Load - y,$(\mathrm{N})$,1,-inf,inf,1
+bodyFrameTotalLoad_z,Body Frame Total Load - z,$(\mathrm{N})$,1,-inf,inf,1
+bodyFrameTotalAcceleration_x,Body Frame Total Acceleration - x,$(\frac{\mathrm{m}}{\mathrm{s}^2})$,1,-inf,inf,1
+bodyFrameTotalAcceleration_y,Body Frame Total Acceleration - y,$(\frac{\mathrm{m}}{\mathrm{s}^2})$,1,-inf,inf,1
+bodyFrameTotalAcceleration_z,Body Frame Total Acceleration - z,$(\frac{\mathrm{m}}{\mathrm{s}^2})$,1,-inf,inf,1
+aerodyamicFrameTotalLoad_x,Aerodynamic Frame Total Load - x,$(\mathrm{N})$,1,-inf,inf,1
+aerodyamicFrameTotalLoad_y,Aerodynamic Frame Total Load - y,$(\mathrm{N})$,1,-inf,inf,1
+aerodyamicFrameTotalLoad_z,Aerodynamic Frame Total Load - z,$(\mathrm{N})$,1,-inf,inf,1
+aerodyamicFrameTotalAcceleration_x,Aerodynamic Frame Total Acceleration - x,$(\frac{\mathrm{m}}{\mathrm{s}^2})$,1,-inf,inf,1
+aerodyamicFrameTotalAcceleration_y,Aerodynamic Frame Total Acceleration - y,$(\frac{\mathrm{m}}{\mathrm{s}^2})$,1,-inf,inf,1
+aerodyamicFrameTotalAcceleration_z,Aerodynamic Frame Total Acceleration - z,$(\frac{\mathrm{m}}{\mathrm{s}^2})$,1,-inf,inf,1
+passengerFrameTotalLoad_x,Passenger Frame Total Load - x,$(\mathrm{N})$,1,-inf,inf,1
+passengerFrameTotalLoad_y,Passenger Frame Total Load - y,$(\mathrm{N})$,1,-inf,inf,1
+passengerFrameTotalLoad_z,Passenger Frame Total Load - z,$(\mathrm{N})$,1,-inf,inf,1
+passengerFrameJerk_x,Passenger Frame Jerk - x,$(\frac{\mathrm{m}}{\mathrm{s}^3})$,1,-inf,inf,1
+passengerFrameJerk_y,Passenger Frame Jerk - y,$(\frac{\mathrm{m}}{\mathrm{s}^3})$,1,-inf,inf,1
+passengerFrameJerk_z,Passenger Frame Jerk - z,$(\frac{\mathrm{m}}{\mathrm{s}^3})$,1,-inf,inf,1
+flightCorridorBoundary_DynamicPressure,Flight Corridor Boundary: Dynamic Pressure,$(\mathrm{km})$,1e3,-inf,inf,1
+flightCorridorBoundary_BendingMoment,Flight Corridor Boundary: Bending Moment,$(\mathrm{km})$,1e3,-inf,inf,1
+flightCorridorBoundary_ThermalLoad,Flight Corridor Boundary: Thermal Load,$(\mathrm{km})$,1e3,-inf,inf,1
+flightCorridorBoundary_SkipSuppression,Flight Corridor Boundary: Skip Suppression,$(\mathrm{km})$,1e3,-inf,inf,1
+flightCorridorBoundary_MechanicalLoad_ascent,Flight Corridor Boundary: Mechanical Load - Ascent,$(\mathrm{km})$,1e3,-inf,inf,1
+flightCorridorBoundary_MechanicalLoad_descent,Flight Corridor Boundary: Mechanical Load - Descent,$(\mathrm{km})$,1e3,-inf,inf,1
+passengerFrameJerk_x_calc,Passenger Frame Jerk (Numerical Derivative) - x,$(\frac{\mathrm{m}}{\mathrm{s}^3})$,1,-inf,inf,1
+passengerFrameJerk_y_calc,Passenger Frame Jerk (Numerical Derivative) - y,$(\frac{\mathrm{m}}{\mathrm{s}^3})$,1,-inf,inf,1
+passengerFrameJerk_z_calc,Passenger Frame Jerk (Numerical Derivative) - z,$(\frac{\mathrm{m}}{\mathrm{s}^3})$,1,-inf,inf,1
+integratedHeatLoad,Integrated Heat Load,$(\frac{\mathrm{MJ}}{\mathrm{m}^2})$,1e6,-inf,inf,1
+acc_x,Inertial Frame Total Acceleration - x,$(\frac{\mathrm{m}}{\mathrm{s}^2})$,1,-inf,inf,1
+acc_y,Inertial Frame Total Acceleration - y,$(\frac{\mathrm{m}}{\mathrm{s}^2})$,1,-inf,inf,1
+acc_z,Inertial Frame Total Acceleration - z,$(\frac{\mathrm{m}}{\mathrm{s}^2})$,1,-inf,inf,1
+acc_aero_M,Acceleration Magnitude: Aerodynamic,$(\frac{\mathrm{m}}{\mathrm{s}^2})$,1,-inf,inf,1
+acc_grav_M,Acceleration Magnitude: Gravity,$(\frac{\mathrm{m}}{\mathrm{s}^2})$,1,-inf,inf,1
+acc_thru_M,Acceleration Magnitude: Thrust,$(\frac{\mathrm{m}}{\mathrm{s}^2})$,1,-inf,inf,1

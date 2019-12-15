@@ -12,7 +12,7 @@ for p = 1:numel(compilation)
             figure(fig_num)
             set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
             set (gca,'Fontsize',15)
-            title(strcat('Angle of Attack  through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+            title(strcat('Angle of Attack  through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).case),'_',' ')))
             ylim([0 50])
             max_tof = max([compilation(p).evolutions.max_tof]);
             %max_tof = 1400;
@@ -21,41 +21,36 @@ for p = 1:numel(compilation)
             ylabel('Commanded Angle of Attack (deg)') % y-axis label
             set(gca,'YTick', 0:5:50);
             set(gca,'XTick', 0:200:max_tof);
+            
             hold on
             grid on
             
-            for ii = compilation(p).evolutions(k).population(1).indices.printed
-                if  compilation(1).validation == 1
-                    stairs(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
+            if  compilation(1).validation == 1
+                
+                for ii = compilation(p).evolutions(k).population(1).indices.printed
+                    plot(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
                         compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.angleOfAttack,'k','LineWidth',2);
                     xlim([0 1400])
                     set(gca,'XTick', 0:200:1400);
                     ylim([10 45])
                     set(gca,'YTick', 0:5:50);
-                    
-                else
-                    h = stairs(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
-                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.angleOfAttack);
-                    
-                    set(gca, 'ColorOrder', circshift(get(gca, 'ColorOrder'), numel(h)))
-                    
-                    scatter(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(1)),...
-                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.angleOfAttack(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(1)),'x');
-                    set(gca, 'ColorOrder', circshift(get(gca, 'ColorOrder'), numel(h)))
-                    
-                    scatter(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(2)),...
-                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.angleOfAttack(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(2)),'s');
                 end
+            else
+                ii = compilation(p).evolutions(k).population(1).indices.printed;
+                
+                plotFieldVsField( compilation, p, k, ii, {'timeOfFlight'}, 1, {'angleOfAttack'}, 1 )
             end
+            
             hold off
+            
             saveas(...
                 figure(fig_num),...
                 strcat(...
-                compilation(p).mainpath,...
-                '/figures/timeHistoryAngleOfAttack_Evolution_',...
+                compilation(p).figurePath,...
+                'timeHistoryAngleOfAttack_Evolution_',...
                 num2str(k - 1),...
                 '_Set',...
-                convertCharsToStrings(compilation(p).set),...
+                convertCharsToStrings(compilation(p).case),...
                 '.png'),...
                 'png');
             close(fig_num);
@@ -72,7 +67,7 @@ for p = 1:numel(compilation)
         figure(fig_num)
         set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
         set (gca,'Fontsize',15)
-        title(strcat('Evaluated Angle of Attack through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+        title(strcat('Evaluated Angle of Attack through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).case),'_',' ')))
         ylim([0 50])
         max_tof = max([compilation(p).evolutions.max_tof]);
         xlim([0 max_tof])
@@ -84,7 +79,7 @@ for p = 1:numel(compilation)
         grid on
         
         for ii = compilation(p).evolutions(k).population(1).indices.printed
-            stairs(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
+            plot(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
                 compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.evaluatedAngleOfAttack);
         end
         
@@ -96,7 +91,7 @@ for p = 1:numel(compilation)
             '/figures/timeHistoryEvaluatedAngleOfAttack_Evolution_',...
             num2str(k - 1),...
             '_Set',...
-            convertCharsToStrings(compilation(p).set),...
+            convertCharsToStrings(compilation(p).case),...
             '.png'),...
             'png');
         close(fig_num);
@@ -111,7 +106,7 @@ for p = 1:numel(compilation)
         figure(fig_num)
         set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
         set (gca,'Fontsize',15)
-        title(strcat('Commanded Angle of Attack  through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+        title(strcat('Commanded Angle of Attack  through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).case),'_',' ')))
         ylim([0 50])
         max_tof = max([compilation(p).evolutions.max_tof]);
         xlim([0 max_tof])
@@ -124,7 +119,7 @@ for p = 1:numel(compilation)
         
         for ii = compilation(p).evolutions(k).population(1).indices.printed
             if  compilation(1).validation == 1
-                stairs(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
+                plot(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
                     compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.commandedAngleOfAttack,'k','LineWidth',2);
                 xlim([0 1400])
                 set(gca,'XTick', 0:200:1400);
@@ -132,7 +127,7 @@ for p = 1:numel(compilation)
                 set(gca,'YTick', 0:5:50);
                 
             else
-                stairs(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
+                plot(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
                     compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.commandedAngleOfAttack);
             end
         end
@@ -141,11 +136,11 @@ for p = 1:numel(compilation)
         saveas(...
             figure(fig_num),...
             strcat(...
-            compilation(p).mainpath,...
+            compilation(p).figurePath,...
             '/figures/timeHistoryCommandedAngleOfAttack_Evolution_',...
             num2str(k - 1),...
             '_Set',...
-            convertCharsToStrings(compilation(p).set),...
+            convertCharsToStrings(compilation(p).case),...
             '.png'),...
             'png');
         close(fig_num);
@@ -157,65 +152,63 @@ for p = 1:numel(compilation)
     
     for k = 1:numel(compilation(p).evolutions)
         
-        if compilation(p).evolutions(k).population(1).indices.printed > 0
-            
-            fig_num = p*100 + 4000 + k*1;
-            figure(fig_num)
-            set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
-            set (gca,'Fontsize',15)
-            title(strcat('Bank Angle through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
-            ylim([-90 90])
-            max_tof = max([compilation(p).evolutions.max_tof]);
-            % max_tof = 1400;
-            xlim([0 max_tof])
-            xlabel('Propagation Time (s)') % x-axis label
-            ylabel('Bank Angle (deg)') % y-axis label
-            set(gca,'YTick', -90:15:90);
-            set(gca,'XTick', 0:200:max_tof);
-            hold on
-            grid on
-            
-            plot([0 max_tof],[0 0],'k','LineWidth',2)
+                if compilation(p).evolutions(k).population(1).indices.printed > 0
+        
+        fig_num = p*100 + 4000 + k*1;
+        figure(fig_num)
+        set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
+        set (gca,'Fontsize',15)
+        title(strcat('Bank Angle through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).case),'_',' ')))
+        ylim([-90 90])
+        max_tof = max([compilation(p).evolutions.max_tof]);
+        % max_tof = 1400;
+        xlim([0 max_tof])
+        xlabel('Propagation Time (s)') % x-axis label
+        ylabel('Bank Angle (deg)') % y-axis label
+        set(gca,'YTick', -90:15:90);
+        set(gca,'XTick', 0:200:max_tof);
+        hold on
+        grid on
+        
+        plot([0 max_tof],[0 0],'k','LineWidth',2)
+        
+        if  compilation(1).validation == 1
             
             for ii = compilation(p).evolutions(k).population(1).indices.printed
                 
-                if  compilation(1).validation == 1
-                    stairs(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
-                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.bankAngle,'k','LineWidth',2);
-                    plot([0 1400],[0 0],'k','LineWidth',2)
-                    xlim([0 1400])
-                    set(gca,'XTick', 0:200:1400);
-                    ylim([-80 100])
-                    set(gca,'YTick', -80:20:100);
-                else
-                    h = stairs(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
-                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.bankAngle);
-                    set(gca, 'ColorOrder', circshift(get(gca, 'ColorOrder'), numel(h)))
-                    
-                    scatter(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(1)),...
-                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.bankAngle(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(1)),'x');
-                    set(gca, 'ColorOrder', circshift(get(gca, 'ColorOrder'), numel(h)))
-                    
-                    scatter(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(2)),...
-                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.bankAngle(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(2)),'s');
-                end
+                plot(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
+                    compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.bankAngle,'k','LineWidth',2);
+                plot([0 1400],[0 0],'k','LineWidth',2)
+                xlim([0 1400])
+                set(gca,'XTick', 0:200:1400);
+                ylim([-80 100])
+                set(gca,'YTick', -80:20:100);
+                
             end
             
-            hold off
-            saveas(...
-                figure(fig_num),...
-                strcat(...
-                compilation(p).mainpath,...
-                '/figures/timeHistoryBankAngle_Evolution_',...
-                num2str(k - 1),...
-                '_Set',...
-                convertCharsToStrings(compilation(p).set),...
-                '.png'),...
-                'png');
-            close(fig_num);
+        else
+            ii = compilation(p).evolutions(k).population(1).indices.printed;
+            
+            plotFieldVsField( compilation, p, k, ii, {'timeOfFlight'}, 1, {'bankAngle'}, 1 )
         end
+        
+        
+        hold off
+        saveas(...
+            figure(fig_num),...
+            strcat(...
+            compilation(p).figurePath,...
+            'timeHistoryBankAngle_Evolution_',...
+            num2str(k - 1),...
+            '_Set',...
+            convertCharsToStrings(compilation(p).case),...
+            '.png'),...
+            'png');
+        %  close(fig_num);
+    end
     end
 end
+
 %% Time History: Skip Suppresion Limit
 for p = 1:numel(compilation)
     
@@ -227,7 +220,7 @@ for p = 1:numel(compilation)
             figure(fig_num)
             set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
             set (gca,'Fontsize',15)
-            title(strcat('Skip Suppression Limit through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+            title(strcat('Skip Suppression Limit through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).case),'_',' ')))
             ylim(90*[-1 1])
             max_tof = max([compilation(p).evolutions.max_tof]);
             xlim([0 max_tof])
@@ -241,7 +234,7 @@ for p = 1:numel(compilation)
             plot([0 max_tof],(0)*[1 1],'k','LineWidth',2)
             
             for ii = compilation(p).evolutions(k).population(1).indices.printed
-                h = stairs(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
+                h = plot(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
                     abs(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.skipSuppressionBankAngleLimit));
                 set(gca, 'ColorOrder', circshift(get(gca, 'ColorOrder'), numel(h)))
                 
@@ -257,11 +250,11 @@ for p = 1:numel(compilation)
             saveas(...
                 figure(fig_num),...
                 strcat(...
-                compilation(p).mainpath,...
-                '/figures/timeHistorySkipSuppressionBankAngleLimit_Evolution_',...
+                compilation(p).figurePath,...
+                'timeHistorySkipSuppressionBankAngleLimit_Evolution_',...
                 num2str(k - 1),...
                 '_Set',...
-                convertCharsToStrings(compilation(p).set),...
+                convertCharsToStrings(compilation(p).case),...
                 '.png'),...
                 'png');
             close(fig_num);
@@ -283,7 +276,7 @@ for p = 1:numel(compilation)
         figure(fig_num)
         set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
         set (gca,'Fontsize',15)
-        title(strcat('Evaluated Bank Angle through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+        title(strcat('Evaluated Bank Angle through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).case),'_',' ')))
         ylim([-90 90])
         max_tof = max([compilation(p).evolutions.max_tof]);
         xlim([0 max_tof])
@@ -297,7 +290,7 @@ for p = 1:numel(compilation)
         plot([0 max_tof],[0 0],'k','LineWidth',2)
         
         for ii = compilation(p).evolutions(k).population(1).indices.printed
-            stairs(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
+            plot(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
                 compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.evaluatedBankAngle);
         end
         
@@ -305,11 +298,11 @@ for p = 1:numel(compilation)
         saveas(...
             figure(fig_num),...
             strcat(...
-            compilation(p).mainpath,...
+            compilation(p).figurePath,...
             '/figures/timeHistoryEvaluatedBankAngle_Evolution',...
             num2str(k - 1),...
             '_Set',...
-            convertCharsToStrings(compilation(p).set),...
+            convertCharsToStrings(compilation(p).case),...
             '.png'),...
             'png');
         close(fig_num);
@@ -326,7 +319,7 @@ for p = 1:numel(compilation)
         figure(fig_num)
         set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
         set (gca,'Fontsize',15)
-        title(strcat('Commanded Bank Angle through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+        title(strcat('Commanded Bank Angle through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).case),'_',' ')))
         ylim([-90 90])
         max_tof = max([compilation(p).evolutions.max_tof]);
         xlim([0 max_tof])
@@ -338,7 +331,7 @@ for p = 1:numel(compilation)
         grid on
         
         for ii = compilation(p).evolutions(k).population(1).indices.printed
-            stairs(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
+            plot(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
                 compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.commandedBankAngle);
         end
         
@@ -347,14 +340,14 @@ for p = 1:numel(compilation)
         saveas(...
             figure(fig_num),...
             strcat(...
-            compilation(p).mainpath,...
-            '/figures/timeHistoryCommandedBankAngle_Evolution',...
+            compilation(p).figurePath,...
+            'timeHistoryCommandedBankAngle_Evolution',...
             num2str(k - 1),...
             '_Set',...
-            convertCharsToStrings(compilation(p).set),...
+            convertCharsToStrings(compilation(p).case),...
             '.png'),...
             'png');
-        close(fig_num);
+       % close(fig_num);
     end
 end
 
@@ -367,7 +360,7 @@ for p = 1:numel(compilation)
         figure(fig_num)
         set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
         set (gca,'Fontsize',15)
-        title(strcat('Bank Reversal Trigger - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+        title(strcat('Bank Reversal Trigger - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).case),'_',' ')))
         ylim([0 1.5])
         max_tof = max([compilation(p).evolutions.max_tof]);
         xlim([0 max_tof])
@@ -379,7 +372,7 @@ for p = 1:numel(compilation)
         
         % for ii = numel(compilation(p).evolutions(k).trajectories):numel(compilation(p).evolutions(k).trajectories)
         for ii = compilation(p).evolutions(k).population(1).indices.printed
-            stairs(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
+            plot(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
                 compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.bank_angle_reversal_trigger);
         end
         
@@ -387,11 +380,11 @@ for p = 1:numel(compilation)
         saveas(...
             figure(fig_num),...
             strcat(...
-            compilation(p).mainpath,...
+            compilation(p).figurePath,...
             '/figures/timeHistoryBankAngleReversalTrigger_Evolution',...
             num2str(k - 1),...
             '_Set',...
-            convertCharsToStrings(compilation(p).set),...
+            convertCharsToStrings(compilation(p).case),...
             '.png'),...
             'png');
         close(fig_num);
@@ -410,7 +403,7 @@ for p = 1:numel(compilation)
             figure(fig_num)
             set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
             set (gca,'Fontsize',15)
-            title(strcat('Flight-Path Angle through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+            title(strcat('Flight-Path Angle through Time - Generation:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).case),'_',' ')))
             ylim([-15 10])
             max_tof = max([compilation(p).evolutions.max_tof]);
             %max_tof = 1400;
@@ -425,49 +418,43 @@ for p = 1:numel(compilation)
             
             plot([0 max_tof],[0 0],'k','LineWidth',2)
             
-            for ii = compilation(p).evolutions(k).population(1).indices.printed
+            if  compilation(1).validation == 1
                 
-                if  compilation(1).validation == 1
-                    stairs(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
+                for ii = compilation(p).evolutions(k).population(1).indices.printed
+                    
+                    plot(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
                         compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.flightPathAngle,'k','LineWidth',2);
                     plot([0 1400],[0 0],'k','LineWidth',2)
                     xlim([0 1400])
                     set(gca,'XTick', 0:200:1400);
                     ylim([-10 0])
                     set(gca,'YTick', -10:1:0);
-                    
-                else
-                    h = stairs(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
-                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.flightPathAngle);
-                    set(gca, 'ColorOrder', circshift(get(gca, 'ColorOrder'), numel(h)))
-                    
-                    scatter(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(1)),...
-                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.flightPathAngle(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(1)),'x');
-                    set(gca, 'ColorOrder', circshift(get(gca, 'ColorOrder'), numel(h)))
-                    
-                    scatter(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(2)),...
-                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.flightPathAngle(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(2)),'s');
-                end
+                end                
+            else
+                ii = compilation(p).evolutions(k).population(1).indices.printed;
+                
+                plotFieldVsField( compilation, p, k, ii, {'timeOfFlight'}, 1, {'flightPathAngle'}, 1 )
             end
+            
             
             hold off
             
             saveas(...
                 figure(fig_num),...
                 strcat(...
-                compilation(p).mainpath,...
-                '/figures/timeHistoryFlightPathAngle_Evolution',...
+                compilation(p).figurePath,...
+                'timeHistoryFlightPathAngle_Generation',...
                 num2str(k - 1),...
                 '_Set',...
-                convertCharsToStrings(compilation(p).set),...
+                convertCharsToStrings(compilation(p).case),...
                 '.png'),...
                 'png');
-            close(fig_num);
+            %     close(fig_num);
         end
     end
 end
 
-%% Time History: Flight-Path Angle Rate - per Evolution
+%% Time History: Flight-Path Angle Rate - per Generation
 for p = 1:numel(compilation)
     
     for k = 1:numel(compilation(p).evolutions)
@@ -478,7 +465,7 @@ for p = 1:numel(compilation)
             figure(fig_num)
             set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
             set (gca,'Fontsize',15)
-            title(strcat('Flight-Path Angle Rate through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+            title(strcat('Flight-Path Angle Rate through Time - Generation:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).case),'_',' ')))
             ylim([-1 1])
             max_tof = max([compilation(p).evolutions.max_tof]);
             %max_tof = 1400;
@@ -495,9 +482,9 @@ for p = 1:numel(compilation)
             
             for ii = compilation(p).evolutions(k).population(1).indices.printed
                 if  compilation(1).validation == 1
-                    stairs(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
+                    plot(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
                         compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.flightPathAngleRate,'k','LineWidth',2);
-                    stairs(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
+                    plot(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
                         compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.flightPathAngleRate,'b','LineWidth',2);
                     plot([0 1400],[0 0],'k','LineWidth',2)
                     xlim([0 1400])
@@ -506,16 +493,19 @@ for p = 1:numel(compilation)
                     set(gca,'YTick', -2:1:2);
                     
                 else
-                    stairs(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
+                    h = plot(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
                         compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.flightPathAngleRate);
                     set(gca, 'ColorOrder', circshift(get(gca, 'ColorOrder'), numel(h)))
                     
-                    scatter(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(1)),...
-                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.flightPathAngleRate(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(1)),'x');
-                    set(gca, 'ColorOrder', circshift(get(gca, 'ColorOrder'), numel(h)))
-                    
-                    scatter(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(2)),...
-                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.flightPathAngleRate(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(2)),'s');
+                    if isnan(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(1)) == false
+                        scatter(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(1)),...
+                            compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.flightPathAngleRate(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(1)),'x');
+                        set(gca, 'ColorOrder', circshift(get(gca, 'ColorOrder'), numel(h)))
+                    end
+                    if isnan(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(2)) == false
+                        scatter(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(2)),...
+                            compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.flightPathAngleRate(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(2)),'s');
+                    end
                 end
             end
             
@@ -524,21 +514,21 @@ for p = 1:numel(compilation)
             saveas(...
                 figure(fig_num),...
                 strcat(...
-                compilation(p).mainpath,...
-                '/figures/timeHistoryFlightPathAngleRate_Evolution_',...
+                compilation(p).figurePath,...
+                'timeHistoryFlightPathAngleRate_Generation_',...
                 num2str(k - 1),...
                 '_Set',...
-                convertCharsToStrings(compilation(p).set),...
+                convertCharsToStrings(compilation(p).case),...
                 '.png'),...
                 'png');
-            close(fig_num);
+            % close(fig_num);
         end
     end
 end
 
 
 
-%% Time History: BodyFlap Deflection Angle - per Evolution
+%% Time History: BodyFlap Deflection Angle - per Generation
 for p = 1:numel(compilation)
     
     for k = 1:numel(compilation(p).evolutions)
@@ -549,7 +539,7 @@ for p = 1:numel(compilation)
             figure(fig_num)
             set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
             set (gca,'Fontsize',15)
-            title(strcat('BodyFlap Deflection Angle through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+            title(strcat('BodyFlap Deflection Angle through Time - Generation:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).case),'_',' ')))
             ylim([-20 30])
             max_tof = max([compilation(p).evolutions.max_tof]);
             % max_tof =1400;
@@ -566,7 +556,7 @@ for p = 1:numel(compilation)
             
             for ii = compilation(p).evolutions(k).population(1).indices.printed
                 if  compilation(1).validation == 1
-                    stairs(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
+                    plot(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
                         compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.bodyflapDeflectionAngle,'k','LineWidth',2);
                     xlim([0 1400])
                     plot([0 1400],[0 0],'k','LineWidth',2)
@@ -574,16 +564,19 @@ for p = 1:numel(compilation)
                     ylim([-20 20])
                     set(gca,'YTick', -20:5:20);
                 else
-                    h = stairs(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
+                    h = plot(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
                         compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.bodyflapDeflectionAngle);
                     set(gca, 'ColorOrder', circshift(get(gca, 'ColorOrder'), numel(h)))
                     
-                    scatter(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(1)),...
-                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.bodyflapDeflectionAngle(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(1)),'x');
-                    set(gca, 'ColorOrder', circshift(get(gca, 'ColorOrder'), numel(h)))
-                    
-                    scatter(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(2)),...
-                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.bodyflapDeflectionAngle(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(2)),'s');
+                    if isnan(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(1)) == false
+                        scatter(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(1)),...
+                            compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.bodyflapDeflectionAngle(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(1)),'x');
+                        set(gca, 'ColorOrder', circshift(get(gca, 'ColorOrder'), numel(h)))
+                    end
+                    if isnan(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(2)) == false
+                        scatter(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(2)),...
+                            compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.bodyflapDeflectionAngle(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(2)),'s');
+                    end
                 end
             end
             
@@ -592,11 +585,11 @@ for p = 1:numel(compilation)
             saveas(...
                 figure(fig_num),...
                 strcat(...
-                compilation(p).mainpath,...
-                '/figures/timeHistoryBodyFlapDeflectionAngle_Evolution',...
+                compilation(p).figurePath,...
+                'timeHistoryBodyFlapDeflectionAngle_Generation',...
                 num2str(k - 1),...
                 '_Set',...
-                convertCharsToStrings(compilation(p).set),...
+                convertCharsToStrings(compilation(p).case),...
                 '.png'),...
                 'png');
             close(fig_num);
@@ -604,7 +597,7 @@ for p = 1:numel(compilation)
     end
 end
 
-%% Time History: Elevon Deflection Angle - per Evolution
+%% Time History: Elevon Deflection Angle - per Generation
 for p = 1:numel(compilation)
     
     for k = 1:numel(compilation(p).evolutions)
@@ -614,7 +607,7 @@ for p = 1:numel(compilation)
             figure(fig_num)
             set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
             set (gca,'Fontsize',15)
-            title(strcat('Elevon Deflection Angle through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
+            title(strcat('Elevon Deflection Angle through Time - Generation:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).case),'_',' ')))
             ylim([-40 40])
             max_tof = max([compilation(p).evolutions.max_tof]);
             %max_tof = 1400;
@@ -632,7 +625,7 @@ for p = 1:numel(compilation)
             
             for ii = compilation(p).evolutions(k).population(1).indices.printed
                 if  compilation(1).validation == 1
-                    stairs(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
+                    plot(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
                         compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.elevonDeflectionAngle,'k','LineWidth',2);
                     xlim([0 1400])
                     plot([0 1400],[0 0],'k','LineWidth',2)
@@ -640,7 +633,7 @@ for p = 1:numel(compilation)
                     ylim([-40 40])
                     set(gca,'YTick', -40:5:40);
                 else
-                    stairs(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
+                    plot(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight,...
                         compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.elevonDeflectionAngle);
                     set(gca, 'ColorOrder', circshift(get(gca, 'ColorOrder'), numel(h)))
                     
@@ -658,11 +651,11 @@ for p = 1:numel(compilation)
             saveas(...
                 figure(fig_num),...
                 strcat(...
-                compilation(p).mainpath,...
-                '/figures/timeHistoryElevonDeflectionAngle_Evolution',...
+                compilation(p).figurePath,...
+                'timeHistoryElevonDeflectionAngle_Generation',...
                 num2str(k - 1),...
                 '_Set',...
-                convertCharsToStrings(compilation(p).set),...
+                convertCharsToStrings(compilation(p).case),...
                 '.png'),...
                 'png');
             close(fig_num);

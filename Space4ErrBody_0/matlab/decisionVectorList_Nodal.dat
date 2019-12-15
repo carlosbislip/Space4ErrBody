@@ -1,0 +1,6 @@
+mappedNormalizedSpecificEnergy,Mapped Normalized Specific Energy,$(-)$,1,0,1,.1
+nodeInterval,Node Interval,$(-)$,1,0,1,.1
+angleOfAttack,Angle of Attack,$(\mathrm{deg})$,1,0,50,10
+angleOfSideslip,Angle of Sideslip,$(\mathrm{deg})$,1,0,90,15
+bankAngle,Bank Angle,$(\mathrm{deg})$,1,0,90,15
+throttleSetting,Throttle Setting,$(-)$,1,0,1,.1

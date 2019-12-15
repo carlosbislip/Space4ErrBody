@@ -1,0 +1,13 @@
+Starting Calendar Year, 2018
+Starting Calendar Month, 10
+Starting Calendar Day, 28
+Starting Calendar Hour, 11
+Starting Calendar Minute, 0
+Starting Calendar Second, 0
+Max. Elapsed Time, 3600.0
+Propagation Step Size, 1.0
+Guidance Step Size, 1.0
+Spherical Harmonic Degree, 0
+Spherical Harmonic Order, 2
+Maximize Thrust, 1
+Debug Info, 0

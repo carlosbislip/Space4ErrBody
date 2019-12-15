@@ -1,0 +1,27 @@
+THESISparameterList_Ascent.txt
+THESISparameterBounds_AscentHORUS.txt
+THESISparameterList_Descent.txt
+THESISparameterBounds_DescentHORUS.txt
+HORUSvehicleParameterList.txt
+HORUSvehicleParameterValues.txt
+HORUSaeroCoeffFileList.txt
+THESISoptimization_settingsList.txt
+THESISoptimization_settingsValues_THESIS_HORUS_NSGA2_234998684_100_1_100_1_A_10_10.txt
+THESISsimulation_settingsList.txt
+THESISsimulation_settingsValues.txt
+THESISoutput_settingsList.txt
+THESISoutput_settingsValues.txt
+THESISinitialConditionsList.txt
+THESISinitialConditionsValues.txt
+THESISconstraintsList.txt
+THESISconstraintsValues.txt
+HORUSheadingErrorDeadBandCoarse.txt
+HORUSheadingErrorDeadBandLowDistance.txt
+HORUSalphaMachEnvelopeLB.txt
+HORUSalphaMachEnvelopeUB.txt
+THESIShardConstraintsList.txt
+THESIShardConstraintsValues.txt
+densityParametersForJerk.txt
+THESIS_HORUS_NSGA2_234998684_100_1_100_1_A_10_10/
+AMS to IAD Ballistic Trajectory: 10/28/2018  11:00:00 AM
+Vehicle

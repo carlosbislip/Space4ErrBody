@@ -50,7 +50,7 @@ bool StopOrNot( const tudat::simulation_setup::NamedBodyMap& bodyMap,
     const double total_d_traveled_rad = bislip::variables::computeAngularDistance( lat_i_rad , lon_i_rad , lat_c_rad , lon_c_rad );
 
     //! Extract Initial distance to target
-    const double initial_d_to_target_rad = bodyMap.at( vehicleName )->getVehicleSystems()->getInitialDistanceToTarget();
+    const double initial_d_to_target_rad = bodyMap.at( vehicleName )->getVehicleSystems()->getInitialValue( bislip::initial_values::initial_value_type::distance_to_central_target );
 
     //! Extract current altitude
     const double current_height = FlightConditions->getCurrentAltitude();

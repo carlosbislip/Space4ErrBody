@@ -6,8 +6,6 @@ function [ prop_Output_files,...
     interp_Descent_Output_files,...
     DV_mapped_Ascent_Output_files,...
     DV_mapped_Descent_Output_files,...
-    headingErrorDeadbandBounds_Output_files,...
-    alphaMachBounds_Output_files,...
     pop_files,npop_files,fit_files,nfit_files] = ...
     ...
     ...
@@ -18,8 +16,6 @@ function [ prop_Output_files,...
     interp_Decent_File_Path_List_prefix,...
     DV_mapped_Ascent_File_Path_List_prefix,...
     DV_mapped_Descent_File_Path_List_prefix,...
-    headingErrorDeadbandBounds_File_Path_List_prefix,...
-    alphaMachBounds_File_Path_List_prefix,...
     pop_file_path_prefix,fit_file_path_prefix)
 %READ_FOLDER_CONTENT Summary of this function goes here
 %   Detailed explanation goes here
@@ -32,30 +28,28 @@ n_prop_Output_files = length(prop_Output_files);
 depvar_Output_files = dir(depvar_File_Path_List_prefix{p});
 n_depvar_Output_files = length(depvar_Output_files);
 
+% headingErrorDeadbandBounds_Output_files = prop_Output_files;
+% headingErrorDeadbandBounds_Output_files(1).folder = erase(headingErrorDeadbandBounds_Output_files(1).folder,'propagationHistory');
+% tempDir = dir(headingErrorDeadbandBounds_File_Path_List_prefix{:});
+% headingErrorDeadbandBounds_Output_files(1).name = tempDir.name;
+% clear tempDir;
+% 
+% alphaMachBounds_Output_files = prop_Output_files;
+% alphaMachBounds_Output_files(1).folder = erase(alphaMachBounds_Output_files(1).folder,'propagationHistory');
+% tempDir = dir(alphaMachBounds_File_Path_List_prefix{p});
+% alphaMachBounds_Output_files(1).name = tempDir.name;
+% clear tempDir;
+
+pop_files = dir(pop_file_path_prefix{p});
+npop_files = length(pop_files);
+
+fit_files = dir(fit_file_path_prefix{p});
+nfit_files = length(fit_files);
+
 interp_Ascent_Output_files = dir(interp_Ascent_File_Path_List_prefix{p});
 interp_Descent_Output_files = dir(interp_Decent_File_Path_List_prefix{p});
 
 DV_mapped_Ascent_Output_files = dir(DV_mapped_Ascent_File_Path_List_prefix{p});
 DV_mapped_Descent_Output_files = dir(DV_mapped_Descent_File_Path_List_prefix{p});
-
-headingErrorDeadbandBounds_Output_files = DV_mapped_Descent_Output_files;
-headingErrorDeadbandBounds_Output_files(1).folder = erase(headingErrorDeadbandBounds_Output_files(1).folder,'map_DV_mapped_Descent');
-tempDir = dir(headingErrorDeadbandBounds_File_Path_List_prefix{p});
-headingErrorDeadbandBounds_Output_files(1).name = tempDir.name;
-clear tempDir;
-
-alphaMachBounds_Output_files = DV_mapped_Descent_Output_files;
-alphaMachBounds_Output_files(1).folder = erase(alphaMachBounds_Output_files(1).folder,'map_DV_mapped_Descent');
-tempDir = dir(alphaMachBounds_File_Path_List_prefix{p});
-alphaMachBounds_Output_files(1).name = tempDir.name;
-
-clear tempDir;
-
-pop_files = dir(pop_file_path_prefix{p});
-npop_files = length(pop_files);
-
-
-fit_files = dir(fit_file_path_prefix{p});
-nfit_files = length(fit_files);
 end
 

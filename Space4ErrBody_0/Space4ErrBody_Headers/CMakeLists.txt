@@ -10,11 +10,12 @@
 # Set the header files.
 set(SPACE4ERRBODY_HEADERS
     "${CMAKE_CURRENT_SOURCE_DIR}/Space4ErrBodyProblem.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/runInputArgumentEvaluator.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/getPagmoAlgorithm.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/getOutputPath.h"
     #"${CMAKE_CURRENT_SOURCE_DIR}/applicationOutput_tudat.h"
     #"${CMAKE_CURRENT_SOURCE_DIR}/applicationOutput_pagmo.h"
     #"${CMAKE_CURRENT_SOURCE_DIR}/saveOptimizationResults.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/updateGuidance.h"
    # "${CMAKE_CURRENT_SOURCE_DIR}/guidanceFunctions.h"
     #"${CMAKE_CURRENT_SOURCE_DIR}/updateGuidance_val.h"
     #"${CMAKE_CURRENT_SOURCE_DIR}/getStuff.h"
@@ -24,7 +25,8 @@ set(SPACE4ERRBODY_HEADERS
 
 set(SPACE4ERRBODY_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/Space4ErrBodyProblem.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/updateGuidance.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/runInputArgumentEvaluator.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/getPagmoAlgorithm.cpp"
     #"${CMAKE_CURRENT_SOURCE_DIR}/bislipVariables.cpp"
     #"${CMAKE_CURRENT_SOURCE_DIR}/StopOrNot.cpp"
    # "${CMAKE_CURRENT_SOURCE_DIR}/guidanceFunctions.cpp"
@@ -33,9 +35,7 @@ set(SPACE4ERRBODY_SOURCES
     #  "${CMAKE_CURRENT_SOURCE_DIR}/getRoot.cpp"
     #  "${CMAKE_CURRENT_SOURCE_DIR}/getSorting.cpp"
 
-
     )
-
 
 
 add_library(Space4ErrBody_Headers STATIC ${SPACE4ERRBODY_SOURCES} ${SPACE4ERRBODY_HEADERS})

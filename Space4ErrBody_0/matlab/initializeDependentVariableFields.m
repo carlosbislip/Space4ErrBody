@@ -1,0 +1,187 @@
+function [ evolutions ] = initializeDependentVariableFields( evolutions, k, i)
+%UNTITLED5 Summary of this function goes here
+%   Detailed explanation goes here
+%%
+    dependentVariableList = readcell( 'dependentVariableList.dat','Delimiter',{','} );
+
+  for j = 1:size(dependentVariableList,1)
+      evolutions(k).population(i).dependentVariableTimeHistory.(dependentVariableList{j,1}).figureSaveNameContent = dependentVariableList{j,1};
+      evolutions(k).population(i).dependentVariableTimeHistory.(dependentVariableList{j,1}).variableLabel = dependentVariableList{j,2};
+      evolutions(k).population(i).dependentVariableTimeHistory.(dependentVariableList{j,1}).units = dependentVariableList{j,3};
+      evolutions(k).population(i).dependentVariableTimeHistory.(dependentVariableList{j,1}).scalingFactor = dependentVariableList{j,4};
+      evolutions(k).population(i).dependentVariableTimeHistory.(dependentVariableList{j,1}).limits = [dependentVariableList{j,5} dependentVariableList{j,6}];
+      evolutions(k).population(i).dependentVariableTimeHistory.(dependentVariableList{j,1}).tick = dependentVariableList{j,7};
+      evolutions(k).population(i).dependentVariableTimeHistory.(dependentVariableList{j,1}).value = nan;
+  end
+
+  
+  
+  
+%     %%
+% 
+% evolutions(k).population(i).dependentVariableTimeHistory.t                                    	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.timeOfFlight                          	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.height                               	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.latitudeAngle                       	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.longitudeAngle                      	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.airspeed                             	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.normalizedSpecificEnergy             	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.dynamicPressure                      	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.bendingMoment                       	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.mass                                 	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.flightPathAngle                    	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.centralTargetAngularDistanceToGo      =	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.bodyFrameTotalGLoad_x            	 	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.bodyFrameTotalGLoad_y            	 	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.bodyFrameTotalGLoad_z            	 	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.bodyFrameTotalGLoadMagnitude          =	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.passengerFrameTotalGLoad_x       	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.passengerFrameTotalGLoad_y       	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.passengerFrameTotalGLoad_z       	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.passengerFrameTotalAcceleration_x    	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.passengerFrameTotalAcceleration_y    	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.passengerFrameTotalAcceleration_z    	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.heatFluxChapmanNose               	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.x_R                                  	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.y_R                                  	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.z_R                                  	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.altitude                             	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.specificEnergy                       	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.angularDistanceTraveled               =	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.cumulativeAngularDistanceTravelled                 	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.groundtrackDifference               	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.cumulativeCartesianDistanceTravelled        	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.headingAngle                        	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.headingAngleToCentralTarget       	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.headingAngleToCentralTargetError      =	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.headingAngleToDynamicTarget          	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.headingAngleToDynamicTargetError      =	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.headingAngleToDynamicTargetErrorDeadband                 	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.vertexLatitude       	                =	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.vertexLongitude       	            =	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.tangent1Latitude       	            =	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.tangent1Longitude       	            =	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.tangent2Latitude       	            =	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.tangent2Longitude       	            =	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.dynamicTargetHeadingAngleBounds1      =	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.dynamicTargetHeadingAngleBounds2      =	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.dynamicTargetLatitude  	            =	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.dynamicTargetLongitude  	            =	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.dynamicTargetAngularDistanceToGo  	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.centralTargetLongitudeIntersection  	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.centralTargetLatitudeIntersection  	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.centralTargetLatitudeIntersectionAzimuth =	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.intersectionCase                      =	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.estimatedFightPathAngle              	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.flightPathAngleRate               	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.angularDistanceCoveredRatio        	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.trajectoryPhase                      	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.angleOfAttack                      	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.evaluatedAngleOfAttack            	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.commandedAngleOfAttack            	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.machNumber                            =	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.bodyflapDeflectionAngle               =	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.increment_Cm_bodyflap                	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.increment_Cm_bodyflap_dif            	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.elevonDeflectionAngle                    	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.aerodynamicCoefficient_CD           	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.aerodynamicCoefficient_CS           	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.aerodynamicCoefficient_CL           	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.aerodynamicCoefficient_Cl          	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.aerodynamicCoefficient_Cm          	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.aerodynamicCoefficient_Cn          	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.evaluatedThrustElevationAngle     	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.commandedThrustElevationAngle     	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.evaluatedThrustAzimuthAngle       	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.commandedThrustAzimuthAngle       	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.angleOfSideslip                    	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.bankAngle                           	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.evaluatedBankAngle                 	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.commandedBankAngle                 	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.tempBankAngle                        	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.skipSuppressionBankAngleLimit         =	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.reversalConditional                  	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.bankAngleReversalTrigger          	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.speedOfSound                         	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.freestreamTemperature                	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.adiabaticWallTemperature             	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.localDensity                         	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.heatFluxTUDATNose                 	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.equilibriumWallTemperatureChapmanNose             	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.equilibriumWallTemperatureTauberStagnationLeadingEdge   	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.equilibriumWallTemperatureTauberFlatPlateLeadingEdge    	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.heatFluxTauberStagnationLeadingEdge          	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.heatFluxTauberFlatPlateLeadingEdge           	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.heatFluxTauberLeadingEdge         	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.massRate                            	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.engineStatus                        	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.evaluatedThrottleSetting           	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.commandedThrottleSetting           	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.acc_grav_x                           	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.acc_grav_y                           	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.acc_grav_z                           	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.localGravity_1                      	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.localGravity_2                      	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.localGravity_3                      	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.localGravityfromSphericalHarmonics_1              	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.localGravityfromSphericalHarmonics_2              	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.localGravityfromSphericalHarmonics_3              	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.acc_aero_x                           	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.acc_aero_y                           	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.acc_aero_z                           	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.currentDragForce                     	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.currentLiftForce                     	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.aerodyamicFrameAerodynamicLoad_x     	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.aerodyamicFrameAerodynamicLoad_y     	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.aerodyamicFrameAerodynamicLoad_z     	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.aerodynamicFrameAerodynamicGLoad      =	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.thrustMagnitude                      	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.acc_thru_x                           	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.acc_thru_y                           	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.acc_thru_z                           	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.bodyFrameThrustLoad_x             	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.bodyFrameThrustLoad_y             	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.bodyFrameThrustLoad_z             	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.bodyFrameAerodynamicLoad_x            =	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.bodyFrameAerodynamicLoad_y            =	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.bodyFrameAerodynamicLoad_z            =	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.bodyFrameTotalLoad_x              	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.bodyFrameTotalLoad_y              	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.bodyFrameTotalLoad_z              	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.bodyFrameTotalAcceleration_x              	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.bodyFrameTotalAcceleration_y              	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.bodyFrameTotalAcceleration_z              	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.aerodyamicFrameTotalLoad_x           	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.aerodyamicFrameTotalLoad_y           	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.aerodyamicFrameTotalLoad_z           	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.aerodyamicFrameTotalAcceleration_x   	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.aerodyamicFrameTotalAcceleration_y   	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.aerodyamicFrameTotalAcceleration_z   	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.passengerFrameTotalLoad_x            	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.passengerFrameTotalLoad_y            	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.passengerFrameTotalLoad_z            	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.passengerFrameJerk_x                 	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.passengerFrameJerk_y                 	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.passengerFrameJerk_z                 	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.flightCorridorBoundary_DynamicPressure =	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.flightCorridorBoundary_BendingMoment =	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.flightCorridorBoundary_ThermalLoad =	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.flightCorridorBoundary_SkipSuppression =	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.flightCorridorBoundary_MechanicalLoad_ascent =	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.flightCorridorBoundary_MechanicalLoad_descent =	nan;
+% 
+% evolutions(k).population(i).dependentVariableTimeHistory.passengerFrameJerk_x_calc            	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.passengerFrameJerk_y_calc            	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.passengerFrameJerk_z_calc            	=	nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.integratedHeatLoad                	=	nan;
+% 
+% 
+% evolutions(k).population(i).dependentVariableTimeHistory.acc_x                            	    = nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.acc_y                           	    = nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.acc_z                           	    = nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.acc_aero_M                      	    = nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.acc_grav_M                          	= nan;
+% evolutions(k).population(i).dependentVariableTimeHistory.acc_thru_M                       	    = nan;
+
+end
+

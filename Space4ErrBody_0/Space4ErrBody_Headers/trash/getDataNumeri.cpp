@@ -5,7 +5,7 @@
 #include <vector>
 
 namespace bislip {
-std::vector< double > bislip::variables::getDataNumeri ( const std::string &filename )
+std::vector< double > bislip::utilities::getDataNumeri ( const std::string &filename )
 {
     std::ifstream inputdata;
     inputdata.open(filename.c_str());

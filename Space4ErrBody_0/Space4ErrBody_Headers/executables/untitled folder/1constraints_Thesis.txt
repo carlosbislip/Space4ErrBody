@@ -1,0 +1,16 @@
+Latitude                [ deg ], 38.94444444
+Longitude               [ deg ], -77.45583333
+Angular Distance        [ deg ], 0.75
+Height Maximum          [ m   ], 200000.0
+Height Minimum          [ m   ], 10000.0
+Minimum Mach Number     [ -   ], 1.05
+Velocity                [ m/s ], 8000.0
+Moment Coef. C_m        [ -   ], 0.0
+Mechanical Load Ascent  [ -   ], 3.0
+Mechanical Load Descent [ -   ], 3.0
+Heat Flux.              [W/m^2], 700000.0
+Dynamic Pressure        [ Pa  ], 25000.0
+Bending Moment          [Pa-rad], 4363.3231299858
+Pass. +z gLoad          [ -   ], 1.8
+Pass. -z gLoad          [ -   ], -1.8
+Pass. Jerk Load         [m/s^3], 2.0

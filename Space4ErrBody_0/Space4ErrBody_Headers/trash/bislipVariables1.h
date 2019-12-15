@@ -114,7 +114,7 @@ double evaluateGuidanceInterpolator (
         const double &airspeed,
         const double &E_max);
 
-Eigen::Vector3d computeBodyFixedThrustDirection (
+Eigen::Vector3d computeBodyFrameThrustUnitVector (
         const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions,
         const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems);
 
@@ -122,7 +122,7 @@ double computeThrustMagnitude (
         const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions,
         const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems);
 
-Eigen::Vector3d computeBodyFixedThrustVector (
+Eigen::Vector3d computeBodyFrameThrustLoad (
         const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions,
         const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems);
 

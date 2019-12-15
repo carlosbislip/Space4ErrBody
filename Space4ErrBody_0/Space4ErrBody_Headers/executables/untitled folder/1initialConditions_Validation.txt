@@ -1,0 +1,7 @@
+Latitude         [ deg ], -22.3
+Longitude        [ deg ], -106.58
+Height           [ m   ], 122000.0
+Mach             [ -   ], 7435.5
+Flight-path Angle[ deg ], -1.43
+Bodyflap Angle   [ deg ], 15.0
+Elevon Angle     [ deg ], 0.0

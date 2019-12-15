@@ -1,0 +1,32 @@
+Reference Area             [ m^2 ], 110.0
+Reference Wingspan         [ m   ], 29.4
+Reference Chord            [ m   ], 30.0
+MRC - Δx                   [ m   ], 13.0
+MRC - Δy                   [ m   ], 0.0
+MRC - Δz                   [ m   ], 0.0
+COM - Δx                   [ m   ], 13.0
+COM - Δy                   [ m   ], 0.0
+COM - Δz                   [ m   ], 0.0
+COT - Δx                   [ m   ], 25.0
+COT - Δy                   [ m   ], 0.0
+COT - Δz                   [ m   ], 2.25
+Initial Mass               [ kg  ], 26029.0
+Landing Mass               [ kg  ], 26029.0
+Isp                        [ s   ], 472.0
+Thrust                     [ N   ], 0.0
+Chest Forward Angle        [ deg ], 0.0
+Vertebra Inc. Angle        [ deg ], 0.0
+Control Dyn. Press.        [ Pa  ], 100.0
+Nose Radius                [ m   ], 0.8
+Leading Edge Radius        [ m   ], 0.4
+Wall Emissivity            [     ], 0.85
+Min. Bodyflap Angle        [ deg ], -20.0
+Max. Bodyflap Angle        [ deg ], 30.0
+Min. Elevon Angle          [ deg ], -40.0
+Max. Elevon Angle          [ deg ], 40.0
+Min. Thrust El Angle       [ deg ], -20.0
+Max. Thrust El Angle       [ deg ], 20.0
+Min. Thrust Az Angle       [ deg ], -20.0
+Max. Thrust Az Angle       [ deg ], 20.0
+Min. Throttle              [ -   ], 0.2
+Max. Throttle              [ -   ], 1.0

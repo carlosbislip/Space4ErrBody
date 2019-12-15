@@ -1,5 +1,5 @@
-#ifndef GETPAGMOALGO_H
-#define GETPAGMOALGO_H
+#ifndef GETPAGMOALGORITHM_H
+#define GETPAGMOALGORITHM_H
 
 #include <iostream>
 
@@ -23,36 +23,9 @@
 //#include "pagmo/algorithms/ihs.hpp"
 
 #include <pagmo/pagmo.hpp>
+namespace bislip {
 
-pagmo::algorithm getPagmoAlgorithm( const int index )
-{
-    //! Default multi-objective algorithm. (Arbitrary)
-    pagmo::algorithm algo{ pagmo::nsga2( ) };
+pagmo::algorithm getPagmoAlgorithm( const bool customParameters, const Eigen::VectorXd optimizerSpecificParameterValues );
 
-    switch( index )
-    {
-    case 0:
-    {
-        pagmo::algorithm algo{ pagmo::nsga2( ) };
-        break;
-    }
-    case 1:
-    {
-        pagmo::algorithm algo{ pagmo::moead( ) };
-        break;
-    }
-    case 2:
-    {
-        pagmo::algorithm algo{ pagmo::ihs( ) };
-        break;
-    }
-    default:
-    {
-        throw std::runtime_error( "Error, multi-objective pagmo algorithm " + std::to_string( index ) + " was not found." );
-    }
-    }
-
-    return algo;
-}
-
-#endif // GETPAGMOALGO_H
+} // namespace bislip
+#endif // GETPAGMOALGORITHM_H

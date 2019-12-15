@@ -13,6 +13,7 @@ cmake_minimum_required(VERSION 2.6)
 # Specify project name.
 project( Space4ErrBody )
 
+
 # Load UserSettings.txt
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
     set(BUILD_STYLE "standalone")
@@ -33,6 +34,8 @@ if((NOT CMAKE_BUILD_TYPE) OR (CMAKE_BUILD_TYPE STREQUAL "Release"))
 elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(CMAKE_BUILD_TYPE Debug)
 endif()
+
+SET(CMAKE_BUILD_TYPE Debug)
 
 message(STATUS "<< ${PROJECT_NAME} (${CMAKE_BUILD_TYPE} - ${BUILD_STYLE}) >>")
 
@@ -242,7 +245,23 @@ include(tudatLinkLibraries)
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Space4ErrBody_Headers")
 
+#add_executable(SequentialRuns "${SRCROOT}/SequentialRuns.cpp")
+#setup_executable_target(SequentialRuns "${SRCROOT}")
+#target_link_libraries(SequentialRuns Space4ErrBody_Headers ${TUDAT_PROPAGATION_LIBRARIES}
+#    pthread ${Boost_LIBRARIES} )
+
 add_executable(Space4ErrBody "${SRCROOT}/Space4ErrBody.cpp")
 setup_executable_target(Space4ErrBody "${SRCROOT}")
 target_link_libraries(Space4ErrBody Space4ErrBody_Headers ${TUDAT_PROPAGATION_LIBRARIES}
     pthread ${Boost_LIBRARIES} )
+
+
+
+
+MESSAGE(STATUS "Build type: " ${CMAKE_BUILD_TYPE})
+MESSAGE(STATUS "Library Type: " ${LIB_TYPE})
+MESSAGE(STATUS "Compiler flags:" ${CMAKE_CXX_COMPILE_FLAGS})
+MESSAGE(STATUS "Compiler cxx debug flags:" ${CMAKE_CXX_FLAGS_DEBUG})
+MESSAGE(STATUS "Compiler cxx release flags:" ${CMAKE_CXX_FLAGS_RELEASE})
+MESSAGE(STATUS "Compiler cxx min size flags:" ${CMAKE_CXX_FLAGS_MINSIZEREL})
+MESSAGE(STATUS "Compiler cxx flags:" ${CMAKE_CXX_FLAGS})

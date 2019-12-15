@@ -1,0 +1,8 @@
+Optimization Method
+Population per Island
+Num. of Archipelagos
+Num. of Evolutions
+Seed Number
+Single Island
+Obj. Function Case
+Monte Carlo Analysis

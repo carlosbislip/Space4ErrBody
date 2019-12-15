@@ -215,7 +215,7 @@ double computeHeadingToTarget (
         const double &lat_f,
         const double &lon_f)
 {
-    // const double heading_to_target = std::atan2( std::sin( lon_f - lon_c ) * std::cos( lat_f ) , std::cos( lat_c ) * std::sin( lat_f ) - std::sin( lat_c ) * std::cos( lat_f ) * std::cos( lon_f - lon_c ) );
+    // const double heading_angle_to_dynamic_target = std::atan2( std::sin( lon_f - lon_c ) * std::cos( lat_f ) , std::cos( lat_c ) * std::sin( lat_f ) - std::sin( lat_c ) * std::cos( lat_f ) * std::cos( lon_f - lon_c ) );
 
     return std::atan2( std::sin( lon_f - lon_c ) * std::cos( lat_f ) , std::cos( lat_c ) * std::sin( lat_f ) - std::sin( lat_c ) * std::cos( lat_f ) * std::cos( lon_f - lon_c ) );
 
@@ -228,7 +228,7 @@ double computeHeadingError (
         const double &lon_f,
         const double &heading)
 {
-    // const double heading_to_target = computeHeadingToTarget( lat_c, lon_c, lat_f, lon_f );
+    // const double heading_angle_to_dynamic_target = computeHeadingToTarget( lat_c, lon_c, lat_f, lon_f );
 
     return computeHeadingToTarget( lat_c, lon_c, lat_f, lon_f ) - heading;
 }
@@ -375,7 +375,7 @@ double evaluateGuidanceInterpolator (
     return evaluation;
 }
 
-Eigen::Vector3d computeBodyFixedThrustDirection (
+Eigen::Vector3d computeBodyFrameThrustUnitVector (
         const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions,
         const std::shared_ptr< tudat::system_models::BislipSystems > &bislipSystems)
 {
@@ -419,7 +419,7 @@ double computeThrustMagnitude (
     return throttle * bislipSystems->getMaxThrust();
 }
 
-Eigen::Vector3d computeBodyFixedThrustVector (
+Eigen::Vector3d computeBodyFrameThrustLoad (
 
         const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions,
         const std::shared_ptr< tudat::system_models::BislipSystems > &bislipSystems)
@@ -427,7 +427,7 @@ Eigen::Vector3d computeBodyFixedThrustVector (
 //const std::shared_ptr< tudat::aerodynamics::AtmosphericFlightConditions > &flightConditions,
 // const std::shared_ptr< tudat::system_models::VehicleSystems > &vehicleSystems)
 {
-    const Eigen::Vector3d BodyFixedThrustDirection = bislip::variables::computeBodyFixedThrustDirection( flightConditions, bislipSystems );
+    const Eigen::Vector3d BodyFixedThrustDirection = bislip::variables::computeBodyFrameThrustUnitVector( flightConditions, bislipSystems );
     const double thrustMagnitude = bislip::variables::computeThrustMagnitude( flightConditions, bislipSystems );
 
     Eigen::Vector3d BodyFixedThrustVector;

@@ -1,0 +1,9 @@
+initialFlightPathAngle,Initial Flight-Path Angle,(deg),1,0,10,1
+initialLaunchHeadingAngle,Initial Launch Heading Angle,(deg),1,0,360,30
+initialVelocity,Initial Velocity,(m/s),1,700,1200,50
+maximumVelocity,Maximum Velocity,(m/s),1,2000,8000,500
+maximumHeight,Maximum Height,(km),1e3,60000,210000,15
+additionalMass,Additional Mass,(kg),1,0,30000,5000
+terminationDistanceRatio,Termination Distance Ratio,(-),1,0,1,.1
+finalVelocity,Final Velocity,(m/s),1,400,1600,400
+skipSuppressionTriggerTime,Skip Suppression Trigger Time,(s),1,0,1,.1

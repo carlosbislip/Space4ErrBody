@@ -1,0 +1,11 @@
+central_target_angular_distance_to_go,Cost: Central Target Angular Distance To Go,$(-)$,1,0,100,10
+heat_load,Cost: Heat Load,$(-)$,1,0,2,.2
+fuel_mass,Cost: Fuel Mass,$(-)$,1,0,2,.2
+mechanical_load,Penalty: Mechanical Load,$(-)$,1,0,2,.2
+dynamic_pressure,Penalty: Dynamic Pressure,$(-)$,1,0,2,.2
+bending_moment,Penalty: Bending Moment,$(-)$,1,0,2,.2
+heat_flux,Penalty: Heat Flux,$(-)$,1,0,2,.2
+flight_path_angle,Penalty: Flight Path Angle,$(-)$,1,0,2,.2
+monotonic_energy,Penalty: Monotonic Energy,$(-)$,1,0,2,.2
+kinetics,Penalty: Kinetics,$(-)$,1,0,2,.2
+kinematics,Penalty: Kinematics,$(-)$,1,0,2,.2

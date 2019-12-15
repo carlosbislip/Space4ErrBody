@@ -16,12 +16,12 @@ for p = 1:numel(compilation)
             set(figure(fig_num),'units','pixels','position',[0,0,1200,600])
             set (gca,'Fontsize',15)
             title(strcat('Chapman Heat Flux at Nose through Time - Evolution:_{ }',num2str(k - 1),' - ',strrep(convertCharsToStrings(compilation(p).set),'_',' ')))
-            %ylim([0 600])
+            ylim([0 800])
             max_tof = max([compilation(p).evolutions.max_tof]);
             xlim([0 max_tof])
             xlabel('Propagation Time (s)') % x-axis label
             ylabel('Chapman Heat Flux at Nose (kW/m^2)') % y-axis label
-            %set(gca,'YTick', 0:50:800);
+            set(gca,'YTick', 0:50:800);
             set(gca,'XTick', 0:200:max_tof);
             
             hold on
@@ -42,12 +42,15 @@ for p = 1:numel(compilation)
                         compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.heatFluxChapmanNose/1e3);
                     set(gca, 'ColorOrder', circshift(get(gca, 'ColorOrder'), numel(h)))
                     
-                    scatter(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(1)),...
-                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.heatFluxChapmanNose(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(1))/1e3,'x');
-                    set(gca, 'ColorOrder', circshift(get(gca, 'ColorOrder'), numel(h)))
-                    
-                    scatter(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(2)),...
-                        compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.heatFluxChapmanNose(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(2))/1e3,'s');
+                    if isnan(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(1)) == false
+                        scatter(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(1)),...
+                            compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.heatFluxChapmanNose(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(1))/1e3,'x');
+                        set(gca, 'ColorOrder', circshift(get(gca, 'ColorOrder'), numel(h)))
+                    end
+                    if isnan(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(2)) == false
+                        scatter(compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.timeOfFlight(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(2)),...
+                            compilation(p).evolutions(k).population(ii).dependentVariableTimeHistory.heatFluxChapmanNose(compilation(p).evolutions(k).population(ii).indices.trajectoryPhaseChange(2))/1e3,'s');
+                    end
                 end
             end
             

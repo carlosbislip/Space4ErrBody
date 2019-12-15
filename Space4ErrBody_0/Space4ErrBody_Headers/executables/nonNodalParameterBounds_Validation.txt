@@ -1,0 +1,9 @@
+Initial Flight-Path Angle  [ deg ],  -1.430000001,      -1.429999999
+Initial Heading            [ deg ],  70.7499999999,     70.7500000001
+Initial Velocity           [ m/s ],  7435.49999999,     7435.50000001
+Maximum Velocity           [ m/s ],  37435.49999999,    7435.50000001
+Maximum Height             [ m   ],  121999.9999999999, 122000.0000000001
+Additional Mass            [ kg  ],  0.0,               0.000000001
+Termination Distance Ratio [ -   ],  0.0,               0.000000001
+Final Velocity             [ m/s ],  500,               1500
+Skip Suppression           [ s   ],  0,                 0.000001
